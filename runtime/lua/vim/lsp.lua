@@ -897,7 +897,7 @@ function lsp.start_client(config)
       client.initialized = true
       uninitialized_clients[client_id] = nil
       client.workspace_folders = workspace_folders
-      -- TODO(mjlbach): Backwards compatbility, to be removed in 0.7
+      -- TODO(mjlbach): Backwards compatibility, to be removed in 0.7
       client.workspaceFolders = client.workspace_folders
       client.server_capabilities = assert(result.capabilities, "initialize result doesn't contain capabilities")
       -- These are the cleaned up capabilities we use for dynamically deciding
@@ -1131,7 +1131,7 @@ function lsp._text_document_did_save_handler(bufnr)
     if client.resolved_capabilities.text_document_save then
       local included_text
       if client.resolved_capabilities.text_document_save_include_text then
-        included_text = text()
+        included_text = text(bufnr)
       end
       client.notify('textDocument/didSave', {
         textDocument = {
