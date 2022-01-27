@@ -1099,6 +1099,9 @@ void ex_copy(linenr_T line1, linenr_T line2, linenr_T n)
   }
 
   appended_lines_mark(n, count);
+  if (VIsual_active) {
+    check_pos(curbuf, &VIsual);
+  }
 
   msgmore((long)count);
 }
@@ -5068,8 +5071,7 @@ int find_help_tags(const char_u *arg, int *num_matches, char_u ***matches, bool 
         && ((arg[1] != NUL && arg[2] == NUL)
             || (vim_strchr((char_u *)"%_z@", arg[1]) != NULL
                 && arg[2] != NUL))) {
-      STRCPY(d, "/\\\\");
-      STRCPY(d + 3, arg + 1);
+      vim_snprintf((char *)d, IOSIZE, "/\\\\%s", arg + 1);
       // Check for "/\\_$", should be "/\\_\$"
       if (d[3] == '_' && d[4] == '$') {
         STRCPY(d + 4, "\\$");
