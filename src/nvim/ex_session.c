@@ -338,14 +338,26 @@ static int put_view(FILE *fd, win_T *wp, int add_edit, unsigned *flagp, int curr
 
   // Edit the file.  Skip this when ":next" already did it.
   if (add_edit && (!did_next || wp->w_arg_idx_invalid)) {
-    char *fname_esc =
-      ses_escape_fname(ses_get_fname(wp->w_buffer, flagp), flagp);
-    //
-    // Load the file.
-    //
-    if (wp->w_buffer->b_ffname != NULL
-        && (!bt_nofile(wp->w_buffer)
-            || wp->w_buffer->terminal)) {
+    char *fname_esc = ses_escape_fname(ses_get_fname(wp->w_buffer, flagp), flagp);
+    if (bt_help(wp->w_buffer)) {
+      char *curtag = "";
+
+      // A help buffer needs some options to be set.
+      // First, create a new empty buffer with "buftype=help".
+      // Then ":help" will re-use both the buffer and the window and set
+      // the options, even when "options" is not in 'sessionoptions'.
+      if (0 < wp->w_tagstackidx && wp->w_tagstackidx <= wp->w_tagstacklen) {
+        curtag = (char *)wp->w_tagstack[wp->w_tagstackidx - 1].tagname;
+      }
+
+      if (put_line(fd, "enew | setl bt=help") == FAIL
+          || fprintf(fd, "help %s", curtag) < 0 || put_eol(fd) == FAIL) {
+        return FAIL;
+      }
+    } else if (wp->w_buffer->b_ffname != NULL
+               && (!bt_nofile(wp->w_buffer) || wp->w_buffer->terminal)) {
+      // Load the file.
+
       // Editing a file in this buffer: use ":edit file".
       // This may have side effects! (e.g., compressed or network file).
       //
@@ -579,7 +591,9 @@ static int makeopens(FILE *fd, char_u *dirnow)
     return FAIL;
   }
 
-  // Now put the other buffers into the buffer list.
+  // Put all buffers into the buffer list.
+  // Do it very early to preserve buffer order after loading session (which
+  // can be disrupted by prior `edit` or `tabedit` calls).
   FOR_ALL_BUFFERS(buf) {
     if (!(only_save_windows && buf->b_nwindows == 0)
         && !(buf->b_help && !(ssop_flags & SSOP_HELP))
@@ -630,7 +644,10 @@ static int makeopens(FILE *fd, char_u *dirnow)
     // Similar to ses_win_rec() below, populate the tab pages first so
     // later local options won't be copied to the new tabs.
     FOR_ALL_TABS(tp) {
-      if (tp->tp_next != NULL && put_line(fd, "tabnew") == FAIL) {
+      // Use `bufhidden=wipe` to remove empty "placeholder" buffers once
+      // they are not needed. This prevents creating extra buffers (see
+      // cause of Vim patch 8.1.0829)
+      if (tp->tp_next != NULL && put_line(fd, "tabnew +setlocal\\ bufhidden=wipe") == FAIL) {
         return FAIL;
       }
     }

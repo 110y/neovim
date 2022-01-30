@@ -1598,8 +1598,9 @@ int vgetc(void)
       if (!no_mapping && KeyTyped && !(State & TERM_FOCUS)
           && (mod_mask == MOD_MASK_ALT || mod_mask == MOD_MASK_META)) {
         mod_mask = 0;
-        ins_char_typebuf(c, 0);
-        ins_char_typebuf(ESC, 0);
+        int len = ins_char_typebuf(c, 0);
+        (void)ins_char_typebuf(ESC, 0);
+        ungetchars(len + 3);  // The ALT/META modifier takes three more bytes
         continue;
       }
 
@@ -2669,9 +2670,10 @@ void set_maparg_lhs_rhs(const char_u *orig_lhs, const size_t orig_lhs_len,
     }
   } else {
     char tmp_buf[64];
+    // orig_rhs is not used for Lua mappings, but still needs to be a string.
+    mapargs->orig_rhs = xcalloc(1, sizeof(char_u));
+    mapargs->orig_rhs_len = 0;
     // stores <lua>ref_no<cr> in map_str
-    mapargs->orig_rhs_len = (size_t)vim_snprintf(S_LEN(tmp_buf), "<LUA>%d<CR>", rhs_lua);
-    mapargs->orig_rhs = vim_strsave((char_u *)tmp_buf);
     mapargs->rhs_len = (size_t)vim_snprintf(S_LEN(tmp_buf), "%c%c%c%d\r", K_SPECIAL,
                                             (char_u)KEY2TERMCAP0(K_LUA), KEY2TERMCAP1(K_LUA),
                                             rhs_lua);
