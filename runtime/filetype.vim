@@ -44,7 +44,7 @@ endif
 " file name matches ft_ignore_pat.
 " When using this, the entry should probably be further down below with the
 " other StarSetf() calls.
-func! s:StarSetf(ft)
+func s:StarSetf(ft)
   if expand("<amatch>") !~ g:ft_ignore_pat
     exe 'setf ' . a:ft
   endif
@@ -224,6 +224,9 @@ au BufNewFile,BufRead *.bib			setf bib
 
 " BibTeX Bibliography Style
 au BufNewFile,BufRead *.bst			setf bst
+
+" Bicep
+au BufNewFile,BufRead *.bicep			setf bicep
 
 " BIND configuration
 " sudoedit uses namedXXXX.conf
@@ -1788,6 +1791,9 @@ au BufNewFile,BufRead *.mib,*.my		setf mib
 au BufNewFile,BufRead *.hog,snort.conf,vision.conf	setf hog
 au BufNewFile,BufRead *.rules			call dist#ft#FTRules()
 
+" Solidity
+au BufRead,BufNewFile *.sol			setf solidity
+
 " SPARQL queries
 au BufNewFile,BufRead *.rq,*.sparql		setf sparql
 
@@ -2517,7 +2523,7 @@ endif
 " Function called for testing all functions defined here.  These are
 " script-local, thus need to be executed here.
 " Returns a string with error messages (hopefully empty).
-func! TestFiletypeFuncs(testlist)
+func TestFiletypeFuncs(testlist)
   let output = ''
   for f in a:testlist
     try
