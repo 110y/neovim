@@ -887,7 +887,6 @@ int do_autocmd_event(event_T event, char_u *pat, bool once, int nested, char_u *
   while (patlen) {
     // detect special <buffer[=X]> buffer-local patterns
     is_buflocal = aupat_is_buflocal(pat, patlen);
-    buflocal_nr = 0;
 
     if (is_buflocal) {
       buflocal_nr = aupat_get_buflocal_nr(pat, patlen);
@@ -2474,7 +2473,7 @@ bool aucmd_exec_is_deleted(AucmdExecutable acc)
   case CALLABLE_EX:
     return acc.callable.cmd == NULL;
   case CALLABLE_CB:
-    return callback_is_freed(acc.callable.cb);
+    return acc.callable.cb.type == kCallbackNone;
   case CALLABLE_NONE:
     return true;
   }
