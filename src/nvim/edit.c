@@ -390,9 +390,13 @@ static void insert_enter(InsertState *s)
   trigger_modechanged();
   stop_insert_mode = false;
 
-  // Need to recompute the cursor position, it might move when the cursor is
-  // on a TAB or special character.
-  curs_columns(curwin, true);
+  // Need to recompute the cursor position, it might move when the cursor
+  // is on a TAB or special character.
+  // ptr2cells() treats a TAB character as double-width.
+  if (ptr2cells(get_cursor_pos_ptr()) > 1) {
+    curwin->w_valid &= ~VALID_VIRTCOL;
+    curs_columns(curwin, true);
+  }
 
   // Enable langmap or IME, indicated by 'iminsert'.
   // Note that IME may enabled/disabled without us noticing here, thus the
@@ -1486,7 +1490,7 @@ static void ins_redraw(bool ready)
 
   // Trigger CursorMoved if the cursor moved.  Not when the popup menu is
   // visible, the command might delete it.
-  if (ready && (has_event(EVENT_CURSORMOVEDI) || curwin->w_p_cole > 0)
+  if (ready && has_event(EVENT_CURSORMOVEDI)
       && !equalpos(curwin->w_last_cursormoved, curwin->w_cursor)
       && !pum_visible()) {
     // Need to update the screen first, to make sure syntax
@@ -1496,12 +1500,10 @@ static void ins_redraw(bool ready)
     if (syntax_present(curwin) && must_redraw) {
       update_screen(0);
     }
-    if (has_event(EVENT_CURSORMOVEDI)) {
-      // Make sure curswant is correct, an autocommand may call
-      // getcurpos()
-      update_curswant();
-      ins_apply_autocmds(EVENT_CURSORMOVEDI);
-    }
+    // Make sure curswant is correct, an autocommand may call
+    // getcurpos()
+    update_curswant();
+    ins_apply_autocmds(EVENT_CURSORMOVEDI);
     curwin->w_last_cursormoved = curwin->w_cursor;
   }
 
