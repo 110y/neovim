@@ -383,6 +383,7 @@ let s:filename_checks = {
     \ 'omnimark': ['file.xom', 'file.xin'],
     \ 'opam': ['opam', 'file.opam', 'file.opam.template'],
     \ 'openroad': ['file.or'],
+    \ 'openscad': ['file.scad'],
     \ 'ora': ['file.ora'],
     \ 'org': ['file.org', 'file.org_archive'],
     \ 'pamconf': ['/etc/pam.conf', '/etc/pam.d/file', 'any/etc/pam.conf', 'any/etc/pam.d/file'],
@@ -743,7 +744,7 @@ func Test_setfiletype_completion()
 endfunc
 
 """""""""""""""""""""""""""""""""""""""""""""""""
-" Tests for specific extentions and filetypes.
+" Tests for specific extensions and filetypes.
 " Keep sorted.
 """""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -1535,11 +1536,13 @@ func Test_src_file()
   bwipe!
   call delete('srcfile.Src')
 
-  " KRL global def with embedded spaces, file starts with empty line(s).
-  call writefile(['', 'global  def  srcfile()'], 'srcfile.SRC')
-  split srcfile.SRC
-  call assert_equal('krl', &filetype)
-  bwipe!
+  " KRL global deffct with embedded spaces, file starts with empty line(s).
+  for text in ['global  def  srcfile()', 'global  deffct  srcfile()']
+    call writefile(['', text], 'srcfile.SRC')
+    split srcfile.SRC
+    call assert_equal('krl', &filetype, text)
+    bwipe!
+  endfor
 
   " User may overrule file inspection
   let g:filetype_src = 'src'
