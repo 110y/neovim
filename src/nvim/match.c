@@ -373,6 +373,7 @@ static int next_search_hl_pos(match_T *shl, linenr_T lnum, posmatch_T *posmatch,
     shl->rm.endpos[0].lnum = 0;
     shl->rm.endpos[0].col = end;
     shl->is_addpos = true;
+    shl->has_cursor = false;
     posmatch->cur = found + 1;
     return 1;
   }
@@ -582,8 +583,10 @@ bool prepare_search_hl_line(win_T *wp, linenr_T lnum, colnr_T mincol, char_u **l
     }
     shl->startcol = MAXCOL;
     shl->endcol = MAXCOL;
+    shl->lines = 0;
     shl->attr_cur = 0;
     shl->is_addpos = false;
+    shl->has_cursor = false;
     if (cur != NULL) {
       cur->pos.cur = 0;
     }
@@ -606,6 +609,22 @@ bool prepare_search_hl_line(win_T *wp, linenr_T lnum, colnr_T mincol, char_u **l
       } else {
         shl->endcol = MAXCOL;
       }
+      if (shl->rm.endpos[0].lnum != shl->rm.startpos[0].lnum) {
+        shl->lines = shl->rm.endpos[0].lnum - shl->rm.startpos[0].lnum;
+      } else {
+        shl->lines = 1;
+      }
+
+      // check if the cursor is in the match before changing the columns
+      if (wp->w_cursor.lnum >= shl->lnum
+          && wp->w_cursor.lnum <= shl->lnum + shl->rm.endpos[0].lnum
+          && (wp->w_cursor.lnum > shl->lnum
+              || wp->w_cursor.col >= shl->rm.startpos[0].col)
+          && (wp->w_cursor.lnum < shl->lnum + shl->lines
+              || wp->w_cursor.col < shl->rm.endpos[0].col)) {
+        shl->has_cursor = true;
+      }
+
       // Highlight one character for an empty match.
       if (shl->startcol == shl->endcol) {
         if ((*line)[shl->endcol] != NUL) {
@@ -668,12 +687,9 @@ int update_search_hl(win_T *wp, linenr_T lnum, colnr_T col, char_u **line, match
         if (shl->endcol < next_col) {
           shl->endcol = next_col;
         }
-        // Use "CurSearch" highlight for current search match
-        if (shl == search_hl
-            && (HL_ATTR(HLF_LC) || wp->w_hl_ids[HLF_LC])
-            && wp->w_cursor.lnum == lnum
-            && wp->w_cursor.col >= shl->startcol
-            && wp->w_cursor.col < shl->endcol) {
+        // Highlight the match were the cursor is using the CurSearch
+        // group.
+        if (shl == search_hl && shl->has_cursor && (HL_ATTR(HLF_LC) || wp->w_hl_ids[HLF_LC])) {
           shl->attr_cur = win_hl_attr(wp, HLF_LC) ? win_hl_attr(wp, HLF_LC) : HL_ATTR(HLF_LC);
         } else {
           shl->attr_cur = shl->attr;
