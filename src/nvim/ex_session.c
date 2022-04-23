@@ -599,7 +599,7 @@ static int makeopens(FILE *fd, char_u *dirnow)
   }
 
   // Now save the current files, current buffer first.
-  PUTLINE_FAIL("set shortmess=aoO");
+  PUTLINE_FAIL("set shortmess=aoOF");
 
   // Put all buffers into the buffer list.
   // Do it very early to preserve buffer order after loading session (which
