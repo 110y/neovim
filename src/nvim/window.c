@@ -806,7 +806,7 @@ void win_config_float(win_T *wp, FloatConfig fconfig)
       col += parent->w_wincol;
       ScreenGrid *grid = &parent->w_grid;
       int row_off = 0, col_off = 0;
-      screen_adjust_grid(&grid, &row_off, &col_off);
+      grid_adjust(&grid, &row_off, &col_off);
       row += row_off;
       col += col_off;
     }
@@ -877,7 +877,7 @@ void ui_ext_win_position(win_T *wp)
       if (win) {
         grid = &win->w_grid;
         int row_off = 0, col_off = 0;
-        screen_adjust_grid(&grid, &row_off, &col_off);
+        grid_adjust(&grid, &row_off, &col_off);
         row += row_off;
         col += col_off;
         if (c.bufpos.lnum >= 0) {
@@ -6560,13 +6560,13 @@ char_u *file_name_in_line(char_u *line, int col, int options, long count, char_u
     } else if (STRNCMP(p, line_transl, STRLEN(line_transl)) == 0) {
       p += STRLEN(line_transl);
     } else {
-      p = skipwhite(p);
+      p = (char_u *)skipwhite((char *)p);
     }
     if (*p != NUL) {
       if (!isdigit(*p)) {
         p++;                        // skip the separator
       }
-      p = skipwhite(p);
+      p = (char_u *)skipwhite((char *)p);
       if (isdigit(*p)) {
         *file_lnum = getdigits_long(&p, false, 0);
       }
