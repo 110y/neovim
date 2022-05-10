@@ -1476,7 +1476,7 @@ void set_curbuf(buf_T *buf, int action)
       // Do not sync when in Insert mode and the buffer is open in
       // another window, might be a timer doing something in another
       // window.
-      if (prevbuf == curbuf && ((State & INSERT) == 0 || curbuf->b_nwindows <= 1)) {
+      if (prevbuf == curbuf && ((State & MODE_INSERT) == 0 || curbuf->b_nwindows <= 1)) {
         u_sync(false);
       }
       close_buffer(prevbuf == curwin->w_buffer ? curwin : NULL,
@@ -3635,7 +3635,8 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, int use_san
         // correct the start of the items for the truncation
         for (int idx = stl_groupitems[groupdepth] + 1; idx < curitem; idx++) {
           // Shift everything back by the number of removed bytes
-          stl_items[idx].start -= n;
+          // Minus one for the leading '<' added above.
+          stl_items[idx].start -= n - 1;
 
           // If the item was partially or completely truncated, set its
           // start to the start of the group
@@ -3961,8 +3962,7 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, int use_san
       break;
 
     case STL_COLUMN:
-      num = !(State & INSERT) && empty_line
-            ? 0 : (int)wp->w_cursor.col + 1;
+      num = (State & MODE_INSERT) == 0 && empty_line ? 0 : (int)wp->w_cursor.col + 1;
       break;
 
     case STL_VIRTCOL:
@@ -3970,7 +3970,7 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, int use_san
       colnr_T virtcol = wp->w_virtcol + 1;
       // Don't display %V if it's the same as %c.
       if (opt == STL_VIRTCOL_ALT
-          && (virtcol == (colnr_T)(!(State & INSERT) && empty_line
+          && (virtcol == (colnr_T)((State & MODE_INSERT) == 0 && empty_line
                                    ? 0 : (int)wp->w_cursor.col + 1))) {
         break;
       }
@@ -4028,7 +4028,7 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, int use_san
       long l = ml_find_line_or_offset(wp->w_buffer, wp->w_cursor.lnum, NULL,
                                       false);
       num = (wp->w_buffer->b_ml.ml_flags & ML_EMPTY) || l < 0 ?
-            0L : l + 1 + (!(State & INSERT) && empty_line ?
+            0L : l + 1 + ((State & MODE_INSERT) == 0 && empty_line ?
                           0 : (int)wp->w_cursor.col);
       break;
     }
