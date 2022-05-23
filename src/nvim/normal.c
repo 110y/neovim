@@ -32,6 +32,7 @@
 #include "nvim/fold.h"
 #include "nvim/getchar.h"
 #include "nvim/globals.h"
+#include "nvim/grid_defs.h"
 #include "nvim/indent.h"
 #include "nvim/keycodes.h"
 #include "nvim/log.h"
@@ -1126,9 +1127,6 @@ static int normal_execute(VimState *state, int key)
 
   if (s->ca.nchar == ESC) {
     clearop(&s->oa);
-    if (restart_edit == 0 && goto_im()) {
-      restart_edit = 'a';
-    }
     s->command_finished = true;
     goto finish;
   }
@@ -1177,14 +1175,6 @@ static void normal_check_stuff_buffer(NormalState *s)
     if (need_wait_return) {
       // if wait_return still needed call it now
       wait_return(false);
-    }
-
-    if (need_start_insertmode && goto_im() && !VIsual_active) {
-      need_start_insertmode = false;
-      stuffReadbuff("i");  // start insert mode next
-      // skip the fileinfo message now, because it would be shown
-      // after insert mode finishes!
-      need_fileinfo = false;
     }
   }
 }
@@ -1443,6 +1433,63 @@ static void move_tab_to_mouse(void)
   }
 }
 
+/// Call click definition function for column "col" in the "click_defs" array for button
+/// "which_button".
+static void call_click_def_func(StlClickDefinition *click_defs, int col, int which_button)
+{
+  typval_T argv[] = {
+    {
+      .v_lock = VAR_FIXED,
+      .v_type = VAR_NUMBER,
+      .vval = {
+        .v_number = (varnumber_T)click_defs[col].tabnr
+      },
+    },
+    {
+      .v_lock = VAR_FIXED,
+      .v_type = VAR_NUMBER,
+      .vval = {
+        .v_number = ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_4CLICK
+                     ? 4
+                     : ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_3CLICK
+                        ? 3
+                        : ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK
+                           ? 2
+                           : 1)))
+      },
+    },
+    {
+      .v_lock = VAR_FIXED,
+      .v_type = VAR_STRING,
+      .vval = {
+        .v_string = (which_button == MOUSE_LEFT
+                     ? "l"
+                     : (which_button == MOUSE_RIGHT
+                        ? "r"
+                        : (which_button == MOUSE_MIDDLE
+                           ? "m"
+                           : "?")))
+      },
+    },
+    {
+      .v_lock = VAR_FIXED,
+      .v_type = VAR_STRING,
+      .vval = {
+        .v_string = (char[]) {
+          (char)(mod_mask & MOD_MASK_SHIFT ? 's' : ' '),
+          (char)(mod_mask & MOD_MASK_CTRL ? 'c' : ' '),
+          (char)(mod_mask & MOD_MASK_ALT ? 'a' : ' '),
+          (char)(mod_mask & MOD_MASK_META ? 'm' : ' '),
+          NUL
+        }
+      },
+    }
+  };
+  typval_T rettv;
+  (void)call_vim_function(click_defs[col].func, ARRAY_SIZE(argv), argv, &rettv);
+  tv_clear(&rettv);
+}
+
 /// Do the appropriate action for the current mouse click in the current mode.
 /// Not used for Command-line mode.
 ///
@@ -1492,6 +1539,7 @@ bool do_mouse(oparg_T *oap, int c, int dir, long count, bool fixindent)
   int jump_flags = 0;           // flags for jump_to_mouse()
   pos_T start_visual;
   bool moved;                   // Has cursor moved?
+  bool in_winbar;               // mouse in window bar
   bool in_status_line;          // mouse in status line
   static bool in_tab_line = false;   // mouse clicked in tab line
   bool in_sep_line;             // mouse in vertical separator line
@@ -1722,65 +1770,9 @@ bool do_mouse(oparg_T *oap, int c, int dir, long count, bool fixindent)
           }
         }
         break;
-      case kStlClickFuncRun: {
-        typval_T argv[] = {
-          {
-            .v_lock = VAR_FIXED,
-            .v_type = VAR_NUMBER,
-            .vval = {
-              .v_number = (varnumber_T)tab_page_click_defs[mouse_col].tabnr
-            },
-          },
-          {
-            .v_lock = VAR_FIXED,
-            .v_type = VAR_NUMBER,
-            .vval = {
-              .v_number = ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_4CLICK
-                           ? 4
-                           : ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_3CLICK
-                              ? 3
-                              : ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK
-                                 ? 2
-                                 : 1)))
-            },
-          },
-          {
-            .v_lock = VAR_FIXED,
-            .v_type = VAR_STRING,
-            .vval = {
-              .v_string = (which_button == MOUSE_LEFT
-                           ? "l"
-                           : (which_button == MOUSE_RIGHT
-                              ? "r"
-                              : (which_button == MOUSE_MIDDLE
-                                 ? "m"
-                                 : "?")))
-            },
-          },
-          {
-            .v_lock = VAR_FIXED,
-            .v_type = VAR_STRING,
-            .vval = {
-              .v_string = (char[]) {
-                (char)(mod_mask & MOD_MASK_SHIFT ? 's' : ' '),
-                (char)(mod_mask & MOD_MASK_CTRL ? 'c' : ' '),
-                (char)(mod_mask & MOD_MASK_ALT ? 'a' : ' '),
-                (char)(mod_mask & MOD_MASK_META ? 'm' : ' '),
-                NUL
-              }
-            },
-          }
-        };
-        typval_T rettv;
-        funcexe_T funcexe = FUNCEXE_INIT;
-        funcexe.firstline = curwin->w_cursor.lnum;
-        funcexe.lastline = curwin->w_cursor.lnum;
-        funcexe.evaluate = true;
-        (void)call_func(tab_page_click_defs[mouse_col].func, -1,
-                        &rettv, ARRAY_SIZE(argv), argv, &funcexe);
-        tv_clear(&rettv);
+      case kStlClickFuncRun:
+        call_click_def_func(tab_page_click_defs, mouse_col, which_button);
         break;
-      }
       }
     }
     return true;
@@ -1851,15 +1843,39 @@ bool do_mouse(oparg_T *oap, int c, int dir, long count, bool fixindent)
                              oap == NULL ? NULL : &(oap->inclusive),
                              which_button);
 
-  // A click in the window bar has no side effects.
-  if (jump_flags & MOUSE_WINBAR) {
-    return false;
-  }
-
   moved = (jump_flags & CURSOR_MOVED);
+  in_winbar = (jump_flags & MOUSE_WINBAR);
   in_status_line = (jump_flags & IN_STATUS_LINE);
   in_sep_line = (jump_flags & IN_SEP_LINE);
 
+  if ((in_winbar || in_status_line) && is_click) {
+    // Handle click event on window bar or status lin
+    int click_grid = mouse_grid;
+    int click_row = mouse_row;
+    int click_col = mouse_col;
+    win_T *wp = mouse_find_win(&click_grid, &click_row, &click_col);
+
+    StlClickDefinition *click_defs = in_status_line ? wp->w_status_click_defs
+                                                    : wp->w_winbar_click_defs;
+
+    if (click_defs != NULL) {
+      switch (click_defs[click_col].type) {
+      case kStlClickDisabled:
+        break;
+      case kStlClickFuncRun:
+        call_click_def_func(click_defs, click_col, which_button);
+        break;
+      default:
+        assert(false && "winbar and statusline only support %@ for clicks");
+        break;
+      }
+    }
+
+    return false;
+  } else if (in_winbar) {
+    // A drag or release event in the window bar has no side effects.
+    return false;
+  }
 
   // When jumping to another window, clear a pending operator.  That's a bit
   // friendlier than beeping and not jumping to that window.
@@ -3904,7 +3920,6 @@ static void nv_regreplay(cmdarg_T *cap)
 /// Handle a ":" command and <Cmd> or Lua keymaps.
 static void nv_colon(cmdarg_T *cap)
 {
-  int old_p_im;
   bool cmd_result;
   bool is_cmdkey = cap->cmdchar == K_COMMAND;
   bool is_lua = cap->cmdchar == K_LUA;
@@ -3930,23 +3945,12 @@ static void nv_colon(cmdarg_T *cap)
       compute_cmdrow();
     }
 
-    old_p_im = p_im;
-
     if (is_lua) {
       cmd_result = map_execute_lua();
     } else {
       // get a command line and execute it
       cmd_result = do_cmdline(NULL, is_cmdkey ? getcmdkeycmd : getexline, NULL,
                               cap->oap->op_type != OP_NOP ? DOCMD_KEEPLINE : 0);
-    }
-
-    // If 'insertmode' changed, enter or exit Insert mode
-    if (p_im != old_p_im) {
-      if (p_im) {
-        restart_edit = 'i';
-      } else {
-        restart_edit = 0;
-      }
     }
 
     if (cmd_result == false) {
@@ -6735,10 +6739,6 @@ static void nv_normal(cmdarg_T *cap)
       end_visual_mode();                // stop Visual
       redraw_curbuf_later(INVERTED);
     }
-    // CTRL-\ CTRL-G restarts Insert mode when 'insertmode' is set.
-    if (cap->nchar == Ctrl_G && p_im) {
-      restart_edit = 'a';
-    }
   } else {
     clearopbeep(cap->oap);
   }
@@ -6753,8 +6753,7 @@ static void nv_esc(cmdarg_T *cap)
   no_reason = (cap->oap->op_type == OP_NOP
                && cap->opcount == 0
                && cap->count0 == 0
-               && cap->oap->regname == 0
-               && !p_im);
+               && cap->oap->regname == 0);
 
   if (cap->arg) {               // true for CTRL-C
     if (restart_edit == 0
@@ -6771,9 +6770,8 @@ static void nv_esc(cmdarg_T *cap)
 
     // Don't reset "restart_edit" when 'insertmode' is set, it won't be
     // set again below when halfway through a mapping.
-    if (!p_im) {
-      restart_edit = 0;
-    }
+    restart_edit = 0;
+
     if (cmdwin_type != 0) {
       cmdwin_result = K_IGNORE;
       got_int = false;          // don't stop executing autocommands et al.
@@ -6796,13 +6794,6 @@ static void nv_esc(cmdarg_T *cap)
     vim_beep(BO_ESC);
   }
   clearop(cap->oap);
-
-  // A CTRL-C is often used at the start of a menu.  When 'insertmode' is
-  // set return to Insert mode afterwards.
-  if (restart_edit == 0 && goto_im()
-      && ex_normal_busy == 0) {
-    restart_edit = 'a';
-  }
 }
 
 // Move the cursor for the "A" command.
@@ -6837,8 +6828,7 @@ static void nv_edit(cmdarg_T *cap)
   } else if ((cap->cmdchar == 'a' || cap->cmdchar == 'i')
              && (cap->oap->op_type != OP_NOP || VIsual_active)) {
     nv_object(cap);
-  } else if (!curbuf->b_p_ma && !p_im && !curbuf->terminal) {
-    // Only give this error when 'insertmode' is off.
+  } else if (!curbuf->b_p_ma && !curbuf->terminal) {
     emsg(_(e_modifiable));
     clearop(cap->oap);
   } else if (!checkclearopq(cap->oap)) {
