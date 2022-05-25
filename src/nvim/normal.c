@@ -86,7 +86,6 @@ typedef struct normal_state {
 
 static int VIsual_mode_orig = NUL;              // saved Visual mode
 
-
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "normal.c.generated.h"
 #endif
@@ -1605,7 +1604,6 @@ bool do_mouse(oparg_T *oap, int c, int dir, long count, bool fixindent)
     }
   }
 
-
   // CTRL right mouse button does CTRL-T
   if (is_click && (mod_mask & MOD_MASK_CTRL) && which_button == MOUSE_RIGHT) {
     if (State & MODE_INSERT) {
@@ -1781,7 +1779,6 @@ bool do_mouse(oparg_T *oap, int c, int dir, long count, bool fixindent)
     return false;
   }
 
-
   // When 'mousemodel' is "popup" or "popup_setpos", translate mouse events:
   // right button up   -> pop-up menu
   // shift-left button -> right button
@@ -1854,6 +1851,9 @@ bool do_mouse(oparg_T *oap, int c, int dir, long count, bool fixindent)
     int click_row = mouse_row;
     int click_col = mouse_col;
     win_T *wp = mouse_find_win(&click_grid, &click_row, &click_col);
+    if (wp == NULL) {
+      return false;
+    }
 
     StlClickDefinition *click_defs = in_status_line ? wp->w_status_click_defs
                                                     : wp->w_winbar_click_defs;
@@ -1898,7 +1898,6 @@ bool do_mouse(oparg_T *oap, int c, int dir, long count, bool fixindent)
       curwin->w_cursor = save_cursor;
     }
   }
-
 
   // Set global flag that we are extending the Visual area with mouse dragging;
   // temporarily minimize 'scrolloff'.
@@ -2552,7 +2551,6 @@ static char_u showcmd_buf[SHOWCMD_BUFLEN];
 static char_u old_showcmd_buf[SHOWCMD_BUFLEN];    // For push_showcmd()
 static bool showcmd_is_clear = true;
 static bool showcmd_visual = false;
-
 
 void clear_showcmd(void)
 {
@@ -3813,7 +3811,6 @@ dozet:
     }
     break;
 
-
   case 'u':     // "zug" and "zuw": undo "zg" and "zw"
     no_mapping++;
     allow_keys++;               // no mapping for nchar, but allow key codes
@@ -3899,7 +3896,6 @@ dozet:
     newFoldLevel();
   }
 }
-
 
 /// "Q" command.
 static void nv_regreplay(cmdarg_T *cap)
@@ -5445,7 +5441,6 @@ static void n_swapchar(cmdarg_T *cap)
     }
   }
 
-
   check_cursor();
   curwin->w_set_curswant = true;
   if (did_change) {
@@ -5801,7 +5796,6 @@ static void n_start_visual_mode(int c)
     curwin->w_old_visual_lnum = curwin->w_cursor.lnum;
   }
 }
-
 
 /// CTRL-W: Window commands
 static void nv_window(cmdarg_T *cap)
@@ -6691,7 +6685,6 @@ static void nv_select(cmdarg_T *cap)
     nv_g_cmd(cap);
   }
 }
-
 
 /// "G", "gg", CTRL-END, CTRL-HOME.
 /// cap->arg is true for "G".
