@@ -760,6 +760,8 @@ nvim_create_user_command({name}, {command}, {*opts})
                                  when a Lua function is used for {command}.
                                • force: (boolean, default true) Override any
                                  previous definition.
+                               • preview: (function) Preview callback for
+                                 'inccommand' |:command-preview|
 
 nvim_del_current_line()                              *nvim_del_current_line()*
                 Deletes the current line.
@@ -1706,7 +1708,7 @@ nvim_set_vvar({name}, {value})                               *nvim_set_vvar()*
 
 nvim_strwidth({text})                                        *nvim_strwidth()*
                 Calculates the number of display cells occupied by `text`.
-                <Tab> counts as one cell.
+                Control characters including <Tab> count as one cell.
 
                 Parameters: ~
                     {text}  Some text
