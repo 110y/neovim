@@ -629,7 +629,7 @@ void stuffReadbuffSpec(const char *s)
       stuffReadbuffLen(s, 3);
       s += 3;
     } else {
-      int c = mb_ptr2char_adv((const char_u **)&s);
+      int c = mb_cptr2char_adv((const char_u **)&s);
       if (c == CAR || c == NL || c == ESC) {
         c = ' ';
       }
@@ -2585,8 +2585,8 @@ static int vgetorpeek(bool advance)
 
         // get a character: 3. from the user - get it
         if (typebuf.tb_len == 0) {
-          // timedout may have been set while waiting for a mapping
-          // that has a <Nop> RHS.
+          // timedout may have been set if a mapping with empty RHS
+          // fully matched while longer mappings timed out.
           timedout = false;
         }
 
