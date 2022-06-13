@@ -14,6 +14,7 @@ local pesc = helpers.pesc
 local rmdir = helpers.rmdir
 local sleep = helpers.sleep
 local meths = helpers.meths
+local expect_exit = helpers.expect_exit
 
 local file_prefix = 'Xtest-functional-ex_cmds-mksession_spec'
 
@@ -44,7 +45,7 @@ describe(':mksession', function()
     command('mksession '..session_file)
 
     -- Create a new test instance of Nvim.
-    command('qall!')
+    expect_exit(command, 'qall!')
     clear()
     -- Restore session.
     command('source '..session_file)
@@ -111,7 +112,7 @@ describe(':mksession', function()
     if iswin() then
       sleep(100)  -- Make sure all child processes have exited.
     end
-    command('qall!')
+    expect_exit(command, 'qall!')
 
     -- Create a new test instance of Nvim.
     clear()
@@ -154,7 +155,7 @@ describe(':mksession', function()
 
     command('cd '..cwd_dir)
     command('mksession '..session_path)
-    command('qall!')
+    expect_exit(command, 'qall!')
 
     -- Create a new test instance of Nvim.
     clear()
