@@ -4057,6 +4057,11 @@ bool current_quote(oparg_T *oap, long count, bool include, int quotechar)
 
     // Find out if we have a quote in the selection.
     while (i <= col_end) {
+      // check for going over the end of the line, which can happen if
+      // the line was changed after the Visual area was selected.
+      if (line[i] == NUL) {
+        break;
+      }
       if (line[i++] == quotechar) {
         selected_quote = true;
         break;
@@ -5239,7 +5244,9 @@ static void do_fuzzymatch(const typval_T *const argvars, typval_T *const rettv,
     } else if (!tv_dict_get_callback(d, "text_cb", -1, &cb)) {
       semsg(_(e_invargval), "text_cb");
       return;
-    } else if ((di = tv_dict_find(d, "limit", -1)) != NULL) {
+    }
+
+    if ((di = tv_dict_find(d, "limit", -1)) != NULL) {
       if (di->di_tv.v_type != VAR_NUMBER) {
         semsg(_(e_invarg2), tv_get_string(&di->di_tv));
         return;
