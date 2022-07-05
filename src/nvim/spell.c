@@ -1469,7 +1469,9 @@ size_t spell_move_to(win_T *wp, int dir, bool allwords, bool curline, hlf_T *att
     }
 
     // Copy the line into "buf" and append the start of the next line if
-    // possible.
+    // possible.  Note: this ml_get_buf() may make "line" invalid, check
+    // for empty line first.
+    bool empty_line = *skipwhite((const char *)line) == NUL;
     STRCPY(buf, line);
     if (lnum < wp->w_buffer->b_ml.ml_line_count) {
       spell_cat_line(buf + STRLEN(buf),
@@ -1613,7 +1615,7 @@ size_t spell_move_to(win_T *wp, int dir, bool allwords, bool curline, hlf_T *att
       --capcol;
 
       // But after empty line check first word in next line
-      if (*skipwhite((char *)line) == NUL) {
+      if (empty_line) {
         capcol = 0;
       }
     }
@@ -2327,11 +2329,11 @@ char *did_set_spelllang(win_T *wp)
       }
     }
   }
+  redraw_later(wp, NOT_VALID);
 
 theend:
   xfree(spl_copy);
   recursive = false;
-  redraw_later(wp, NOT_VALID);
   return ret_msg;
 }
 
@@ -7021,8 +7023,9 @@ void spell_dump_compl(char_u *pat, int ic, Direction *dir, int dumpflags_arg)
           n = arridx[depth] + curi[depth];
           ++curi[depth];
           c = byts[n];
-          if (c == 0) {
-            // End of word, deal with the word.
+          if (c == 0 || depth >= MAXWLEN - 1) {
+            // End of word or reached maximum length, deal with the
+            // word.
             // Don't use keep-case words in the fold-case tree,
             // they will appear in the keep-case tree.
             // Only use the word when the region matches.
