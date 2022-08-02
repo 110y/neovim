@@ -1828,7 +1828,7 @@ static void mb_adjust_opend(oparg_T *oap)
 {
   if (oap->inclusive) {
     char *p = (char *)ml_get(oap->end.lnum);
-    oap->end.col += mb_tail_off(p, p + oap->end.col);
+    oap->end.col += utf_cp_tail_off(p, p + oap->end.col);
   }
 }
 
@@ -4349,6 +4349,9 @@ static void op_format(oparg_T *oap, int keep_cursor)
   if (keep_cursor) {
     curwin->w_cursor = saved_cursor;
     saved_cursor.lnum = 0;
+
+    // formatting may have made the cursor position invalid
+    check_cursor();
   }
 
   if (oap->is_VIsual) {
