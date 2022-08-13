@@ -30,7 +30,7 @@ typedef struct {
 #include "nvim/option_defs.h"
 // for jump list and tag stack sizes in a buffer and mark types
 #include "nvim/mark_defs.h"
-// for u_header_T; needs buf_T.
+// for u_header_T
 #include "nvim/undo_defs.h"
 // for hashtab_T
 #include "nvim/hashtab.h"
@@ -431,7 +431,7 @@ typedef struct {
 typedef struct {
   hashtab_T b_keywtab;                  // syntax keywords hash table
   hashtab_T b_keywtab_ic;               // idem, ignore case
-  int b_syn_error;                      // TRUE when error occurred in HL
+  bool b_syn_error;                     // true when error occurred in HL
   bool b_syn_slow;                      // true when 'redrawtime' reached
   int b_syn_ic;                         // ignore case for :syn cmds
   int b_syn_foldlevel;                  // how to compute foldlevel on a line

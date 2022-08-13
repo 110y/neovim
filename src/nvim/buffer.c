@@ -27,6 +27,7 @@
 #include "nvim/api/private/helpers.h"
 #include "nvim/ascii.h"
 #include "nvim/assert.h"
+#include "nvim/autocmd.h"
 #include "nvim/buffer.h"
 #include "nvim/buffer_updates.h"
 #include "nvim/change.h"
@@ -1532,6 +1533,15 @@ void set_curbuf(buf_T *buf, int action)
 /// be pointing to freed memory.
 void enter_buffer(buf_T *buf)
 {
+  // when closing the current buffer stop Visual mode
+  if (VIsual_active
+#if defined(EXITFREE)
+      && !entered_free_all_mem
+#endif
+      ) {
+    end_visual_mode();
+  }
+
   // Get the buffer in the current window.
   curwin->w_buffer = buf;
   curbuf = buf;
@@ -2595,7 +2605,7 @@ void get_winopts(buf_T *buf)
   }
 
   if (curwin->w_float_config.style == kWinStyleMinimal) {
-    didset_window_options(curwin);
+    didset_window_options(curwin, false);
     win_set_minimal_style(curwin);
   }
 
@@ -2603,7 +2613,7 @@ void get_winopts(buf_T *buf)
   if (p_fdls >= 0) {
     curwin->w_p_fdl = p_fdls;
   }
-  didset_window_options(curwin);
+  didset_window_options(curwin, false);
 }
 
 /// Find the mark for the buffer 'buf' for the current window.
