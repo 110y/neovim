@@ -43,6 +43,7 @@
 #include "nvim/mark.h"
 #include "nvim/memline.h"
 #include "nvim/memory.h"
+#include "nvim/menu.h"
 #include "nvim/message.h"
 #include "nvim/mouse.h"
 #include "nvim/move.h"
@@ -1283,7 +1284,7 @@ static void normal_redraw(NormalState *s)
     update_screen(INVERTED);
   } else if (must_redraw) {
     update_screen(0);
-  } else if (redraw_cmdline || clear_cmdline) {
+  } else if (redraw_cmdline || clear_cmdline || redraw_mode) {
     showmode();
   }
 
@@ -6927,6 +6928,10 @@ static void nv_esc(cmdarg_T *cap)
       } else {
         msg(_("Type  :qa  and press <Enter> to exit Nvim"));
       }
+    }
+
+    if (restart_edit != 0) {
+      redraw_mode = true;  // remove "-- (insert) --"
     }
 
     restart_edit = 0;

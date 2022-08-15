@@ -6,11 +6,12 @@
 
 #include "nvim/ascii.h"
 #include "nvim/event/loop.h"
+#include "nvim/ex_cmds_defs.h"
 #include "nvim/ex_eval_defs.h"
 #include "nvim/iconv.h"
 #include "nvim/macros.h"
 #include "nvim/mbyte.h"
-#include "nvim/menu.h"
+#include "nvim/menu_defs.h"
 #include "nvim/os/os_defs.h"
 #include "nvim/runtime.h"
 #include "nvim/syntax_defs.h"
@@ -144,6 +145,7 @@ EXTERN int vgetc_char INIT(= 0);
 EXTERN int cmdline_row;
 
 EXTERN bool redraw_cmdline INIT(= false);          // cmdline must be redrawn
+EXTERN bool redraw_mode INIT(= false);             // mode must be redrawn
 EXTERN bool clear_cmdline INIT(= false);           // cmdline must be cleared
 EXTERN bool mode_displayed INIT(= false);          // mode is being displayed
 EXTERN int cmdline_star INIT(= false);             // cmdline is encrypted
