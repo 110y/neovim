@@ -56,6 +56,7 @@
 #include "nvim/msgpack_rpc/server.h"
 #include "nvim/ops.h"
 #include "nvim/option.h"
+#include "nvim/optionstr.h"
 #include "nvim/os/dl.h"
 #include "nvim/os/shell.h"
 #include "nvim/path.h"
@@ -2052,10 +2053,10 @@ static void f_expandcmd(typval_T *argvars, typval_T *rettv, FunPtr fptr)
   };
   eap.argt |= EX_NOSPC;
 
+  emsg_off++;
   expand_filename(&eap, &cmdstr, &errormsg);
-  if (errormsg != NULL && *errormsg != NUL) {
-    emsg(errormsg);
-  }
+  emsg_off--;
+
   rettv->vval.v_string = cmdstr;
 }
 
