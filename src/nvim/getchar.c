@@ -20,6 +20,7 @@
 #include "nvim/eval.h"
 #include "nvim/eval/typval.h"
 #include "nvim/event/loop.h"
+#include "nvim/ex_cmds.h"
 #include "nvim/ex_docmd.h"
 #include "nvim/ex_getln.h"
 #include "nvim/garray.h"
@@ -2399,7 +2400,8 @@ static int vgetorpeek(bool advance)
   vgetc_busy++;
 
   if (advance) {
-    KeyStuffed = FALSE;
+    KeyStuffed = false;
+    typebuf_was_empty = false;
   }
 
   init_typebuf();
@@ -2624,6 +2626,11 @@ static int vgetorpeek(bool advance)
             c = ESC;
           }
           tc = c;
+
+          // set a flag to indicate this wasn't a normal char
+          if (advance) {
+            typebuf_was_empty = true;
+          }
 
           // return 0 in normal_check()
           if (pending_exmode_active) {
