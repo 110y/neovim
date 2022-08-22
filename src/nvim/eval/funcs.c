@@ -588,7 +588,7 @@ buf_T *tv_get_buf(typval_T *tv, int curtab_only)
   int save_magic = p_magic;
   p_magic = true;
   char *save_cpo = p_cpo;
-  p_cpo = "";
+  p_cpo = (char *)empty_option;
 
   buf_T *buf = buflist_findnr(buflist_findpat((char *)name, (char *)name + STRLEN(name),
                                               true, false, curtab_only));
@@ -874,7 +874,8 @@ static void f_charidx(typval_T *argvars, typval_T *rettv, FunPtr fptr)
   if (argvars[0].v_type != VAR_STRING
       || argvars[1].v_type != VAR_NUMBER
       || (argvars[2].v_type != VAR_UNKNOWN
-          && argvars[2].v_type != VAR_NUMBER)) {
+          && argvars[2].v_type != VAR_NUMBER
+          && argvars[2].v_type != VAR_BOOL)) {
     emsg(_(e_invarg));
     return;
   }
@@ -4893,7 +4894,7 @@ static void find_some_match(typval_T *const argvars, typval_T *const rettv,
 
   // Make 'cpoptions' empty, the 'l' flag should not be used here.
   char *save_cpo = p_cpo;
-  p_cpo = "";
+  p_cpo = (char *)empty_option;
 
   rettv->vval.v_number = -1;
   switch (type) {
@@ -7413,6 +7414,11 @@ long do_searchpair(const char *spat, const char *mpat, const char *epat, int dir
     p_cpo = save_cpo;
   } else {
     // Darn, evaluating the {skip} expression changed the value.
+    // If it's still empty it was changed and restored, need to restore in
+    // the complicated way.
+    if (*p_cpo == NUL) {
+      set_option_value_give_err("cpo", 0L, save_cpo, 0);
+    }
     free_string_option((char_u *)save_cpo);
   }
 
@@ -8167,7 +8173,7 @@ static void f_split(typval_T *argvars, typval_T *rettv, FunPtr fptr)
 
   // Make 'cpoptions' empty, the 'l' flag should not be used here.
   char *save_cpo = p_cpo;
-  p_cpo = "";
+  p_cpo = (char *)empty_option;
 
   const char *str = tv_get_string(&argvars[0]);
   const char *pat = NULL;
@@ -9452,6 +9458,11 @@ static void f_trim(typval_T *argvars, typval_T *rettv, FunPtr fptr)
   rettv->v_type = VAR_STRING;
   rettv->vval.v_string = NULL;
   if (head == NULL) {
+    return;
+  }
+
+  if (argvars[1].v_type != VAR_UNKNOWN && argvars[1].v_type != VAR_STRING) {
+    semsg(_(e_invarg2), tv_get_string(&argvars[1]));
     return;
   }
 
