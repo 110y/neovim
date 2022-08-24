@@ -1277,8 +1277,11 @@ static int command_line_execute(VimState *state, int key)
   // <S-Tab> goes to last match, in a clumsy way
   if (s->c == K_S_TAB && KeyTyped) {
     if (nextwild(&s->xpc, WILD_EXPAND_KEEP, 0, s->firstc != '@') == OK) {
-      // Trigger the popup menu when wildoptions=pum
-      showmatches(&s->xpc, p_wmnu && ((wim_flags[s->wim_index] & WIM_LIST) == 0));
+      if (s->xpc.xp_numfiles > 1
+          && ((!s->did_wild_list && (wim_flags[s->wim_index] & WIM_LIST)) || p_wmnu)) {
+        // Trigger the popup menu when wildoptions=pum
+        showmatches(&s->xpc, p_wmnu && ((wim_flags[s->wim_index] & WIM_LIST) == 0));
+      }
       nextwild(&s->xpc, WILD_PREV, 0, s->firstc != '@');
       nextwild(&s->xpc, WILD_PREV, 0, s->firstc != '@');
       return command_line_changed(s);
@@ -1798,13 +1801,16 @@ static int command_line_handle_key(CommandLineState *s)
     return command_line_not_changed(s);
 
   case Ctrl_A:            // all matches
+    if (cmdline_pum_active()) {
+      // As Ctrl-A completes all the matches, close the popup
+      // menu (if present)
+      cmdline_pum_cleanup(&ccline);
+    }
     if (nextwild(&s->xpc, WILD_ALL, 0, s->firstc != '@') == FAIL) {
       break;
     }
-    if (cmdline_pum_active()) {
-      cmdline_pum_cleanup(&ccline);
-      s->xpc.xp_context = EXPAND_NOTHING;
-    }
+    s->xpc.xp_context = EXPAND_NOTHING;
+    s->did_wild_list = false;
     return command_line_changed(s);
 
   case Ctrl_L:
@@ -3154,7 +3160,6 @@ draw_cmdline_no_arabicshape:
 static void ui_ext_cmdline_show(CmdlineInfo *line)
 {
   Arena arena = ARENA_EMPTY;
-  arena_start(&arena, &ui_ext_fixblk);
   Array content;
   if (cmdline_star) {
     content = arena_array(&arena, 1);
@@ -3199,7 +3204,7 @@ static void ui_ext_cmdline_show(CmdlineInfo *line)
                                  line->special_shift,
                                  line->level);
   }
-  arena_mem_free(arena_finish(&arena), &ui_ext_fixblk);
+  arena_mem_free(arena_finish(&arena));
 }
 
 void ui_ext_cmdline_block_append(size_t indent, const char *line)
