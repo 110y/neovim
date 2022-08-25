@@ -513,7 +513,7 @@ void last_pat_prog(regmmatch_T *regmatch)
     regmatch->regprog = NULL;
     return;
   }
-  ++emsg_off;           // So it doesn't beep if bad expr
+  emsg_off++;           // So it doesn't beep if bad expr
   (void)search_regcomp((char_u *)"", 0, last_idx, SEARCH_KEEP, regmatch);
   emsg_off--;
 }
@@ -632,7 +632,7 @@ int searchit(win_T *win, buf_T *buf, pos_T *pos, pos_T *end_pos, Direction dir, 
       lnum = pos->lnum;
     }
 
-    for (loop = 0; loop <= 1; ++loop) {     // loop twice if 'wrapscan' set
+    for (loop = 0; loop <= 1; loop++) {     // loop twice if 'wrapscan' set
       for (; lnum > 0 && lnum <= buf->b_ml.ml_line_count;
            lnum += dir, at_first_line = FALSE) {
         // Stop after checking "stop_lnum", if it's set.
@@ -991,7 +991,7 @@ static int first_submatch(regmmatch_T *rp)
 {
   int submatch;
 
-  for (submatch = 1;; ++submatch) {
+  for (submatch = 1;; submatch++) {
     if (rp->startpos[submatch].lnum >= 0) {
       break;
     }
@@ -1298,7 +1298,7 @@ int do_search(oparg_T *oap, int dirc, int search_delim, char_u *pat, long count,
      */
     if (!spats[0].off.line && spats[0].off.off && pos.col < MAXCOL - 2) {
       if (spats[0].off.off > 0) {
-        for (c = spats[0].off.off; c; --c) {
+        for (c = spats[0].off.off; c; c--) {
           if (decl(&pos) == -1) {
             break;
           }
@@ -1308,7 +1308,7 @@ int do_search(oparg_T *oap, int dirc, int search_delim, char_u *pat, long count,
           pos.col = MAXCOL;
         }
       } else {
-        for (c = spats[0].off.off; c; ++c) {
+        for (c = spats[0].off.off; c; c++) {
           if (incl(&pos) == -1) {
             break;
           }
@@ -1499,16 +1499,15 @@ int search_for_exact_line(buf_T *buf, pos_T *pos, Direction dir, char_u *pat)
 
     // when adding lines the matching line may be empty but it is not
     // ignored because we are interested in the next line -- Acevedo
-    if ((compl_cont_status & CONT_ADDING)
-        && !(compl_cont_status & CONT_SOL)) {
+    if (compl_status_adding() && !compl_status_sol()) {
       if (mb_strcmp_ic((bool)p_ic, (const char *)p, (const char *)pat) == 0) {
         return OK;
       }
     } else if (*p != NUL) {  // Ignore empty lines.
       // Expanding lines or words.
-      assert(compl_length >= 0);
-      if ((p_ic ? mb_strnicmp(p, pat, (size_t)compl_length)
-                : STRNCMP(p, pat, compl_length)) == 0) {
+      assert(ins_compl_len() >= 0);
+      if ((p_ic ? mb_strnicmp(p, pat, (size_t)ins_compl_len())
+           : STRNCMP(p, pat, ins_compl_len())) == 0) {
         return OK;
       }
     }
@@ -1868,7 +1867,7 @@ pos_T *findmatchlimit(oparg_T *oap, int initc, int flags, int64_t maxtravel)
          * the line.
          */
         if (linep[pos.col] == NUL && pos.col) {
-          --pos.col;
+          pos.col--;
         }
         for (;;) {
           initc = utf_ptr2char((char *)linep + pos.col);
@@ -2002,7 +2001,7 @@ pos_T *findmatchlimit(oparg_T *oap, int initc, int flags, int64_t maxtravel)
         if (pos.lnum == 1) {            // start of file
           break;
         }
-        --pos.lnum;
+        pos.lnum--;
 
         if (maxtravel > 0 && ++traveled > maxtravel) {
           break;
@@ -2037,7 +2036,7 @@ pos_T *findmatchlimit(oparg_T *oap, int initc, int flags, int64_t maxtravel)
             || lispcomm) {
           break;
         }
-        ++pos.lnum;
+        pos.lnum++;
 
         if (maxtravel && traveled++ > maxtravel) {
           break;
@@ -2132,7 +2131,7 @@ pos_T *findmatchlimit(oparg_T *oap, int initc, int flags, int64_t maxtravel)
        * Watch out for "\\".
        */
       at_start = do_quotes;
-      for (ptr = linep; *ptr; ++ptr) {
+      for (ptr = linep; *ptr; ptr++) {
         if (ptr == linep + pos.col + backwards) {
           at_start = (do_quotes & 1);
         }
@@ -2212,7 +2211,7 @@ pos_T *findmatchlimit(oparg_T *oap, int initc, int flags, int64_t maxtravel)
       if (do_quotes) {
         int col;
 
-        for (col = pos.col - 1; col >= 0; --col) {
+        for (col = pos.col - 1; col >= 0; col--) {
           if (linep[col] != '\\') {
             break;
           }
@@ -2523,7 +2522,7 @@ int findsent(Direction dir, long count)
       c = gchar_pos(&pos);
       if (c == NUL || (pos.col == 0 && startPS(pos.lnum, NUL, FALSE))) {
         if (dir == BACKWARD && pos.lnum != startlnum) {
-          ++pos.lnum;
+          pos.lnum++;
         }
         break;
       }
@@ -3299,7 +3298,7 @@ extend:
       }
       findsent_forward(count, at_start_sent);
       if (*p_sel == 'e') {
-        ++curwin->w_cursor.col;
+        curwin->w_cursor.col++;
       }
     }
     return OK;
@@ -3357,7 +3356,7 @@ extend:
       goto extend;
     }
     if (*p_sel == 'e') {
-      ++curwin->w_cursor.col;
+      curwin->w_cursor.col++;
     }
     VIsual = start_pos;
     VIsual_mode = 'v';
@@ -3410,7 +3409,7 @@ int current_block(oparg_T *oap, long count, int include, int what, int other)
     }
     if (gchar_cursor() == what) {
       // cursor on '(' or '{', move cursor just after it
-      ++curwin->w_cursor.col;
+      curwin->w_cursor.col++;
     }
   } else if (lt(VIsual, curwin->w_cursor)) {
     old_start = VIsual;
@@ -3804,7 +3803,7 @@ extend:
       }
 
       prev_start_is_white = -1;
-      for (t = 0; t < 2; ++t) {
+      for (t = 0; t < 2; t++) {
         start_lnum += dir;
         start_is_white = linewhite(start_lnum);
         if (prev_start_is_white == start_is_white) {
@@ -4869,7 +4868,7 @@ static int fuzzy_match_compute_score(const char_u *const str, const int strSz,
     if (currIdx > 0) {
       // Camel case
       const char_u *p = str;
-      int neighbor;
+      int neighbor = ' ';
 
       for (uint32_t sidx = 0; sidx < currIdx; sidx++) {
         neighbor = utf_ptr2char((char *)p);
@@ -5309,7 +5308,7 @@ static char_u *get_line_and_copy(linenr_T lnum, char_u *buf)
 }
 
 /// Find identifiers or defines in included files.
-/// If p_ic && (compl_cont_status & CONT_SOL) then ptr must be in lowercase.
+/// If p_ic && compl_status_sol() then ptr must be in lowercase.
 ///
 /// @param ptr            pointer to search pattern
 /// @param dir            direction of expansion
@@ -5362,9 +5361,9 @@ void find_pattern_in_path(char_u *ptr, Direction dir, size_t len, bool whole, bo
   file_line = xmalloc(LSIZE);
 
   if (type != CHECK_PATH && type != FIND_DEFINE
-      // when CONT_SOL is set compare "ptr" with the beginning of the line
-      // is faster than quote_meta/regcomp/regexec "ptr" -- Acevedo
-      && !(compl_cont_status & CONT_SOL)) {
+      // when CONT_SOL is set compare "ptr" with the beginning of the
+      // line is faster than quote_meta/regcomp/regexec "ptr" -- Acevedo
+      && !compl_status_sol()) {
     pat = xmalloc(len + 5);
     assert(len <= INT_MAX);
     sprintf((char *)pat, whole ? "\\<%.*s\\>" : "%.*s", (int)len, ptr);
@@ -5604,8 +5603,7 @@ search_line:
        * define and this line didn't match define_prog above.
        */
       if (def_regmatch.regprog == NULL || define_matched) {
-        if (define_matched
-            || (compl_cont_status & CONT_SOL)) {
+        if (define_matched || compl_status_sol()) {
           // compare the first "len" chars from "ptr"
           startp = (char_u *)skipwhite((char *)p);
           if (p_ic) {
@@ -5640,7 +5638,7 @@ search_line:
             p = (char_u *)skipwhite((char *)line);
             if (matched
                 || (p[0] == '/' && p[1] == '*') || p[0] == '*') {
-              for (p = line; *p && p < startp; ++p) {
+              for (p = line; *p && p < startp; p++) {
                 if (matched
                     && p[0] == '/'
                     && (p[1] == '*' || p[1] == '/')) {
@@ -5671,8 +5669,8 @@ search_line:
         }
         found = true;
         aux = p = startp;
-        if (compl_cont_status & CONT_ADDING) {
-          p += compl_length;
+        if (compl_status_adding()) {
+          p += ins_compl_len();
           if (vim_iswordp(p)) {
             goto exit_matched;
           }
@@ -5681,7 +5679,7 @@ search_line:
         p = find_word_end(p);
         i = (int)(p - aux);
 
-        if ((compl_cont_status & CONT_ADDING) && i == compl_length) {
+        if (compl_status_adding() && i == ins_compl_len()) {
           // IOSIZE > compl_length, so the STRNCPY works
           STRNCPY(IObuff, aux, i);
 
@@ -5728,7 +5726,7 @@ search_line:
           IObuff[i] = NUL;
           aux = IObuff;
 
-          if (i == compl_length) {
+          if (i == ins_compl_len()) {
             goto exit_matched;
           }
         }
@@ -5838,7 +5836,7 @@ exit_matched:
       // are not at the end of it already
       if (def_regmatch.regprog == NULL
           && action == ACTION_EXPAND
-          && !(compl_cont_status & CONT_SOL)
+          && !compl_status_sol()
           && *startp != NUL
           && *(p = startp + utfc_ptr2len((char *)startp)) != NUL) {
         goto search_line;

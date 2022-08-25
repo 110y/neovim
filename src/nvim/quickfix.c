@@ -3180,7 +3180,7 @@ static void qf_fmt_text(const char *restrict text, char *restrict buf, int bufsi
   int i;
   const char *p = (char *)text;
 
-  for (i = 0; *p != NUL && i < bufsize - 1; ++i) {
+  for (i = 0; *p != NUL && i < bufsize - 1; i++) {
     if (*p == '\n') {
       buf[i] = ' ';
       while (*++p != NUL) {
@@ -3263,13 +3263,13 @@ void qf_age(exarg_T *eap)
         emsg(_("E380: At bottom of quickfix stack"));
         break;
       }
-      --qi->qf_curlist;
+      qi->qf_curlist--;
     } else {
       if (qi->qf_curlist >= qi->qf_listcount - 1) {
         emsg(_("E381: At top of quickfix stack"));
         break;
       }
-      ++qi->qf_curlist;
+      qi->qf_curlist++;
     }
   }
   qf_msg(qi, qi->qf_curlist, "");
@@ -4328,7 +4328,7 @@ static char *get_mef_name(void)
 
   char *p;
 
-  for (p = p_mef; *p; ++p) {
+  for (p = p_mef; *p; p++) {
     if (p[0] == '#' && p[1] == '#') {
       break;
     }
@@ -5140,6 +5140,7 @@ static bool vgr_match_buflines(qf_list_T *qfl, char *fname, buf_T *buf, char *sp
   FUNC_ATTR_NONNULL_ARG(1, 3, 4, 5, 6)
 {
   bool found_match = false;
+  const size_t pat_len = STRLEN(spat);
 
   for (linenr_T lnum = 1; lnum <= buf->b_ml.ml_line_count && *tomatch > 0; lnum++) {
     colnr_T col = 0;
@@ -5181,7 +5182,6 @@ static bool vgr_match_buflines(qf_list_T *qfl, char *fname, buf_T *buf, char *sp
         }
       }
     } else {
-      const size_t pat_len = STRLEN(spat);
       char *const str = (char *)ml_get_buf(buf, lnum, false);
       int score;
       uint32_t matches[MAX_FUZZY_MATCHES];

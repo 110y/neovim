@@ -92,6 +92,10 @@ typedef struct insert_state {
 #define BACKSPACE_WORD_NOT_SPACE    3
 #define BACKSPACE_LINE              4
 
+/// Set when doing something for completion that may call edit() recursively,
+/// which is not allowed.
+static bool compl_busy = false;
+
 static colnr_T Insstart_textlen;        // length of line when insert started
 static colnr_T Insstart_blank_vcol;     // vcol for first inserted blank
 static bool update_Insstart_orig = true;  // set Insstart_orig to Insstart
@@ -448,7 +452,7 @@ static int insert_check(VimState *state)
         && (curwin->w_cursor.lnum != curwin->w_topline
             || curwin->w_topfill > 0)) {
       if (curwin->w_topfill > 0) {
-        --curwin->w_topfill;
+        curwin->w_topfill--;
       } else if (hasFolding(curwin->w_topline, NULL, &s->old_topline)) {
         set_topline(curwin, s->old_topline + 1);
       } else {
@@ -1091,7 +1095,7 @@ check_pum:
     // but it is under other ^X modes
     if (*curbuf->b_p_cpt == NUL
         && (ctrl_x_mode_normal() || ctrl_x_mode_whole_line())
-        && !(compl_cont_status & CONT_LOCAL)) {
+        && !compl_status_local()) {
       goto normalchar;
     }
 
@@ -1177,9 +1181,11 @@ normalchar:
 static void insert_do_complete(InsertState *s)
 {
   compl_busy = true;
+  disable_fold_update++;  // don't redraw folds here
   if (ins_complete(s->c, true) == FAIL) {
-    compl_cont_status = 0;
+    compl_status_clear();
   }
+  disable_fold_update--;
   compl_busy = false;
   can_si = may_do_si();  // allow smartindenting
 }
@@ -2686,7 +2692,7 @@ void auto_format(bool trailblank, bool prev_line)
    * the start of a paragraph.
    */
   if (prev_line && !paragraph_start(curwin->w_cursor.lnum)) {
-    --curwin->w_cursor.lnum;
+    curwin->w_cursor.lnum--;
     if (u_save_cursor() == FAIL) {
       return;
     }
@@ -2987,7 +2993,7 @@ static void stop_insert(pos_T *end_insert_pos, int esc, int nomove)
       check_cursor_col();        // make sure it is not past the line
       for (;;) {
         if (gchar_cursor() == NUL && curwin->w_cursor.col > 0) {
-          --curwin->w_cursor.col;
+          curwin->w_cursor.col--;
         }
         cc = gchar_cursor();
         if (!ascii_iswhite(cc)) {
@@ -3004,7 +3010,7 @@ static void stop_insert(pos_T *end_insert_pos, int esc, int nomove)
         tpos = curwin->w_cursor;
         tpos.col++;
         if (cc != NUL && gchar_pos(&tpos) == NUL) {
-          ++curwin->w_cursor.col;         // put cursor back on the NUL
+          curwin->w_cursor.col++;         // put cursor back on the NUL
         }
       }
 
@@ -3076,8 +3082,8 @@ void beginline(int flags)
       char_u *ptr;
 
       for (ptr = get_cursor_line_ptr(); ascii_iswhite(*ptr)
-           && !((flags & BL_FIX) && ptr[1] == NUL); ++ptr) {
-        ++curwin->w_cursor.col;
+           && !((flags & BL_FIX) && ptr[1] == NUL); ptr++) {
+        curwin->w_cursor.col++;
       }
     }
     curwin->w_set_curswant = TRUE;
@@ -3167,8 +3173,8 @@ int oneleft(void)
     return FAIL;
   }
 
-  curwin->w_set_curswant = TRUE;
-  --curwin->w_cursor.col;
+  curwin->w_set_curswant = true;
+  curwin->w_cursor.col--;
 
   // if the character on the left of the current cursor is a multi-byte
   // character, move to its first byte
@@ -3448,7 +3454,7 @@ int replace_push_mb(char_u *p)
   int l = utfc_ptr2len((char *)p);
   int j;
 
-  for (j = l - 1; j >= 0; --j) {
+  for (j = l - 1; j >= 0; j--) {
     replace_push(p[j]);
   }
   return l;
@@ -4265,7 +4271,7 @@ static void ins_ctrl_(void)
 {
   if (revins_on && revins_chars && revins_scol >= 0) {
     while (gchar_cursor() != NUL && revins_chars--) {
-      ++curwin->w_cursor.col;
+      curwin->w_cursor.col++;
     }
   }
   p_ri = !p_ri;
