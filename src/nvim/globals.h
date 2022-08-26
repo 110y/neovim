@@ -559,6 +559,8 @@ EXTERN bool can_si INIT(= false);
 // one indent will be removed.
 EXTERN bool can_si_back INIT(= false);
 
+EXTERN int old_indent INIT(= 0);  ///< for ^^D command in insert mode
+
 // w_cursor before formatting text.
 EXTERN pos_T saved_cursor INIT(= { 0, 0, 0 });
 
@@ -755,7 +757,7 @@ EXTERN int keep_help_flag INIT(= false);  // doing :ta from help file
 // When a string option is NULL (which only happens in out-of-memory
 // situations), it is set to empty_option, to avoid having to check for NULL
 // everywhere.
-EXTERN char_u *empty_option INIT(= (char_u *)"");
+EXTERN char *empty_option INIT(= "");
 
 EXTERN bool redir_off INIT(= false);        // no redirection for a moment
 EXTERN FILE *redir_fd INIT(= NULL);         // message redirection file
@@ -795,7 +797,6 @@ EXTERN char *last_chdir_reason INIT(= NULL);
 EXTERN bool km_stopsel INIT(= false);
 EXTERN bool km_startsel INIT(= false);
 
-EXTERN int cedit_key INIT(= -1);     ///< key value of 'cedit' option
 EXTERN int cmdwin_type INIT(= 0);    ///< type of cmdline window or 0
 EXTERN int cmdwin_result INIT(= 0);  ///< result of cmdline window or 0
 EXTERN int cmdwin_level INIT(= 0);   ///< cmdline recursion level
