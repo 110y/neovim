@@ -167,6 +167,7 @@ void filemess(buf_T *buf, char_u *name, char_u *s, int attr)
 /// READ_STDIN   read from stdin instead of a file
 /// READ_BUFFER  read from curbuf instead of a file (converting after reading
 ///              stdin)
+/// READ_NOFILE  do not read a file, only trigger BufReadCmd
 /// READ_DUMMY   read into a dummy buffer (to check if file contents changed)
 /// READ_KEEP_UNDO  don't clear undo info or read it from a file
 /// READ_FIFO    read from fifo/socket instead of a file
@@ -334,6 +335,12 @@ int readfile(char *fname, char *sfname, linenr_T from, linenr_T lines_to_skip,
     }
 
     curbuf->b_op_start = orig_start;
+
+    if (flags & READ_NOFILE) {
+      // Return NOTDONE instead of FAIL so that BufEnter can be triggered
+      // and other operations don't fail.
+      return NOTDONE;
+    }
   }
 
   if ((shortmess(SHM_OVER) || curbuf->b_help) && p_verbose == 0) {
@@ -711,7 +718,7 @@ int readfile(char *fname, char *sfname, linenr_T from, linenr_T lines_to_skip,
     fenc = curbuf->b_p_fenc;            // use format from buffer
     fenc_alloced = false;
   } else {
-    fenc_next = (char *)p_fencs;                // try items in 'fileencodings'
+    fenc_next = p_fencs;                // try items in 'fileencodings'
     fenc = (char *)next_fenc(&fenc_next, &fenc_alloced);
   }
 
@@ -2735,7 +2742,7 @@ int buf_write(buf_T *buf, char *fname, char *sfname, linenr_T start, linenr_T en
     if (*p_bex == NUL) {
       backup_ext = ".bak";
     } else {
-      backup_ext = (char *)p_bex;
+      backup_ext = p_bex;
     }
 
     if (backup_copy) {
@@ -2757,7 +2764,7 @@ int buf_write(buf_T *buf, char *fname, char *sfname, linenr_T start, linenr_T en
        * For these reasons, the existing writable file must be truncated
        * and reused. Creation of a backup COPY will be attempted.
        */
-      dirp = (char *)p_bdir;
+      dirp = p_bdir;
       while (*dirp) {
         /*
          * Isolate one directory name, using an entry in 'bdir'.
@@ -2918,7 +2925,7 @@ nobackup:
        * path/fo.o.h.bak Try all directories in 'backupdir', first one
        * that works is used.
        */
-      dirp = (char *)p_bdir;
+      dirp = p_bdir;
       while (*dirp) {
         /*
          * Isolate one directory name and make the backup file name.
@@ -3572,7 +3579,7 @@ restore_backup:
    * the backup file our 'original' file.
    */
   if (*p_pm && dobackup) {
-    char *const org = modname(fname, (char *)p_pm, false);
+    char *const org = modname(fname, p_pm, false);
 
     if (backup != NULL) {
       /*
@@ -4172,7 +4179,7 @@ static bool need_conversion(const char_u *fenc)
   } else {
     // Ignore difference between "ansi" and "latin1", "ucs-4" and
     // "ucs-4be", etc.
-    enc_flags = get_fio_flags(p_enc);
+    enc_flags = get_fio_flags((char_u *)p_enc);
     fenc_flags = get_fio_flags(fenc);
     same_encoding = (enc_flags != 0 && fenc_flags == enc_flags);
   }
@@ -4196,7 +4203,7 @@ static int get_fio_flags(const char_u *name)
   int prop;
 
   if (*name == NUL) {
-    name = p_enc;
+    name = (char_u *)p_enc;
   }
   prop = enc_canon_props(name);
   if (prop & ENC_UNICODE) {

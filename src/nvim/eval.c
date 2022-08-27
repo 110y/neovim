@@ -6,12 +6,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "auto/config.h"
-
-#ifdef HAVE_LOCALE_H
-# include <locale.h>
-#endif
-
 #include "nvim/ascii.h"
 #include "nvim/autocmd.h"
 #include "nvim/buffer.h"
@@ -36,6 +30,7 @@
 #include "nvim/ex_session.h"
 #include "nvim/getchar.h"
 #include "nvim/highlight_group.h"
+#include "nvim/locale.h"
 #include "nvim/lua/executor.h"
 #include "nvim/mark.h"
 #include "nvim/memline.h"
@@ -631,7 +626,7 @@ int eval_charconvert(const char *const enc_from, const char *const enc_to,
   set_vim_var_string(VV_CC_TO, enc_to, -1);
   set_vim_var_string(VV_FNAME_IN, fname_from, -1);
   set_vim_var_string(VV_FNAME_OUT, fname_to, -1);
-  if (eval_to_bool((char *)p_ccv, &err, NULL, false)) {
+  if (eval_to_bool(p_ccv, &err, NULL, false)) {
     err = true;
   }
   set_vim_var_string(VV_CC_FROM, NULL, -1);
@@ -651,7 +646,7 @@ int eval_printexpr(const char *const fname, const char *const args)
 
   set_vim_var_string(VV_FNAME_IN, fname, -1);
   set_vim_var_string(VV_CMDARG, args, -1);
-  if (eval_to_bool((char *)p_pexpr, &err, NULL, false)) {
+  if (eval_to_bool(p_pexpr, &err, NULL, false)) {
     err = true;
   }
   set_vim_var_string(VV_FNAME_IN, NULL, -1);
@@ -671,7 +666,7 @@ void eval_diff(const char *const origfile, const char *const newfile, const char
   set_vim_var_string(VV_FNAME_IN, origfile, -1);
   set_vim_var_string(VV_FNAME_NEW, newfile, -1);
   set_vim_var_string(VV_FNAME_OUT, outfile, -1);
-  (void)eval_to_bool((char *)p_dex, &err, NULL, false);
+  (void)eval_to_bool(p_dex, &err, NULL, false);
   set_vim_var_string(VV_FNAME_IN, NULL, -1);
   set_vim_var_string(VV_FNAME_NEW, NULL, -1);
   set_vim_var_string(VV_FNAME_OUT, NULL, -1);
@@ -8601,7 +8596,7 @@ void ex_checkhealth(exarg_T *eap)
     if (vimruntime_env == NULL) {
       emsg(_("E5009: $VIMRUNTIME is empty or unset"));
     } else {
-      bool rtp_ok = NULL != strstr((char *)p_rtp, vimruntime_env);
+      bool rtp_ok = NULL != strstr(p_rtp, vimruntime_env);
       if (rtp_ok) {
         semsg(_("E5009: Invalid $VIMRUNTIME: %s"), vimruntime_env);
       } else {
