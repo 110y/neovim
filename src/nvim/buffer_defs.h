@@ -325,7 +325,7 @@ typedef struct argentry {
  * Used for the typeahead buffer: typebuf.
  */
 typedef struct {
-  char_u *tb_buf;          // buffer for typed characters
+  uint8_t *tb_buf;              // buffer for typed characters
   uint8_t *tb_noremap;          // mapping flags for characters in tb_buf[]
   int tb_buflen;                // size of tb_buf[]
   int tb_off;                   // current position in tb_buf[]
@@ -353,7 +353,7 @@ typedef struct {
 typedef struct mapblock mapblock_T;
 struct mapblock {
   mapblock_T *m_next;           // next mapblock in list
-  char_u *m_keys;               // mapped from, lhs
+  uint8_t *m_keys;              // mapped from, lhs
   char *m_str;                  // mapped to, rhs
   char *m_orig_str;             // rhs as entered by the user
   LuaRef m_luaref;              // lua function reference as rhs
@@ -703,7 +703,7 @@ struct file_buffer {
   char *b_p_cms;                ///< 'commentstring'
   char *b_p_cpt;                ///< 'complete'
 #ifdef BACKSLASH_IN_FILENAME
-  char_u *b_p_csl;              ///< 'completeslash'
+  char *b_p_csl;                ///< 'completeslash'
 #endif
   char *b_p_cfu;                ///< 'completefunc'
   char *b_p_ofu;                ///< 'omnifunc'
@@ -1240,9 +1240,10 @@ struct window_S {
   colnr_T w_skipcol;                // starting column when a single line
                                     // doesn't fit in the window
 
-  // four fields that are only used when there is a WinScrolled autocommand
+  // five fields that are only used when there is a WinScrolled autocommand
   linenr_T w_last_topline;          ///< last known value for w_topline
   colnr_T w_last_leftcol;           ///< last known value for w_leftcol
+  colnr_T w_last_skipcol;           ///< last known value for w_skipcol
   int w_last_width;                 ///< last known value for w_width
   int w_last_height;                ///< last known value for w_height
 
