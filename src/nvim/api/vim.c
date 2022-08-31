@@ -86,8 +86,7 @@ Dictionary nvim_get_hl_by_name(String name, Boolean rgb, Error *err)
   int id = syn_name2id(name.data);
 
   if (id == 0) {
-    api_set_error(err, kErrorTypeException, "Invalid highlight name: %s",
-                  name.data);
+    api_set_error(err, kErrorTypeException, "Invalid highlight name: %s", name.data);
     return result;
   }
   result = nvim_get_hl_by_id(id, rgb, err);
@@ -105,8 +104,7 @@ Dictionary nvim_get_hl_by_id(Integer hl_id, Boolean rgb, Error *err)
 {
   Dictionary dic = ARRAY_DICT_INIT;
   if (syn_get_final_id((int)hl_id) == 0) {
-    api_set_error(err, kErrorTypeException,
-                  "Invalid highlight id: %" PRId64, hl_id);
+    api_set_error(err, kErrorTypeException, "Invalid highlight id: %" PRId64, hl_id);
     return dic;
   }
   int attrcode = syn_id2attr((int)hl_id);
@@ -175,6 +173,10 @@ void nvim_set_hl(Integer ns_id, String name, Dict(highlight) *val, Error *err)
   FUNC_API_SINCE(7)
 {
   int hl_id = syn_check_group(name.data, name.size);
+  if (hl_id == 0) {
+    api_set_error(err, kErrorTypeException, "Invalid highlight name: %s", name.data);
+    return;
+  }
   int link_id = -1;
 
   HlAttrs attrs = dict2hlattrs(val, true, &link_id, err);
@@ -1419,10 +1421,10 @@ Dictionary nvim_get_mode(void)
 /// @param  mode       Mode short-name ("n", "i", "v", ...)
 /// @returns Array of |maparg()|-like dictionaries describing mappings.
 ///          The "buffer" key is always zero.
-ArrayOf(Dictionary) nvim_get_keymap(uint64_t channel_id, String mode)
+ArrayOf(Dictionary) nvim_get_keymap(String mode)
   FUNC_API_SINCE(3)
 {
-  return keymap_array(mode, NULL, channel_id == LUA_INTERNAL_CALL);
+  return keymap_array(mode, NULL);
 }
 
 /// Sets a global |mapping| for the given mode.

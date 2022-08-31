@@ -378,7 +378,7 @@ char_u *deref_func_name(const char *name, int *lenp, partial_T **const partialp,
       *lenp = 0;
       return (char_u *)"";
     }
-    *lenp = (int)STRLEN(v->di_tv.vval.v_string);
+    *lenp = (int)strlen(v->di_tv.vval.v_string);
     return (char_u *)v->di_tv.vval.v_string;
   }
 
@@ -970,11 +970,11 @@ void call_user_func(ufunc_T *fp, int argcount, typval_T *argvars, typval_T *rett
       snprintf((char *)numbuf, sizeof(numbuf), "%d", ai + 1);
       name = (char *)numbuf;
     }
-    if (fixvar_idx < FIXVAR_CNT && STRLEN(name) <= VAR_SHORT_LEN) {
+    if (fixvar_idx < FIXVAR_CNT && strlen(name) <= VAR_SHORT_LEN) {
       v = (dictitem_T *)&fc->fixvar[fixvar_idx++];
       v->di_flags = DI_FLAGS_RO | DI_FLAGS_FIX;
     } else {
-      v = xmalloc(sizeof(dictitem_T) + STRLEN(name));
+      v = xmalloc(sizeof(dictitem_T) + strlen(name));
       v->di_flags = DI_FLAGS_RO | DI_FLAGS_FIX | DI_FLAGS_ALLOC;
     }
     STRCPY(v->di_key, name);
@@ -1455,7 +1455,7 @@ int call_func(const char *funcname, int len, typval_T *rettv, int argcount_in, t
   rettv->v_type = VAR_UNKNOWN;
 
   if (len <= 0) {
-    len = (int)STRLEN(funcname);
+    len = (int)strlen(funcname);
   }
   if (partial != NULL) {
     fp = partial->pt_func;
@@ -2054,7 +2054,7 @@ void ex_function(exarg_T *eap)
               msg_putchar(' ');
             }
           }
-          msg_prt_line((char_u *)FUNCLINE(fp, j), false);
+          msg_prt_line(FUNCLINE(fp, j), false);
           ui_flush();                  // show a line at a time
           os_breakcheck();
         }
@@ -2270,8 +2270,8 @@ void ex_function(exarg_T *eap)
         } else if (line_arg != NULL && *skipwhite((char *)line_arg) != NUL) {
           nextcmd = line_arg;
         } else if (*p != NUL && *p != '"' && p_verbose > 0) {
-          give_warning2((char_u *)_("W22: Text found after :endfunction: %s"),
-                        p, true);
+          give_warning2(_("W22: Text found after :endfunction: %s"),
+                        (char *)p, true);
         }
         if (nextcmd != NULL) {
           // Another command follows. If the line came from "eap" we
@@ -3010,7 +3010,7 @@ void ex_call(exarg_T *eap)
 
   // When inside :try we need to check for following "| catch" or "| endtry".
   // Not when there was an error, but do check if an exception was thrown.
-  if ((!aborting() || current_exception != NULL) && (!failed || eap->cstack->cs_trylevel > 0)) {
+  if ((!aborting() || did_throw) && (!failed || eap->cstack->cs_trylevel > 0)) {
     // Check for trailing illegal characters and a following command.
     if (!ends_excmd(*arg)) {
       if (!failed && !aborting()) {
@@ -3111,8 +3111,7 @@ char *get_return_cmd(void *rettv)
   char *tofree = NULL;
 
   if (rettv != NULL) {
-    tofree = encode_tv2echo((typval_T *)rettv, NULL);
-    s = encode_tv2echo((typval_T *)rettv, NULL);
+    tofree = s = encode_tv2echo((typval_T *)rettv, NULL);
   }
   if (s == NULL) {
     s = "";
