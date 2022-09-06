@@ -2,22 +2,18 @@
 cmake_minimum_required (VERSION 3.10)
 project(NVIM_DEPS C)
 
-# Needed for: check_c_compiler_flag()
-include(CheckCCompilerFlag)
-
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/../cmake")
+
+include(CheckCCompilerFlag)
+include(Util)
 
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(NOT isMultiConfig)
   set(BUILD_TYPE_STRING -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 endif()
 
-# In Windows/MSVC CMAKE_BUILD_TYPE changes the paths/linking of the build
-# recipes (libuv, msgpack), make sure it is set
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
+set_default_buildtype()
 
 set(DEFAULT_MAKE_CFLAGS CFLAGS+=-g)
 
@@ -207,6 +203,12 @@ set(LIBICONV_SHA256 ccf536620a45458d26ba83887a983b96827001e92a13847b45e4925cc891
 
 set(TREESITTER_C_URL https://github.com/tree-sitter/tree-sitter-c/archive/v0.20.2.tar.gz)
 set(TREESITTER_C_SHA256 af66fde03feb0df4faf03750102a0d265b007e5d957057b6b293c13116a70af2 )
+
+set(TREESITTER_LUA_URL https://github.com/MunifTanjim/tree-sitter-lua/archive/v0.0.12.tar.gz)
+set(TREESITTER_LUA_SHA256 b6d7c6d04e9101a2e589d25f1d61668301e776c0b8defa6eae8dd86272e9e7c3)
+
+set(TREESITTER_VIM_URL https://github.com/vigoux/tree-sitter-viml/archive/v0.1.0.tar.gz)
+set(TREESITTER_VIM_SHA256 ea64fa211ccc7197669017b55911fdb56e8d4b6de96ba25c32b9586ec1c4f4c5)
 
 set(TREESITTER_URL https://github.com/tree-sitter/tree-sitter/archive/v0.20.7.tar.gz)
 set(TREESITTER_SHA256 b355e968ec2d0241bbd96748e00a9038f83968f85d822ecb9940cbe4c42e182e)
