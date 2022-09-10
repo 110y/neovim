@@ -665,7 +665,7 @@ static char_u *ins_compl_infercase_gettext(char_u *str, int char_len, int compl_
   }
 
   *p = NUL;
-  return IObuff;
+  return (char_u *)IObuff;
 }
 
 /// This is like ins_compl_add(), but if 'ic' and 'inf' are set, then the
@@ -811,7 +811,7 @@ static int ins_compl_add(char *const str, int len, char *const fname, char *cons
   if (fname != NULL
       && compl_curr_match != NULL
       && compl_curr_match->cp_fname != NULL
-      && STRCMP(fname, compl_curr_match->cp_fname) == 0) {
+      && strcmp(fname, compl_curr_match->cp_fname) == 0) {
     match->cp_fname = compl_curr_match->cp_fname;
   } else if (fname != NULL) {
     match->cp_fname = xstrdup(fname);
@@ -1332,7 +1332,7 @@ static void ins_compl_dictionaries(char_u *dict_start, char_u *pat, int flags, i
       // backticks (for security, the 'dict' option may have been set in
       // a modeline).
       copy_option_part(&dict, buf, LSIZE, ",");
-      if (!thesaurus && STRCMP(buf, "spell") == 0) {
+      if (!thesaurus && strcmp(buf, "spell") == 0) {
         count = -1;
       } else if (vim_strchr(buf, '`') != NULL
                  || expand_wildcards(1, &buf, &count, &files,
@@ -1349,7 +1349,7 @@ static void ins_compl_dictionaries(char_u *dict_start, char_u *pat, int flags, i
       } else {
         ptr = pat;
       }
-      spell_dump_compl(ptr, regmatch.rm_ic, &dir, 0);
+      spell_dump_compl((char *)ptr, regmatch.rm_ic, &dir, 0);
     } else if (count > 0) {  // avoid warning for using "files" uninit
       ins_compl_files(count, files, thesaurus, flags,
                       &regmatch, (char_u *)buf, &dir);
@@ -1443,20 +1443,20 @@ static void ins_compl_files(int count, char **files, int thesaurus, int flags, r
     while (!got_int && !compl_interrupted && !vim_fgets(buf, LSIZE, fp)) {
       ptr = buf;
       while (vim_regexec(regmatch, (char *)buf, (colnr_T)(ptr - buf))) {
-        ptr = regmatch->startp[0];
+        ptr = (char_u *)regmatch->startp[0];
         if (ctrl_x_mode_line_or_eval()) {
           ptr = find_line_end(ptr);
         } else {
           ptr = find_word_end(ptr);
         }
-        add_r = ins_compl_add_infercase(regmatch->startp[0],
-                                        (int)(ptr - regmatch->startp[0]),
+        add_r = ins_compl_add_infercase((char_u *)regmatch->startp[0],
+                                        (int)(ptr - (char_u *)regmatch->startp[0]),
                                         p_ic, (char_u *)files[i], *dir, false);
         if (thesaurus) {
           // For a thesaurus, add all the words in the line
           ptr = buf;
           add_r = thesaurus_add_words_in_line(files[i], &ptr, *dir,
-                                              regmatch->startp[0]);
+                                              (char_u *)regmatch->startp[0]);
         }
         if (add_r == OK) {
           // if dir was BACKWARD then honor it just once
@@ -2588,15 +2588,15 @@ static void get_complete_info(list_T *what_list, dict_T *retdict)
          ; item = TV_LIST_ITEM_NEXT(what_list, item)) {
       const char *what = tv_get_string(TV_LIST_ITEM_TV(item));
 
-      if (STRCMP(what, "mode") == 0) {
+      if (strcmp(what, "mode") == 0) {
         what_flag |= CI_WHAT_MODE;
-      } else if (STRCMP(what, "pum_visible") == 0) {
+      } else if (strcmp(what, "pum_visible") == 0) {
         what_flag |= CI_WHAT_PUM_VISIBLE;
-      } else if (STRCMP(what, "items") == 0) {
+      } else if (strcmp(what, "items") == 0) {
         what_flag |= CI_WHAT_ITEMS;
-      } else if (STRCMP(what, "selected") == 0) {
+      } else if (strcmp(what, "selected") == 0) {
         what_flag |= CI_WHAT_SELECTED;
-      } else if (STRCMP(what, "inserted") == 0) {
+      } else if (strcmp(what, "inserted") == 0) {
         what_flag |= CI_WHAT_INSERTED;
       }
     }
@@ -2980,7 +2980,7 @@ static char_u *ins_comp_get_next_word_or_line(buf_T *ins_buf, pos_T *cur_match_p
           *cont_s_ipos = true;
         }
         IObuff[len] = NUL;
-        ptr = IObuff;
+        ptr = (char_u *)IObuff;
       }
       if (len == compl_length) {
         return NULL;

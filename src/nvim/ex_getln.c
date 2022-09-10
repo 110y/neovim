@@ -2005,7 +2005,7 @@ static int command_line_handle_key(CommandLineState *s)
   } else {
     int j = utf_char2bytes(s->c, (char *)IObuff);
     IObuff[j] = NUL;                // exclude composing chars
-    put_on_cmdline(IObuff, j, true);
+    put_on_cmdline((char_u *)IObuff, j, true);
   }
   return command_line_changed(s);
 }
@@ -2881,7 +2881,7 @@ static bool color_cmdline(CmdlineInfo *colored_ccline)
   // Check whether result of the previous call is still valid.
   if (ccline_colors->prompt_id == colored_ccline->prompt_id
       && ccline_colors->cmdbuff != NULL
-      && STRCMP(ccline_colors->cmdbuff, colored_ccline->cmdbuff) == 0) {
+      && strcmp(ccline_colors->cmdbuff, colored_ccline->cmdbuff) == 0) {
     return ret;
   }
 

@@ -111,7 +111,7 @@ static int get_function_args(char **argp, char_u endchar, garray_T *newargs, int
 
         // Check for duplicate argument name.
         for (i = 0; i < newargs->ga_len; i++) {
-          if (STRCMP(((char **)(newargs->ga_data))[i], arg) == 0) {
+          if (strcmp(((char **)(newargs->ga_data))[i], arg) == 0) {
             semsg(_("E853: Duplicate argument name: %s"), arg);
             xfree(arg);
             goto err_ret;
@@ -2218,7 +2218,7 @@ void ex_function(exarg_T *eap)
         } else {
           p = theline + STRLEN(heredoc_trimmed);
         }
-        if (STRCMP(p, skip_until) == 0) {
+        if (strcmp(p, skip_until) == 0) {
           XFREE_CLEAR(skip_until);
           XFREE_CLEAR(heredoc_trimmed);
           do_concat = true;
@@ -2462,7 +2462,7 @@ void ex_function(exarg_T *eap)
         p = vim_strchr((char *)scriptname, '/');
         plen = (int)STRLEN(p);
         slen = (int)STRLEN(SOURCING_NAME);
-        if (slen > plen && FNAMECMP(p, SOURCING_NAME + slen - plen) == 0) {
+        if (slen > plen && path_fnamecmp(p, SOURCING_NAME + slen - plen) == 0) {
           j = OK;
         }
         xfree(scriptname);
@@ -2632,7 +2632,7 @@ char *get_user_func_name(expand_T *xp, int idx)
       return (char *)fp->uf_name;  // Prevent overflow.
     }
 
-    cat_func_name(IObuff, fp);
+    cat_func_name((char_u *)IObuff, fp);
     if (xp->xp_context != EXPAND_USER_FUNC) {
       STRCAT(IObuff, "(");
       if (!fp->uf_varargs && GA_EMPTY(&fp->uf_args)) {

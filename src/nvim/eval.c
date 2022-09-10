@@ -3998,13 +3998,11 @@ failret:
 bool func_equal(typval_T *tv1, typval_T *tv2, bool ic)
 {
   // empty and NULL function name considered the same
-  char_u *s1 =
-    (char_u *)(tv1->v_type == VAR_FUNC ? tv1->vval.v_string : partial_name(tv1->vval.v_partial));
+  char *s1 = tv1->v_type == VAR_FUNC ? tv1->vval.v_string : partial_name(tv1->vval.v_partial);
   if (s1 != NULL && *s1 == NUL) {
     s1 = NULL;
   }
-  char_u *s2 =
-    (char_u *)(tv2->v_type == VAR_FUNC ? tv2->vval.v_string : partial_name(tv2->vval.v_partial));
+  char *s2 = tv2->v_type == VAR_FUNC ? tv2->vval.v_string : partial_name(tv2->vval.v_partial);
   if (s2 != NULL && *s2 == NUL) {
     s2 = NULL;
   }
@@ -4012,7 +4010,7 @@ bool func_equal(typval_T *tv1, typval_T *tv2, bool ic)
     if (s1 != s2) {
       return false;
     }
-  } else if (STRCMP(s1, s2) != 0) {
+  } else if (strcmp(s1, s2) != 0) {
     return false;
   }
 
@@ -6374,7 +6372,7 @@ pos_T *var2fpos(const typval_T *const tv, const bool dollar_lnum, int *const ret
     listitem_T *li = tv_list_find(l, 1L);
     if (li != NULL && TV_LIST_ITEM_TV(li)->v_type == VAR_STRING
         && TV_LIST_ITEM_TV(li)->vval.v_string != NULL
-        && STRCMP(TV_LIST_ITEM_TV(li)->vval.v_string, "$") == 0) {
+        && strcmp(TV_LIST_ITEM_TV(li)->vval.v_string, "$") == 0) {
       pos.col = len + 1;
     }
 
@@ -7822,7 +7820,7 @@ bool script_autoload(const char *const name, const size_t name_len, const bool r
   // "autoload/", it's always the same.
   int i = 0;
   for (; i < ga_loaded.ga_len; i++) {
-    if (STRCMP(((char **)ga_loaded.ga_data)[i] + 9, scriptname + 9) == 0) {
+    if (strcmp(((char **)ga_loaded.ga_data)[i] + 9, scriptname + 9) == 0) {
       break;
     }
   }
@@ -8119,7 +8117,7 @@ repeat:
 
         // Do not call shorten_fname() here since it removes the prefix
         // even though the path does not have a prefix.
-        if (FNAMENCMP(p, dirname, namelen) == 0) {
+        if (path_fnamencmp(p, dirname, namelen) == 0) {
           p += namelen;
           if (vim_ispathsep(*p)) {
             while (*p && vim_ispathsep(*p)) {
@@ -8331,7 +8329,7 @@ char *do_string_sub(char *str, char *pat, char *sub, typval_T *expr, char *flags
     while (vim_regexec_nl(&regmatch, (char_u *)str, (colnr_T)(tail - str))) {
       // Skip empty match except for first match.
       if (regmatch.startp[0] == regmatch.endp[0]) {
-        if ((char_u *)zero_width == regmatch.startp[0]) {
+        if (zero_width == regmatch.startp[0]) {
           // avoid getting stuck on a match with an empty string
           int i = utfc_ptr2len(tail);
           memmove((char_u *)ga.ga_data + ga.ga_len, tail, (size_t)i);
@@ -8339,7 +8337,7 @@ char *do_string_sub(char *str, char *pat, char *sub, typval_T *expr, char *flags
           tail += i;
           continue;
         }
-        zero_width = (char *)regmatch.startp[0];
+        zero_width = regmatch.startp[0];
       }
 
       // Get some space for a temporary buffer to do the substitution
@@ -8352,14 +8350,14 @@ char *do_string_sub(char *str, char *pat, char *sub, typval_T *expr, char *flags
                          (regmatch.endp[0] - regmatch.startp[0])));
 
       // copy the text up to where the match is
-      int i = (int)(regmatch.startp[0] - (char_u *)tail);
+      int i = (int)(regmatch.startp[0] - tail);
       memmove((char_u *)ga.ga_data + ga.ga_len, tail, (size_t)i);
       // add the substituted text
       (void)vim_regsub(&regmatch, (char_u *)sub, expr,
                        (char_u *)ga.ga_data + ga.ga_len + i, sublen,
                        REGSUB_COPY | REGSUB_MAGIC);
       ga.ga_len += i + sublen - 1;
-      tail = (char *)regmatch.endp[0];
+      tail = regmatch.endp[0];
       if (*tail == NUL) {
         break;
       }
