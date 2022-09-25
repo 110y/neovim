@@ -255,7 +255,7 @@ let s:filename_checks = {
     \ 'hex': ['file.hex', 'file.h32'],
     \ 'hgcommit': ['hg-editor-file.txt'],
     \ 'hjson': ['file.hjson'],
-    \ 'hlsplaylist': ['file.m3u8'],
+    \ 'hlsplaylist': ['file.m3u', 'file.m3u8'],
     \ 'hog': ['file.hog', 'snort.conf', 'vision.conf'],
     \ 'hollywood': ['file.hws'],
     \ 'hoon': ['file.hoon'],
@@ -932,7 +932,9 @@ func Test_d_file()
   call assert_equal('d', &filetype)
   bwipe!
 
+  " clean up
   filetype off
+  call delete('Xfile.d')
 endfunc
 
 func Test_dat_file()
