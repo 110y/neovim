@@ -3370,6 +3370,9 @@ void do_put(int regname, yankreg_T *reg, int dir, long count, int flags)
     // adjust '] mark
     curbuf->b_op_end.lnum = curwin->w_cursor.lnum - 1;
     curbuf->b_op_end.col = bd.textcol + (colnr_T)totlen - 1;
+    if (curbuf->b_op_end.col < 0) {
+      curbuf->b_op_end.col = 0;
+    }
     curbuf->b_op_end.coladd = 0;
     if (flags & PUT_CURSEND) {
       colnr_T len;
@@ -6203,7 +6206,11 @@ void do_pending_operator(cmdarg_T *cap, int old_col, bool gui_yank)
       // If 'equalprg' is empty, do the indenting internally.
       if (oap->op_type == OP_INDENT && *get_equalprg() == NUL) {
         if (curbuf->b_p_lisp) {
-          op_reindent(oap, get_lisp_indent);
+          if (use_indentexpr_for_lisp()) {
+            op_reindent(oap, get_expr_indent);
+          } else {
+            op_reindent(oap, get_lisp_indent);
+          }
           break;
         }
         op_reindent(oap,
