@@ -735,6 +735,7 @@ local extension = {
   opam = 'opam',
   ['or'] = 'openroad',
   scad = 'openscad',
+  ovpn = 'openvpn',
   ora = 'ora',
   org = 'org',
   org_archive = 'org',
@@ -2043,6 +2044,7 @@ local pattern = {
   ['.*%.ml%.cppo'] = 'ocaml',
   ['.*%.mli%.cppo'] = 'ocaml',
   ['.*%.opam%.template'] = 'opam',
+  ['.*/openvpn/.*/.*%.conf'] = 'openvpn',
   ['.*%.[Oo][Pp][Ll]'] = 'opl',
   ['.*/etc/pam%.conf'] = 'pamconf',
   ['.*/etc/pam%.d/.*'] = starsetf('pamconf'),
@@ -2285,8 +2287,6 @@ end
 ---
 --- See $VIMRUNTIME/lua/vim/filetype.lua for more examples.
 ---
---- Note that Lua filetype detection is disabled when |g:do_legacy_filetype| is set.
----
 --- Example:
 --- <pre>
 ---  vim.filetype.add({
@@ -2323,7 +2323,7 @@ end
 ---  })
 --- </pre>
 ---
---- To add a fallback match on contents (see |new-filetype-scripts|), use
+--- To add a fallback match on contents, use
 --- <pre>
 --- vim.filetype.add {
 ---   pattern = {
