@@ -170,7 +170,7 @@ local extension = {
     return require('vim.filetype.detect').bindzone(bufnr, 'dcl')
   end,
   db = function(path, bufnr)
-    return require('vim.filetype.detect').bindzone(bufnr, '')
+    return require('vim.filetype.detect').bindzone(bufnr)
   end,
   bicep = 'bicep',
   bb = 'bitbake',
@@ -564,7 +564,7 @@ local extension = {
   json5 = 'json5',
   jsonc = 'jsonc',
   jsonnet = 'jsonnet',
-  libjsonnet = 'jsonnet',
+  libsonnet = 'jsonnet',
   jsp = 'jsp',
   jl = 'julia',
   kv = 'kivy',
@@ -1791,6 +1791,8 @@ local pattern = {
   ['.*/etc/DIR_COLORS'] = 'dircolors',
   ['.*/etc/dnsmasq%.conf'] = 'dnsmasq',
   ['php%.ini%-.*'] = 'dosini',
+  ['.*/%.aws/config'] = 'confini',
+  ['.*/%.aws/credentials'] = 'confini',
   ['.*/etc/pacman%.conf'] = 'confini',
   ['.*/etc/yum%.conf'] = 'dosini',
   ['.*lvs'] = 'dracula',
