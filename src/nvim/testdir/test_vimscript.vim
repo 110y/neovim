@@ -1542,6 +1542,9 @@ func Test_delfunction_force()
     endfunc
     delfunc! Xtest
     delfunc! Xtest
+
+    " Try deleting the current function
+    call assert_fails('delfunc Test_delfunction_force', 'E131:')
 endfunc
 
 " Test using bang after user command				    {{{1
@@ -1653,6 +1656,22 @@ func Test_compound_assignment_operators()
       call assert_equal(4.2, x)
       call assert_fails('let x %= 0.5', 'E734')
       call assert_fails('let x .= "f"', 'E734')
+      let x = !3.14
+      call assert_equal(0.0, x)
+
+      " integer and float operations
+      let x = 1
+      let x *= 2.1
+      call assert_equal(2.1, x)
+      let x = 1
+      let x /= 0.25
+      call assert_equal(4.0, x)
+      let x = 1
+      call assert_fails('let x %= 0.25', 'E734:')
+      let x = 1
+      call assert_fails('let x .= 0.25', 'E734:')
+      let x = 1.0
+      call assert_fails('let x += [1.1]', 'E734:')
     endif
 
     " Test for environment variable
@@ -1728,10 +1747,7 @@ func Test_funccall_garbage_collect()
 endfunc
 
 func Test_function_defined_line()
-    if has('gui_running')
-        " Can't catch the output of gvim.
-        return
-    endif
+    CheckNotGui
 
     let lines =<< trim [CODE]
     " F1
@@ -1834,6 +1850,9 @@ func Test_missing_end()
 
   " Missing 'in' in a :for statement
   call assert_fails('for i range(1) | endfor', 'E690:')
+
+  " Incorrect number of variables in for
+  call assert_fails('for [i,] in range(3) | endfor', 'E475:')
 endfunc
 
 " Test for deep nesting of if/for/while/try statements              {{{1
@@ -1937,6 +1956,100 @@ func Test_sfile_in_function()
   endfunc
   call Xfunc()
   delfunc Xfunc
+endfunc
+
+" Test for errors in converting to float from various types         {{{1
+func Test_float_conversion_errors()
+  if has('float')
+    call assert_fails('let x = 4.0 % 2.0', 'E804')
+    call assert_fails('echo 1.1[0]', 'E806')
+    call assert_fails('echo sort([function("min"), 1], "f")', 'E891:')
+    call assert_fails('echo 3.2 == "vim"', 'E892:')
+    call assert_fails('echo sort([[], 1], "f")', 'E893:')
+    call assert_fails('echo sort([{}, 1], "f")', 'E894:')
+    call assert_fails('echo 3.2 == v:true', 'E362:')
+    " call assert_fails('echo 3.2 == v:none', 'E907:')
+  endif
+endfunc
+
+func Test_invalid_function_names()
+  " function name not starting with capital
+  let caught_e128 = 0
+  try
+    func! g:test()
+      echo "test"
+    endfunc
+  catch /E128:/
+    let caught_e128 = 1
+  endtry
+  call assert_equal(1, caught_e128)
+
+  " function name includes a colon
+  let caught_e884 = 0
+  try
+    func! b:test()
+      echo "test"
+    endfunc
+  catch /E884:/
+    let caught_e884 = 1
+  endtry
+  call assert_equal(1, caught_e884)
+
+  " function name folowed by #
+  let caught_e128 = 0
+  try
+    func! test2() "#
+      echo "test2"
+    endfunc
+  catch /E128:/
+    let caught_e128 = 1
+  endtry
+  call assert_equal(1, caught_e128)
+
+  " function name starting with/without "g:", buffer-local funcref.
+  function! g:Foo(n)
+    return 'called Foo(' . a:n . ')'
+  endfunction
+  let b:my_func = function('Foo')
+  call assert_equal('called Foo(1)', b:my_func(1))
+  call assert_equal('called Foo(2)', g:Foo(2))
+  call assert_equal('called Foo(3)', Foo(3))
+  delfunc g:Foo
+
+  " script-local function used in Funcref must exist.
+  let lines =<< trim END
+    func s:Testje()
+      return "foo"
+    endfunc
+    let Bar = function('s:Testje')
+    call assert_equal(0, exists('s:Testje'))
+    call assert_equal(1, exists('*s:Testje'))
+    call assert_equal(1, exists('Bar'))
+    call assert_equal(1, exists('*Bar'))
+  END
+  call writefile(lines, 'Xscript')
+  source Xscript
+  call delete('Xscript')
+endfunc
+
+" substring and variable name
+func Test_substring_var()
+  let str = 'abcdef'
+  let n = 3
+  call assert_equal('def', str[n:])
+  call assert_equal('abcd', str[:n])
+  call assert_equal('d', str[n:n])
+  unlet n
+  let nn = 3
+  call assert_equal('def', str[nn:])
+  call assert_equal('abcd', str[:nn])
+  call assert_equal('d', str[nn:nn])
+  unlet nn
+  let b:nn = 4
+  call assert_equal('ef', str[b:nn:])
+  call assert_equal('abcde', str[:b:nn])
+  call assert_equal('e', str[b:nn:b:nn])
+  unlet b:nn
 endfunc
 
 func Test_for_over_string()
