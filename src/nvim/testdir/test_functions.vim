@@ -1018,7 +1018,9 @@ func Test_charidx()
   call assert_equal(2, charidx(a, 4))
   call assert_equal(3, charidx(a, 7))
   call assert_equal(-1, charidx(a, 8))
+  call assert_equal(-1, charidx(a, -1))
   call assert_equal(-1, charidx('', 0))
+  call assert_equal(-1, charidx(v:_null_string, 0))
 
   " count composing characters
   call assert_equal(0, charidx(a, 0, 1))
@@ -1863,6 +1865,7 @@ func Test_call()
   let mydict = {'data': [0, 1, 2, 3], 'len': function("Mylen")}
   eval mydict.len->call([], mydict)->assert_equal(4)
   call assert_fails("call call('Mylen', [], 0)", 'E715:')
+  call assert_fails('call foo', 'E107:')
 endfunc
 
 func Test_char2nr()
@@ -2201,6 +2204,12 @@ func Test_range()
 
   " uniq()
   call assert_equal([0, 1, 2, 3, 4], uniq(range(5)))
+endfunc
+
+func Test_garbagecollect_now_fails()
+  let v:testing = 0
+  call assert_fails('call test_garbagecollect_now()', 'E1142:')
+  let v:testing = 1
 endfunc
 
 " Test for the eval() function
