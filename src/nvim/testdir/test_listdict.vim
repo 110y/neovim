@@ -336,12 +336,12 @@ func Test_dict_deepcopy()
   let l = [4, d, 6]
   let d[3] = l
   let dc = deepcopy(d)
-  call assert_fails('call deepcopy(d, 1)', 'E698')
+  call assert_fails('call deepcopy(d, 1)', 'E698:')
   let l2 = [0, l, l, 3]
   let l[1] = l2
   let l3 = deepcopy(l2)
   call assert_true(l3[1] is l3[2])
-  call assert_fails("call deepcopy([1, 2], 2)", 'E474:')
+  call assert_fails("call deepcopy([1, 2], 2)", 'E1023:')
 endfunc
 
 " Locked variables
@@ -680,10 +680,10 @@ func Test_reverse_sort_uniq()
   endif
 
   call assert_fails('call reverse("")', 'E899:')
-  call assert_fails('call uniq([1, 2], {x, y -> []})', 'E882:')
+  call assert_fails('call uniq([1, 2], {x, y -> []})', 'E745:')
   call assert_fails("call sort([1, 2], function('min'), 1)", "E715:")
   call assert_fails("call sort([1, 2], function('invalid_func'))", "E700:")
-  call assert_fails("call sort([1, 2], function('min'))", "E702:")
+  call assert_fails("call sort([1, 2], function('min'))", "E118:")
 endfunc
 
 " reduce a list or a blob
@@ -983,7 +983,7 @@ func Test_listdict_index()
   call assert_fails('echo d[1:2]', 'E719:')
   call assert_fails("let v = [4, 6][{-> 1}]", 'E729:')
   call assert_fails("let v = range(5)[2:[]]", 'E730:')
-  call assert_fails("let v = range(5)[2:{-> 2}(]", 'E116:')
+  call assert_fails("let v = range(5)[2:{-> 2}(]", ['E15:', 'E116:'])
   call assert_fails("let v = range(5)[2:3", 'E111:')
   call assert_fails("let l = insert([1,2,3], 4, 10)", 'E684:')
   call assert_fails("let l = insert([1,2,3], 4, -10)", 'E684:')
