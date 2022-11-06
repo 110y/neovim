@@ -1975,14 +1975,12 @@ static char *set_bool_option(const int opt_idx, char_u *const varp, const int va
   } else if ((int *)varp == &curbuf->b_p_ma) {
     // when 'modifiable' is changed, redraw the window title
     redraw_titles();
-  } else if ((int *)varp == &curbuf->b_p_eol) {
-    // when 'endofline' is changed, redraw the window title
-    redraw_titles();
-  } else if ((int *)varp == &curbuf->b_p_fixeol) {
-    // when 'fixeol' is changed, redraw the window title
-    redraw_titles();
-  } else if ((int *)varp == &curbuf->b_p_bomb) {
-    // when 'bomb' is changed, redraw the window title and tab page text
+  } else if ((int *)varp == &curbuf->b_p_eof
+             || (int *)varp == &curbuf->b_p_eol
+             || (int *)varp == &curbuf->b_p_fixeol
+             || (int *)varp == &curbuf->b_p_bomb) {
+    // redraw the window title and tab page text when 'endoffile', 'endofline',
+    // 'fixeol' or 'bomb' is changed
     redraw_titles();
   } else if ((int *)varp == &curbuf->b_p_bin) {
     // when 'bin' is set also set some other options
@@ -4704,8 +4702,7 @@ void set_context_in_set_cmd(expand_T *xp, char_u *arg, int opt_flags)
         || p == (char_u *)&p_cdpath
         || p == (char_u *)&p_vdir) {
       xp->xp_context = EXPAND_DIRECTORIES;
-      if (p == (char_u *)&p_path
-          || p == (char_u *)&p_cdpath) {
+      if (p == (char_u *)&p_path || p == (char_u *)&p_cdpath) {
         xp->xp_backslash = XP_BS_THREE;
       } else {
         xp->xp_backslash = XP_BS_ONE;
