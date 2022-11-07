@@ -4074,6 +4074,13 @@ static int getargopt(exarg_T *eap)
     return OK;
   }
 
+  // ":write ++p foo/bar/file
+  if (strncmp(arg, "p", 1) == 0) {
+    eap->mkdir_p = true;
+    eap->arg = skipwhite(arg + 1);
+    return OK;
+  }
+
   if (STRNCMP(arg, "ff", 2) == 0) {
     arg += 2;
     pp = &eap->force_ff;
@@ -4224,7 +4231,7 @@ static void ex_autocmd(exarg_T *eap)
     secure = 2;
     eap->errmsg = _(e_curdir);
   } else if (eap->cmdidx == CMD_autocmd) {
-    do_autocmd(eap->arg, eap->forceit);
+    do_autocmd(eap, eap->arg, eap->forceit);
   } else {
     do_augroup(eap->arg, eap->forceit);
   }
