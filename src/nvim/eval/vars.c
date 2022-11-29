@@ -22,6 +22,7 @@
 #include "nvim/eval/typval_defs.h"
 #include "nvim/eval/userfunc.h"
 #include "nvim/eval/vars.h"
+#include "nvim/eval/window.h"
 #include "nvim/ex_cmds.h"
 #include "nvim/ex_cmds_defs.h"
 #include "nvim/ex_docmd.h"
@@ -1799,13 +1800,15 @@ void f_setbufvar(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     if (*varname == '&') {
       aco_save_T aco;
 
-      // set curbuf to be our buf, temporarily
+      // Set curbuf to be our buf, temporarily.
       aucmd_prepbuf(&aco, buf);
+      if (curbuf == buf) {
+        // Only when it worked to set "curbuf".
+        set_option_from_tv(varname + 1, varp);
 
-      set_option_from_tv(varname + 1, varp);
-
-      // reset notion of buffer
-      aucmd_restbuf(&aco);
+        // reset notion of buffer
+        aucmd_restbuf(&aco);
+      }
     } else {
       const size_t varname_len = strlen(varname);
       char *const bufvarname = xmalloc(varname_len + 3);

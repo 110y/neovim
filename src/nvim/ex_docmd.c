@@ -1827,6 +1827,7 @@ static bool skip_cmd(const exarg_T *eap)
     case CMD_throw:
     case CMD_tilde:
     case CMD_topleft:
+    case CMD_trust:
     case CMD_unlet:
     case CMD_unlockvar:
     case CMD_verbose:
@@ -4620,7 +4621,7 @@ static void ex_pclose(exarg_T *eap)
 void ex_win_close(int forceit, win_T *win, tabpage_T *tp)
 {
   // Never close the autocommand window.
-  if (win == aucmd_win) {
+  if (is_aucmd_win(win)) {
     emsg(_(e_autocmd_close));
     return;
   }
