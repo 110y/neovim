@@ -320,7 +320,7 @@ EXTERN int garbage_collect_at_exit INIT(= false);
 #define SID_STR         (-10)     // for sourcing a string with no script item
 
 // Script CTX being sourced or was sourced to define the current function.
-EXTERN sctx_T current_sctx INIT(= { 0 COMMA 0 COMMA 0 });
+EXTERN sctx_T current_sctx INIT(= { 0, 0, 0 });
 // ID of the current channel making a client API call
 EXTERN uint64_t current_channel_id INIT(= 0);
 
@@ -422,19 +422,18 @@ EXTERN win_T *prevwin INIT(= NULL);  // previous window
 
 EXTERN win_T *curwin;        // currently active window
 
-/// When executing autocommands for a buffer that is not in any window, a
-/// special window is created to handle the side effects.  When autocommands
-/// nest we may need more than one.  Allow for up to five, if more are needed
-/// something crazy is happening.
-enum { AUCMD_WIN_COUNT = 5, };
-
 typedef struct {
   win_T *auc_win;     ///< Window used in aucmd_prepbuf().  When not NULL the
                       ///< window has been allocated.
   bool auc_win_used;  ///< This auc_win is being used.
 } aucmdwin_T;
 
-EXTERN aucmdwin_T aucmd_win[AUCMD_WIN_COUNT];
+/// When executing autocommands for a buffer that is not in any window, a
+/// special window is created to handle the side effects.  When autocommands
+/// nest we may need more than one.
+EXTERN kvec_t(aucmdwin_T) aucmd_win_vec INIT(= KV_INITIAL_VALUE);
+#define aucmd_win (aucmd_win_vec.items)
+#define AUCMD_WIN_COUNT ((int)aucmd_win_vec.size)
 
 // The window layout is kept in a tree of frames.  topframe points to the top
 // of the tree.
