@@ -3900,6 +3900,9 @@ static void qf_update_buffer(qf_info_T *qi, qfline_T *old_last)
       qf_winid = (int)win->handle;
     }
 
+    // autocommands may cause trouble
+    incr_quickfix_busy();
+
     aco_save_T aco;
 
     if (old_last == NULL) {
@@ -3924,6 +3927,9 @@ static void qf_update_buffer(qf_info_T *qi, qfline_T *old_last)
     if ((win = qf_find_win(qi)) != NULL && old_line_count < win->w_botline) {
       redraw_buf_later(buf, UPD_NOT_VALID);
     }
+
+    // always called after incr_quickfix_busy()
+    decr_quickfix_busy();
   }
 }
 
@@ -4070,7 +4076,7 @@ static void qf_fill_buffer(qf_list_T *qfl, buf_T *buf, qfline_T *old_last, int q
   }
 
   // Check if there is anything to display
-  if (qfl != NULL) {
+  if (qfl != NULL && qfl->qf_start != NULL) {
     char dirname[MAXPATHL];
 
     *dirname = NUL;
