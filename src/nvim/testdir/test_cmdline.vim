@@ -1100,6 +1100,15 @@ func Test_cmdline_complete_various()
   " completion after a range followed by a pipe (|) character
   call feedkeys(":1,10 | chist\t\<C-B>\"\<CR>", 'xt')
   call assert_equal('"1,10 | chistory', @:)
+
+  " use <Esc> as the 'wildchar' for completion
+  set wildchar=<Esc>
+  call feedkeys(":g/a\\xb/clearj\<Esc>\<C-B>\"\<CR>", 'xt')
+  call assert_equal('"g/a\xb/clearjumps', @:)
+  " pressing <esc> twice should cancel the command
+  call feedkeys(":chist\<Esc>\<Esc>", 'xt')
+  call assert_equal('"g/a\xb/clearjumps', @:)
+  set wildchar&
 endfunc
 
 func Test_cmdline_write_alternatefile()
@@ -2270,6 +2279,23 @@ func Test_wildmenu_pum()
   call StopVimInTerminal(buf)
   call delete('Xtest')
   call delete('Xdir', 'rf')
+endfunc
+
+func Test_wildmenu_pum_clear_entries()
+  CheckRunVimInTerminal
+
+  " This was using freed memory.  Run in a terminal to get the pum to update.
+  let lines =<< trim END
+    set wildoptions=pum
+    set wildchar=<C-E>
+  END
+  call writefile(lines, 'XwildmenuTest', 'D')
+  let buf = RunVimInTerminal('-S XwildmenuTest', #{rows: 10})
+
+  call term_sendkeys(buf, ":\<C-E>\<C-E>")
+  call VerifyScreenDump(buf, 'Test_wildmenu_pum_clear_entries_1', {})
+
+  set wildoptions& wildchar&
 endfunc
 
 " this was going over the end of IObuff
