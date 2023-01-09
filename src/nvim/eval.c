@@ -267,6 +267,8 @@ static struct vimvar {
   VV(VV__NULL_DICT,       "_null_dict",       VAR_DICT, VV_RO),
   VV(VV__NULL_BLOB,       "_null_blob",       VAR_BLOB, VV_RO),
   VV(VV_LUA,              "lua",              VAR_PARTIAL, VV_RO),
+  VV(VV_RELNUM,           "relnum",           VAR_NUMBER, VV_RO),
+  VV(VV_WRAP,             "wrap",             VAR_BOOL, VV_RO),
 };
 #undef VV
 
@@ -6273,7 +6275,7 @@ int list2fpos(typval_T *arg, pos_T *posp, int *fnump, colnr_T *curswantp, bool c
 int get_env_len(const char **arg)
 {
   const char *p;
-  for (p = *arg; vim_isIDc(*p); p++) {}
+  for (p = *arg; vim_isIDc((uint8_t)(*p)); p++) {}
   if (p == *arg) {  // No name found.
     return 0;
   }
@@ -7861,7 +7863,7 @@ repeat:
 
     if (p != NULL) {
       if (c == '.') {
-        os_dirname((char_u *)dirname, MAXPATHL);
+        os_dirname(dirname, MAXPATHL);
         if (has_homerelative) {
           s = xstrdup(dirname);
           home_replace(NULL, s, dirname, MAXPATHL, true);

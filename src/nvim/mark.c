@@ -664,13 +664,13 @@ static void fname2fnum(xfmark_T *fm)
 
       expand_env("~/", NameBuff, MAXPATHL);
       int len = (int)strlen(NameBuff);
-      STRLCPY(NameBuff + len, fm->fname + 2, MAXPATHL - len);
+      xstrlcpy(NameBuff + len, fm->fname + 2, (size_t)(MAXPATHL - len));
     } else {
-      STRLCPY(NameBuff, fm->fname, MAXPATHL);
+      xstrlcpy(NameBuff, fm->fname, MAXPATHL);
     }
 
     // Try to shorten the file name.
-    os_dirname((char_u *)IObuff, IOSIZE);
+    os_dirname(IObuff, IOSIZE);
     char *p = path_shorten_fname(NameBuff, IObuff);
 
     // buflist_new() will call fmarks_check_names()
@@ -899,8 +899,8 @@ static void show_one_mark(int c, char_u *arg, pos_T *p, char_u *name_arg, int cu
       }
       msg_putchar('\n');
       if (!got_int) {
-        snprintf((char *)IObuff, IOSIZE, " %c %6" PRIdLINENR " %4d ", c, p->lnum, p->col);
-        msg_outtrans((char *)IObuff);
+        snprintf(IObuff, IOSIZE, " %c %6" PRIdLINENR " %4d ", c, p->lnum, p->col);
+        msg_outtrans(IObuff);
         if (name != NULL) {
           msg_outtrans_attr((char *)name, current ? HL_ATTR(HLF_D) : 0);
         }
@@ -1022,11 +1022,11 @@ void ex_jumps(exarg_T *eap)
         xfree(name);
         break;
       }
-      snprintf((char *)IObuff, IOSIZE, "%c %2d %5" PRIdLINENR " %4d ",
+      snprintf(IObuff, IOSIZE, "%c %2d %5" PRIdLINENR " %4d ",
                i == curwin->w_jumplistidx ? '>' : ' ',
                i > curwin->w_jumplistidx ? i - curwin->w_jumplistidx : curwin->w_jumplistidx - i,
                curwin->w_jumplist[i].fmark.mark.lnum, curwin->w_jumplist[i].fmark.mark.col);
-      msg_outtrans((char *)IObuff);
+      msg_outtrans(IObuff);
       msg_outtrans_attr(name,
                         curwin->w_jumplist[i].fmark.fnum == curbuf->b_fnum
                         ? HL_ATTR(HLF_D) : 0);
@@ -1066,7 +1066,7 @@ void ex_changes(exarg_T *eap)
                i > curwin->w_changelistidx ? i - curwin->w_changelistidx : curwin->w_changelistidx - i,
                (long)curbuf->b_changelist[i].mark.lnum,
                curbuf->b_changelist[i].mark.col);
-      msg_outtrans((char *)IObuff);
+      msg_outtrans(IObuff);
       name = (char_u *)mark_line(&curbuf->b_changelist[i].mark, 17);
       msg_outtrans_attr((char *)name, HL_ATTR(HLF_D));
       xfree(name);
