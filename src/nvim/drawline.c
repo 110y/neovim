@@ -398,11 +398,15 @@ static int get_sign_attrs(buf_T *buf, linenr_T lnum, SignTextAttrs *sattrs, int 
   return num_signs;
 }
 
+/// Prepare and build the 'statuscolumn' string for line "lnum" in window "wp".
+/// Fill "stcp" with the built status column string and attributes.
+///
+/// @param[out] stcp  Status column attributes
 static void get_statuscol_str(win_T *wp, linenr_T lnum, int row, int startrow, int filler_lines,
                               int cul_attr, int sign_num_attr, SignTextAttrs *sattrs,
                               foldinfo_T foldinfo, char_u *extra, statuscol_T *stcp)
 {
-  long relnum;
+  long relnum = 0;
   bool wrapped = row != startrow + filler_lines;
   bool use_cul = use_cursor_line_sign(wp, lnum);
 
@@ -446,17 +450,21 @@ static void get_statuscol_str(win_T *wp, linenr_T lnum, int row, int startrow, i
   stcp->textp = stcp->text;
   stcp->hlrecp = stcp->hlrec;
   stcp->cur_attr = stcp->num_attr;
-  stcp->text_len = strlen(stcp->text);
+  stcp->text_end = stcp->text + strlen(stcp->text);
 
   int fill = stcp->width - width;
   if (fill > 0) {
     // Fill up with ' '
-    memset(&stcp->text[stcp->text_len], ' ', (size_t)fill);
-    stcp->text_len += (size_t)fill;
-    stcp->text[stcp->text_len] = NUL;
+    memset(stcp->text_end, ' ', (size_t)fill);
+    *(stcp->text_end += fill) = NUL;
   }
 }
 
+/// Get information needed to display the next segment in the 'statuscolumn'.
+/// If not yet at the end, prepare for next segment and decrement "draw_state".
+///
+/// @param stcp  Status column attributes
+/// @param[out] draw_state  Current draw state in win_line()
 static void get_statuscol_display_info(LineDrawState *draw_state, int *char_attr, int *n_extrap,
                                        int *c_extrap, int *c_finalp, char_u *extra, char **pp_extra,
                                        statuscol_T *stcp)
@@ -467,10 +475,9 @@ static void get_statuscol_display_info(LineDrawState *draw_state, int *char_attr
     *draw_state = WL_STC;
     *char_attr = stcp->cur_attr;
     *pp_extra = stcp->textp;
-    *n_extrap = stcp->hlrecp->start ? (int)(stcp->hlrecp->start - stcp->textp)
-                                    : (int)strlen(*pp_extra);
+    *n_extrap = (int)((stcp->hlrecp->start ? stcp->hlrecp->start : stcp->text_end) - stcp->textp);
     // Prepare for next highlight section if not yet at the end
-    if (stcp->textp + *n_extrap < stcp->text + stcp->text_len) {
+    if (stcp->textp + *n_extrap < stcp->text_end) {
       int hl = stcp->hlrecp->userhl;
       stcp->textp = stcp->hlrecp->start;
       stcp->cur_attr = hl < 0 ? syn_id2attr(-stcp->hlrecp->userhl)
@@ -479,7 +486,7 @@ static void get_statuscol_display_info(LineDrawState *draw_state, int *char_attr
       *draw_state = WL_STC - 1;
     }
     // Skip over empty highlight sections
-  } while (*n_extrap == 0 && stcp->textp < stcp->text + stcp->text_len);
+  } while (*n_extrap == 0 && stcp->textp < stcp->text_end);
 }
 
 /// Return true if CursorLineNr highlight is to be used for the number column.
@@ -1319,7 +1326,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
         draw_state = WL_STC;
         // Draw the 'statuscolumn' if option is set.
         if (statuscol.draw) {
-          if (statuscol.text_len == 0) {
+          if (statuscol.textp == NULL) {
             get_statuscol_str(wp, lnum, row, startrow, filler_lines, cul_attr,
                               sign_num_attr, sattrs, foldinfo, extra, &statuscol);
             if (wp->w_redr_statuscol) {
@@ -2814,7 +2821,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
       if (statuscol.draw) {
         if (row == startrow + 1 || row == startrow + filler_lines) {
           // Re-evaluate 'statuscolumn' for the first wrapped row and non filler line
-          statuscol.text_len = 0;
+          statuscol.textp = NULL;
         } else {  // Otherwise just reset the text/hlrec pointers
           statuscol.textp = statuscol.text;
           statuscol.hlrecp = statuscol.hlrec;

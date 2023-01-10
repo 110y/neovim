@@ -458,12 +458,12 @@ static void redraw_wildmenu(expand_T *xp, int num_matches, char **matches, int m
         s += skip_wildmenu_char(xp, (char_u *)s);
         clen += ptr2cells(s);
         if ((l = utfc_ptr2len(s)) > 1) {
-          strncpy((char *)buf + len, s, (size_t)l);  // NOLINT(runtime/printf)
+          strncpy(buf + len, s, (size_t)l);  // NOLINT(runtime/printf)
           s += l - 1;
           len += l;
         } else {
           STRCPY(buf + len, transchar_byte((uint8_t)(*s)));
-          len += (int)strlen((char *)buf + len);
+          len += (int)strlen(buf + len);
         }
       }
     }
@@ -1585,21 +1585,24 @@ static const char *set_context_by_cmdname(const char *cmd, cmdidx_T cmdidx, cons
   case CMD_dsplit:
     // Skip count.
     arg = (const char *)skipwhite(skipdigits(arg));
-    if (*arg == '/') {  // Match regexp, not just whole words.
-      for (++arg; *arg && *arg != '/'; arg++) {
-        if (*arg == '\\' && arg[1] != NUL) {
-          arg++;
-        }
-      }
-      if (*arg) {
-        arg = (const char *)skipwhite(arg + 1);
+    if (*arg != '/') {
+      return NULL;
+    }
 
-        // Check for trailing illegal characters.
-        if (*arg == NUL || strchr("|\"\n", *arg) == NULL) {
-          xp->xp_context = EXPAND_NOTHING;
-        } else {
-          return arg;
-        }
+    // Match regexp, not just whole words.
+    for (++arg; *arg && *arg != '/'; arg++) {
+      if (*arg == '\\' && arg[1] != NUL) {
+        arg++;
+      }
+    }
+    if (*arg) {
+      arg = (const char *)skipwhite(arg + 1);
+
+      // Check for trailing illegal characters.
+      if (*arg == NUL || strchr("|\"\n", *arg) == NULL) {
+        xp->xp_context = EXPAND_NOTHING;
+      } else {
+        return arg;
       }
     }
     break;

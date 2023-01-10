@@ -226,11 +226,11 @@ const EvalFuncDef *find_internal_func(const char *const name)
   return index >= 0 ? &functions[index] : NULL;
 }
 
-int call_internal_func(const char_u *const fname, const int argcount, typval_T *const argvars,
+int call_internal_func(const char *const fname, const int argcount, typval_T *const argvars,
                        typval_T *const rettv)
   FUNC_ATTR_NONNULL_ALL
 {
-  const EvalFuncDef *const fdef = find_internal_func((const char *)fname);
+  const EvalFuncDef *const fdef = find_internal_func(fname);
   if (fdef == NULL) {
     return FCERR_UNKNOWN;
   } else if (argcount < fdef->min_argc) {
@@ -859,14 +859,14 @@ static void f_cindent(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 
 win_T *get_optional_window(typval_T *argvars, int idx)
 {
-  win_T *win = curwin;
+  if (argvars[idx].v_type == VAR_UNKNOWN) {
+    return curwin;
+  }
 
-  if (argvars[idx].v_type != VAR_UNKNOWN) {
-    win = find_win_by_nr_or_id(&argvars[idx]);
-    if (win == NULL) {
-      emsg(_(e_invalwindow));
-      return NULL;
-    }
+  win_T *win = find_win_by_nr_or_id(&argvars[idx]);
+  if (win == NULL) {
+    emsg(_(e_invalwindow));
+    return NULL;
   }
   return win;
 }
@@ -2751,19 +2751,19 @@ static void f_getpos(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 /// Returns zero on error.
 static int getreg_get_regname(typval_T *argvars)
 {
-  const char_u *strregname;
+  const char *strregname;
 
   if (argvars[0].v_type != VAR_UNKNOWN) {
-    strregname = (const char_u *)tv_get_string_chk(&argvars[0]);
+    strregname = tv_get_string_chk(&argvars[0]);
     if (strregname == NULL) {  // type error; errmsg already given
       return 0;
     }
   } else {
     // Default to v:register
-    strregname = (char_u *)get_vim_var_str(VV_REG);
+    strregname = get_vim_var_str(VV_REG);
   }
 
-  return *strregname == 0 ? '"' : *strregname;
+  return *strregname == 0 ? '"' : (uint8_t)(*strregname);
 }
 
 /// "getreg()" function
@@ -3365,13 +3365,11 @@ static void f_iconv(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 
   const char *const str = tv_get_string(&argvars[0]);
   char buf1[NUMBUFLEN];
-  char_u *const from =
-    (char_u *)enc_canonize(enc_skip((char *)tv_get_string_buf(&argvars[1], buf1)));
+  char *const from = enc_canonize(enc_skip((char *)tv_get_string_buf(&argvars[1], buf1)));
   char buf2[NUMBUFLEN];
-  char_u *const to =
-    (char_u *)enc_canonize(enc_skip((char *)tv_get_string_buf(&argvars[2], buf2)));
+  char *const to = enc_canonize(enc_skip((char *)tv_get_string_buf(&argvars[2], buf2)));
   vimconv.vc_type = CONV_NONE;
-  convert_setup(&vimconv, (char *)from, (char *)to);
+  convert_setup(&vimconv, from, to);
 
   // If the encodings are equal, no conversion needed.
   if (vimconv.vc_type == CONV_NONE) {
@@ -3646,11 +3644,11 @@ static void f_islocked(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   lval_T lv;
 
   rettv->vval.v_number = -1;
-  const char_u *const end = (char_u *)get_lval((char *)tv_get_string(&argvars[0]),
-                                               NULL,
-                                               &lv, false, false,
-                                               GLV_NO_AUTOLOAD|GLV_READ_ONLY,
-                                               FNE_CHECK_START);
+  const char *const end = get_lval((char *)tv_get_string(&argvars[0]),
+                                   NULL,
+                                   &lv, false, false,
+                                   GLV_NO_AUTOLOAD|GLV_READ_ONLY,
+                                   FNE_CHECK_START);
   if (end != NULL && lv.ll_name != NULL) {
     if (*end != NUL) {
       semsg(_(e_trailing_arg), end);
@@ -6109,55 +6107,57 @@ static int get_search_arg(typval_T *varp, int *flagsp)
 {
   int dir = FORWARD;
 
-  if (varp->v_type != VAR_UNKNOWN) {
-    char nbuf[NUMBUFLEN];
-    const char *flags = tv_get_string_buf_chk(varp, nbuf);
-    if (flags == NULL) {
-      return 0;  // Type error; errmsg already given.
-    }
-    int mask;
-    while (*flags != NUL) {
-      switch (*flags) {
-      case 'b':
-        dir = BACKWARD; break;
-      case 'w':
-        p_ws = true; break;
-      case 'W':
-        p_ws = false; break;
-      default:
-        mask = 0;
-        if (flagsp != NULL) {
-          switch (*flags) {
-          case 'c':
-            mask = SP_START; break;
-          case 'e':
-            mask = SP_END; break;
-          case 'm':
-            mask = SP_RETCOUNT; break;
-          case 'n':
-            mask = SP_NOMOVE; break;
-          case 'p':
-            mask = SP_SUBPAT; break;
-          case 'r':
-            mask = SP_REPEAT; break;
-          case 's':
-            mask = SP_SETPCMARK; break;
-          case 'z':
-            mask = SP_COLUMN; break;
-          }
-        }
-        if (mask == 0) {
-          semsg(_(e_invarg2), flags);
-          dir = 0;
-        } else {
-          *flagsp |= mask;
+  if (varp->v_type == VAR_UNKNOWN) {
+    return FORWARD;
+  }
+
+  char nbuf[NUMBUFLEN];
+  const char *flags = tv_get_string_buf_chk(varp, nbuf);
+  if (flags == NULL) {
+    return 0;  // Type error; errmsg already given.
+  }
+  int mask;
+  while (*flags != NUL) {
+    switch (*flags) {
+    case 'b':
+      dir = BACKWARD; break;
+    case 'w':
+      p_ws = true; break;
+    case 'W':
+      p_ws = false; break;
+    default:
+      mask = 0;
+      if (flagsp != NULL) {
+        switch (*flags) {
+        case 'c':
+          mask = SP_START; break;
+        case 'e':
+          mask = SP_END; break;
+        case 'm':
+          mask = SP_RETCOUNT; break;
+        case 'n':
+          mask = SP_NOMOVE; break;
+        case 'p':
+          mask = SP_SUBPAT; break;
+        case 'r':
+          mask = SP_REPEAT; break;
+        case 's':
+          mask = SP_SETPCMARK; break;
+        case 'z':
+          mask = SP_COLUMN; break;
         }
       }
-      if (dir == 0) {
-        break;
+      if (mask == 0) {
+        semsg(_(e_invarg2), flags);
+        dir = 0;
+      } else {
+        *flagsp |= mask;
       }
-      flags++;
     }
+    if (dir == 0) {
+      break;
+    }
+    flags++;
   }
   return dir;
 }

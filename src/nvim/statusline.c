@@ -868,6 +868,12 @@ void draw_tabline(void)
   redraw_tabline = false;
 }
 
+/// Build the 'statuscolumn' string for line "lnum".  If "setnum" is true,
+/// update the "lnum" and "relnum" vim-variables for a new line.
+///
+/// @param hlrec  HL attributes (can be NULL)
+/// @param stcp  Status column attributes (can be NULL)
+/// @return  The width of the built status column string for line "lnum"
 int build_statuscol_str(win_T *wp, bool setnum, bool wrap, linenr_T lnum, long relnum, int maxwidth,
                         int fillchar, char *buf, stl_hlrec_t **hlrec, statuscol_T *stcp)
 {
@@ -1496,7 +1502,7 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, char *opt_n
 
     case STL_LINE:
       // Overload %l with v:lnum for 'statuscolumn'
-      num = strcmp(opt_name, "statuscolumn") == 0 ? get_vim_var_nr(VV_LNUM)
+      num = opt_name != NULL && strcmp(opt_name, "statuscolumn") == 0 ? get_vim_var_nr(VV_LNUM)
             : (wp->w_buffer->b_ml.ml_flags & ML_EMPTY) ? 0L : (long)(wp->w_cursor.lnum);
       break;
 
@@ -1596,7 +1602,7 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, char *opt_n
     case STL_ROFLAG:
     case STL_ROFLAG_ALT:
       // Overload %r with v:relnum for 'statuscolumn'
-      if (strcmp(opt_name, "statuscolumn") == 0) {
+      if (opt_name != NULL && strcmp(opt_name, "statuscolumn") == 0) {
         num = get_vim_var_nr(VV_RELNUM);
       } else {
         itemisflag = true;
@@ -1622,7 +1628,7 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, char *opt_n
 
       bool fold = opt == STL_FOLDCOL;
       *buf_tmp = NUL;
-      for (int i = 0; i <= 9; i++) {
+      for (int i = 0; i <= SIGN_SHOW_MAX; i++) {
         char *p = fold ? stcp->fold_text : stcp->sign_text[i];
         if ((!p || !*p) && *buf_tmp == NUL) {
           break;

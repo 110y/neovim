@@ -240,6 +240,84 @@ describe('statuscolumn', function()
       {2: }{1:  │     }aaaaaa                                      |
                                                            |
     ]])
+    -- v:lnum is the same value on wrapped lines
+    command("set stc=%C%=%{v:lnum}│%s\\ ")
+    screen:expect([[
+      {2: }{1: 4│>>   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 4│     }aaaaaa                                      |
+      {2: }{1: 5│}{0:>!}{1:   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 5│     }aaaaaa                                      |
+      {2: }{1: 6│>>}{0:>!}{1: }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 6│     }aaaaaa                                      |
+      {2: }{1: 7│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 7│     }aaaaaa                                      |
+      {2:+}{1: 8│     }{3:^+--  1 line: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}|
+      {2: }{1: 9│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 9│     }aaaaaa                                      |
+      {2: }{1:10│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:10│     }aaaaaa                                      |
+                                                           |
+    ]])
+    -- v:relnum is the same value on wrapped lines
+    command("set stc=%C%=\\ %{v:relnum}│%s\\ ")
+    screen:expect([[
+      {2: }{1: 4│>>   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 4│     }aaaaaa                                      |
+      {2: }{1: 3│}{0:>!}{1:   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 3│     }aaaaaa                                      |
+      {2: }{1: 2│>>}{0:>!}{1: }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 2│     }aaaaaa                                      |
+      {2: }{1: 1│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 1│     }aaaaaa                                      |
+      {2:+}{1: 0│     }{3:^+--  1 line: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}|
+      {2: }{1: 1│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 1│     }aaaaaa                                      |
+      {2: }{1: 2│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1: 2│     }aaaaaa                                      |
+                                                           |
+    ]])
+    command("set stc=%C%=\\ %{v:wrap?'':v:relnum}│%s\\ ")
+    screen:expect([[
+      {2: }{1: 4│>>   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │     }aaaaaa                                      |
+      {2: }{1: 3│}{0:>!}{1:   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │     }aaaaaa                                      |
+      {2: }{1: 2│>>}{0:>!}{1: }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │     }aaaaaa                                      |
+      {2: }{1: 1│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │     }aaaaaa                                      |
+      {2:+}{1: 0│     }{3:^+--  1 line: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}|
+      {2: }{1: 1│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │     }aaaaaa                                      |
+      {2: }{1: 2│     }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │     }aaaaaa                                      |
+                                                           |
+    ]])
+    -- Up to 9 signs in a line
+    command('set signcolumn=auto:9 foldcolumn=auto')
+    command('sign place 5 line=6 name=piet1 buffer=1')
+    command('sign place 6 line=6 name=piet2 buffer=1')
+    command('sign place 7 line=6 name=piet1 buffer=1')
+    command('sign place 8 line=6 name=piet2 buffer=1')
+    command('sign place 9 line=6 name=piet1 buffer=1')
+    command('sign place 10 line=6 name=piet2 buffer=1')
+    command('sign place 11 line=6 name=piet1 buffer=1')
+    screen:expect([[
+      {2: }{1: 4│>>                 }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │                   }aaaaaaaaaaaaaaaaaaaa          |
+      {2: }{1: 3│}{0:>!}{1:                 }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │                   }aaaaaaaaaaaaaaaaaaaa          |
+      {2: }{1: 2│>>}{0:>!}{1:>>}{0:>!}{1:>>}{0:>!}{1:>>}{0:>!}{1:>> }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │                   }aaaaaaaaaaaaaaaaaaaa          |
+      {2: }{1: 1│                   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │                   }aaaaaaaaaaaaaaaaaaaa          |
+      {2:+}{1: 0│                   }{3:^+--  1 line: aaaaaaaaaaaaaaaaa}|
+      {2: }{1: 1│                   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │                   }aaaaaaaaaaaaaaaaaaaa          |
+      {2: }{1: 2│                   }aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|
+      {2: }{1:  │                   }aaaaaaaaaaaaaaaaaaaa          |
+                                                           |
+    ]])
   end)
 
   it('works with \'statuscolumn\' clicks', function()
