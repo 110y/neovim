@@ -1006,7 +1006,7 @@ static int stuff_yank(int regname, char *p)
   } else {
     free_register(reg);
     set_yreg_additional_data(reg, NULL);
-    reg->y_array = xmalloc(sizeof(char_u *));
+    reg->y_array = xmalloc(sizeof(char *));
     reg->y_array[0] = p;
     reg->y_size = 1;
     reg->y_type = kMTCharWise;
@@ -1028,14 +1028,14 @@ static int execreg_lastc = NUL;
 ///              with a \. Lines that start with a comment "\ character are ignored.
 /// @returns the concatenated line. The index of the line that should be
 ///          processed next is returned in idx.
-static char_u *execreg_line_continuation(char **lines, size_t *idx)
+static char *execreg_line_continuation(char **lines, size_t *idx)
 {
   size_t i = *idx;
   assert(i > 0);
   const size_t cmd_end = i;
 
   garray_T ga;
-  ga_init(&ga, (int)sizeof(char_u), 400);
+  ga_init(&ga, (int)sizeof(char), 400);
 
   char *p;
 
@@ -1068,7 +1068,7 @@ static char_u *execreg_line_continuation(char **lines, size_t *idx)
   ga_clear(&ga);
 
   *idx = i;
-  return (char_u *)str;
+  return str;
 }
 
 /// Execute a yank register: copy it into the stuff buffer
@@ -1118,9 +1118,9 @@ int do_execreg(int regname, int colon, int addcr, int silent)
     // When in Visual mode "'<,'>" will be prepended to the command.
     // Remove it when it's already there.
     if (VIsual_active && strncmp(p, "'<,'>", 5) == 0) {
-      retval = put_in_typebuf((char_u *)p + 5, true, true, silent);
+      retval = put_in_typebuf(p + 5, true, true, silent);
     } else {
-      retval = put_in_typebuf((char_u *)p, true, true, silent);
+      retval = put_in_typebuf(p, true, true, silent);
     }
     xfree(p);
   } else if (regname == '=') {
@@ -1128,7 +1128,7 @@ int do_execreg(int regname, int colon, int addcr, int silent)
     if (p == NULL) {
       return FAIL;
     }
-    retval = put_in_typebuf((char_u *)p, true, colon, silent);
+    retval = put_in_typebuf(p, true, colon, silent);
     xfree(p);
   } else if (regname == '.') {        // use last inserted text
     p = (char *)get_last_insert_save();
@@ -1136,7 +1136,7 @@ int do_execreg(int regname, int colon, int addcr, int silent)
       emsg(_(e_noinstext));
       return FAIL;
     }
-    retval = put_in_typebuf((char_u *)p, false, colon, silent);
+    retval = put_in_typebuf(p, false, colon, silent);
     xfree(p);
   } else {
     yankreg_T *reg = get_yank_register(regname, YREG_PASTE);
@@ -1164,7 +1164,7 @@ int do_execreg(int regname, int colon, int addcr, int silent)
       if (colon && i > 0) {
         p = skipwhite(str);
         if (*p == '\\' || (p[0] == '"' && p[1] == '\\' && p[2] == ' ')) {
-          str = (char *)execreg_line_continuation(reg->y_array, &i);
+          str = execreg_line_continuation(reg->y_array, &i);
           free_str = true;
         }
       }
@@ -1214,7 +1214,7 @@ static void put_reedit_in_typebuf(int silent)
 /// @param esc    when true then it is to be taken literally: Escape K_SPECIAL
 ///               characters and no remapping.
 /// @param colon  add ':' before the line
-static int put_in_typebuf(char_u *s, bool esc, bool colon, int silent)
+static int put_in_typebuf(char *s, bool esc, bool colon, int silent)
 {
   int retval = OK;
 
@@ -1226,9 +1226,9 @@ static int put_in_typebuf(char_u *s, bool esc, bool colon, int silent)
     char *p;
 
     if (esc) {
-      p = vim_strsave_escape_ks((char *)s);
+      p = vim_strsave_escape_ks(s);
     } else {
-      p = (char *)s;
+      p = s;
     }
     if (p == NULL) {
       retval = FAIL;
@@ -1347,7 +1347,7 @@ bool get_spec_reg(int regname, char **argp, bool *allocated, bool errmsg)
     if (last_search_pat() == NULL && errmsg) {
       emsg(_(e_noprevre));
     }
-    *argp = (char *)last_search_pat();
+    *argp = last_search_pat();
     return true;
 
   case '.':                     // last inserted text
@@ -1418,11 +1418,11 @@ bool cmdline_paste_reg(int regname, bool literally_arg, bool remcr)
   }
 
   for (size_t i = 0; i < reg->y_size; i++) {
-    cmdline_paste_str((char_u *)reg->y_array[i], literally);
+    cmdline_paste_str(reg->y_array[i], literally);
 
     // Insert ^M between lines, unless `remcr` is true.
     if (i < reg->y_size - 1 && !remcr) {
-      cmdline_paste_str((char_u *)"\r", literally);
+      cmdline_paste_str("\r", literally);
     }
 
     // Check for CTRL-C, in case someone tries to paste a few thousand
@@ -1455,7 +1455,7 @@ int op_delete(oparg_T *oap)
 {
   int n;
   linenr_T lnum;
-  char_u *ptr;
+  char *ptr;
   char *newp, *oldp;
   struct block_def bd = { 0 };
   linenr_T old_lcount = curbuf->b_ml.ml_line_count;
@@ -1489,11 +1489,11 @@ int op_delete(oparg_T *oap)
       && oap->line_count > 1
       && oap->motion_force == NUL
       && oap->op_type == OP_DELETE) {
-    ptr = (char_u *)ml_get(oap->end.lnum) + oap->end.col;
+    ptr = ml_get(oap->end.lnum) + oap->end.col;
     if (*ptr != NUL) {
       ptr += oap->inclusive;
     }
-    ptr = (char_u *)skipwhite((char *)ptr);
+    ptr = skipwhite(ptr);
     if (*ptr == NUL && inindent(0)) {
       oap->motion_type = kMTLineWise;
     }
@@ -1785,10 +1785,12 @@ setmarks:
 /// Used for deletion.
 static void mb_adjust_opend(oparg_T *oap)
 {
-  if (oap->inclusive) {
-    char *p = ml_get(oap->end.lnum);
-    oap->end.col += utf_cp_tail_off(p, p + oap->end.col);
+  if (!oap->inclusive) {
+    return;
   }
+
+  char *p = ml_get(oap->end.lnum);
+  oap->end.col += utf_cp_tail_off(p, p + oap->end.col);
 }
 
 /// Put character 'c' at position 'lp'
@@ -2738,7 +2740,7 @@ static void op_yank_reg(oparg_T *oap, bool message, yankreg_T *reg, bool append)
   }
 
   if (curr != reg) {      // append the new block to the old block
-    new_ptr = xmalloc(sizeof(char_u *) * (curr->y_size + reg->y_size));
+    new_ptr = xmalloc(sizeof(char *) * (curr->y_size + reg->y_size));
     for (j = 0; j < curr->y_size; j++) {
       new_ptr[j] = curr->y_array[j];
     }
@@ -3081,7 +3083,7 @@ void do_put(int regname, yankreg_T *reg, int dir, long count, int flags)
         if (y_array != NULL) {
           break;
         }
-        y_array = xmalloc(y_size * sizeof(char_u *));
+        y_array = xmalloc(y_size * sizeof(char *));
       }
     } else {
       y_size = 1;               // use fake one-line yank register
@@ -3711,20 +3713,23 @@ void adjust_cursor_eol(void)
 {
   unsigned int cur_ve_flags = get_ve_flags();
 
-  if (curwin->w_cursor.col > 0
-      && gchar_cursor() == NUL
-      && (cur_ve_flags & VE_ONEMORE) == 0
-      && !(restart_edit || (State & MODE_INSERT))) {
-    // Put the cursor on the last character in the line.
-    dec_cursor();
+  const bool adj_cursor = (curwin->w_cursor.col > 0
+                           && gchar_cursor() == NUL
+                           && (cur_ve_flags & VE_ONEMORE) == 0
+                           && !(restart_edit || (State & MODE_INSERT)));
+  if (!adj_cursor) {
+    return;
+  }
 
-    if (cur_ve_flags == VE_ALL) {
-      colnr_T scol, ecol;
+  // Put the cursor on the last character in the line.
+  dec_cursor();
 
-      // Coladd is set to the width of the last character.
-      getvcol(curwin, &curwin->w_cursor, &scol, NULL, &ecol);
-      curwin->w_cursor.coladd = ecol - scol + 1;
-    }
+  if (cur_ve_flags == VE_ALL) {
+    colnr_T scol, ecol;
+
+    // Coladd is set to the width of the last character.
+    getvcol(curwin, &curwin->w_cursor, &scol, NULL, &ecol);
+    curwin->w_cursor.coladd = ecol - scol + 1;
   }
 }
 
@@ -3884,9 +3889,9 @@ void ex_display(exarg_T *eap)
   // display last search pattern
   if (last_search_pat() != NULL
       && (arg == NULL || vim_strchr(arg, '/') != NULL) && !got_int
-      && !message_filtered((char *)last_search_pat())) {
+      && !message_filtered(last_search_pat())) {
     msg_puts("\n  c  \"/   ");
-    dis_msg((char *)last_search_pat(), false);
+    dis_msg(last_search_pat(), false);
   }
 
   // display last used expression
@@ -4205,11 +4210,13 @@ static bool reset_lbr(void)
 /// Restore 'linebreak' and take care of side effects.
 static void restore_lbr(bool lbr_saved)
 {
-  if (!curwin->w_p_lbr && lbr_saved) {
-    // changing 'linebreak' may require w_virtcol to be updated
-    curwin->w_p_lbr = true;
-    curwin->w_valid &= ~(VALID_WROW|VALID_WCOL|VALID_VIRTCOL);
+  if (curwin->w_p_lbr || !lbr_saved) {
+    return;
   }
+
+  // changing 'linebreak' may require w_virtcol to be updated
+  curwin->w_p_lbr = true;
+  curwin->w_valid &= ~(VALID_WROW|VALID_WCOL|VALID_VIRTCOL);
 }
 
 /// prepare a few things for block mode yank/delete/tilde
@@ -4468,7 +4475,7 @@ void op_addsub(oparg_T *oap, linenr_T Prenum1, bool g_cmd)
 int do_addsub(int op_type, pos_T *pos, int length, linenr_T Prenum1)
 {
   int col;
-  char_u *buf1 = NULL;
+  char *buf1 = NULL;
   char buf2[NUMBUFLEN];
   int pre;  // 'X' or 'x': hex; '0': octal; 'B' or 'b': bin
   static bool hexupper = false;  // 0xABC
@@ -4740,7 +4747,7 @@ int do_addsub(int op_type, pos_T *pos, int length, linenr_T Prenum1)
     // When there are many leading zeros it could be very long.
     // Allocate a bit too much.
     buf1 = xmalloc((size_t)length + NUMBUFLEN);
-    ptr = (char *)buf1;
+    ptr = buf1;
     if (negative && (!visual || was_positive)) {
       *ptr++ = '-';
     }
@@ -4792,7 +4799,7 @@ int do_addsub(int op_type, pos_T *pos, int length, linenr_T Prenum1)
     }
     *ptr = NUL;
     STRCAT(buf1, buf2);
-    ins_str((char *)buf1);              // insert the new number
+    ins_str(buf1);              // insert the new number
     endpos = curwin->w_cursor;
     if (curwin->w_cursor.col) {
       curwin->w_cursor.col--;
@@ -5081,7 +5088,7 @@ void write_reg_contents_ex(int name, const char *str, ssize_t len, bool must_app
 
   // Special case: '/' search pattern
   if (name == '/') {
-    set_last_search_pat((char_u *)str, RE_SEARCH, true, true);
+    set_last_search_pat(str, RE_SEARCH, true, true);
     return;
   }
 
@@ -5193,7 +5200,7 @@ static void str_to_reg(yankreg_T *y_ptr, MotionType yank_type, const char *str, 
   }
 
   // Grow the register array to hold the pointers to the new lines.
-  char **pp = xrealloc(y_ptr->y_array, (y_ptr->y_size + newlines) * sizeof(char_u *));
+  char **pp = xrealloc(y_ptr->y_array, (y_ptr->y_size + newlines) * sizeof(char *));
   y_ptr->y_array = pp;
 
   size_t lnum = y_ptr->y_size;  // The current line number.
@@ -5269,8 +5276,8 @@ void clear_oparg(oparg_T *oap)
 ///  line, stopping if it encounters an end-of-line (NUL byte).  In that
 ///  case, eol_size will be added to the character count to account for
 ///  the size of the EOL character.
-static varnumber_T line_count_info(char_u *line, varnumber_T *wc, varnumber_T *cc,
-                                   varnumber_T limit, int eol_size)
+static varnumber_T line_count_info(char *line, varnumber_T *wc, varnumber_T *cc, varnumber_T limit,
+                                   int eol_size)
 {
   varnumber_T i;
   varnumber_T words = 0;
@@ -5287,7 +5294,7 @@ static varnumber_T line_count_info(char_u *line, varnumber_T *wc, varnumber_T *c
       is_word = 1;
     }
     chars++;
-    i += utfc_ptr2len((char *)line + i);
+    i += utfc_ptr2len(line + i);
   }
 
   if (is_word) {
@@ -5312,8 +5319,8 @@ static varnumber_T line_count_info(char_u *line, varnumber_T *wc, varnumber_T *c
 void cursor_pos_info(dict_T *dict)
 {
   char *p;
-  char_u buf1[50];
-  char_u buf2[40];
+  char buf1[50];
+  char buf2[40];
   linenr_T lnum;
   varnumber_T byte_count = 0;
   varnumber_T bom_count = 0;
@@ -5422,7 +5429,7 @@ void cursor_pos_info(dict_T *dict)
         break;
         }
         if (s != NULL) {
-          byte_count_cursor += line_count_info((char_u *)s, &word_count_cursor,
+          byte_count_cursor += line_count_info(s, &word_count_cursor,
                                                &char_count_cursor, len, eol_size);
           if (lnum == curbuf->b_ml.ml_line_count
               && !curbuf->b_p_eol
@@ -5437,14 +5444,14 @@ void cursor_pos_info(dict_T *dict)
           word_count_cursor += word_count;
           char_count_cursor += char_count;
           byte_count_cursor = byte_count
-                              + line_count_info((char_u *)ml_get(lnum), &word_count_cursor,
+                              + line_count_info(ml_get(lnum), &word_count_cursor,
                                                 &char_count_cursor,
                                                 (varnumber_T)curwin->w_cursor.col + 1,
                                                 eol_size);
         }
       }
       // Add to the running totals
-      byte_count += line_count_info((char_u *)ml_get(lnum), &word_count, &char_count,
+      byte_count += line_count_info(ml_get(lnum), &word_count, &char_count,
                                     (varnumber_T)MAXCOL, eol_size);
     }
 
@@ -5459,7 +5466,7 @@ void cursor_pos_info(dict_T *dict)
           getvcols(curwin, &min_pos, &max_pos, &min_pos.col, &max_pos.col);
           int64_t cols;
           STRICT_SUB(oparg.end_vcol + 1, oparg.start_vcol, &cols, int64_t);
-          vim_snprintf((char *)buf1, sizeof(buf1), _("%" PRId64 " Cols; "),
+          vim_snprintf(buf1, sizeof(buf1), _("%" PRId64 " Cols; "),
                        cols);
         } else {
           buf1[0] = NUL;
@@ -5490,7 +5497,7 @@ void cursor_pos_info(dict_T *dict)
       } else {
         p = get_cursor_line_ptr();
         validate_virtcol();
-        col_print((char *)buf1, sizeof(buf1), (int)curwin->w_cursor.col + 1,
+        col_print(buf1, sizeof(buf1), (int)curwin->w_cursor.col + 1,
                   (int)curwin->w_virtcol + 1);
         col_print((char *)buf2, sizeof(buf2), (int)strlen(p), linetabsize(p));
 
@@ -5500,7 +5507,7 @@ void cursor_pos_info(dict_T *dict)
                        _("Col %s of %s; Line %" PRId64 " of %" PRId64 ";"
                          " Word %" PRId64 " of %" PRId64 ";"
                          " Byte %" PRId64 " of %" PRId64 ""),
-                       (char *)buf1, (char *)buf2,
+                       buf1, buf2,
                        (int64_t)curwin->w_cursor.lnum,
                        (int64_t)curbuf->b_ml.ml_line_count,
                        (int64_t)word_count_cursor, (int64_t)word_count,
@@ -5511,7 +5518,7 @@ void cursor_pos_info(dict_T *dict)
                          " Word %" PRId64 " of %" PRId64 ";"
                          " Char %" PRId64 " of %" PRId64 ";"
                          " Byte %" PRId64 " of %" PRId64 ""),
-                       (char *)buf1, (char *)buf2,
+                       buf1, buf2,
                        (int64_t)curwin->w_cursor.lnum,
                        (int64_t)curbuf->b_ml.ml_line_count,
                        (int64_t)word_count_cursor, (int64_t)word_count,

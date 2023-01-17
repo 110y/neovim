@@ -18,6 +18,7 @@
 #include "nvim/ascii.h"
 #include "nvim/buffer_defs.h"
 #include "nvim/charset.h"
+#include "nvim/cmdexpand.h"
 #include "nvim/eval.h"
 #include "nvim/eval/typval.h"
 #include "nvim/eval/typval_defs.h"
@@ -39,6 +40,7 @@
 #include "nvim/pos.h"
 #include "nvim/regexp.h"
 #include "nvim/runtime.h"
+#include "nvim/search.h"
 #include "nvim/strings.h"
 #include "nvim/vim.h"
 
@@ -1268,93 +1270,135 @@ char_u *set_context_in_map_cmd(expand_T *xp, char *cmd, char *arg, bool forceit,
 /// Find all mapping/abbreviation names that match regexp "regmatch".
 /// For command line expansion of ":[un]map" and ":[un]abbrev" in all modes.
 /// @return OK if matches found, FAIL otherwise.
-int ExpandMappings(regmatch_T *regmatch, int *num_file, char ***file)
+int ExpandMappings(char *pat, regmatch_T *regmatch, int *numMatches, char ***matches)
 {
-  mapblock_T *mp;
-  int hash;
-  int count;
-  int round;
-  char *p;
-  int i;
+  const bool fuzzy = cmdline_fuzzy_complete(pat);
 
-  *num_file = 0;                    // return values in case of FAIL
-  *file = NULL;
+  *numMatches = 0;                    // return values in case of FAIL
+  *matches = NULL;
 
-  // round == 1: Count the matches.
-  // round == 2: Build the array to keep the matches.
-  for (round = 1; round <= 2; round++) {
-    count = 0;
+  garray_T ga;
+  if (!fuzzy) {
+    ga_init(&ga, sizeof(char *), 3);
+  } else {
+    ga_init(&ga, sizeof(fuzmatch_str_T), 3);
+  }
 
-    for (i = 0; i < 7; i++) {
-      if (i == 0) {
-        p = "<silent>";
-      } else if (i == 1) {
-        p = "<unique>";
-      } else if (i == 2) {
-        p = "<script>";
-      } else if (i == 3) {
-        p = "<expr>";
-      } else if (i == 4 && !expand_buffer) {
-        p = "<buffer>";
-      } else if (i == 5) {
-        p = "<nowait>";
-      } else if (i == 6) {
-        p = "<special>";
-      } else {
+  // First search in map modifier arguments
+  for (int i = 0; i < 7; i++) {
+    char *p;
+    if (i == 0) {
+      p = "<silent>";
+    } else if (i == 1) {
+      p = "<unique>";
+    } else if (i == 2) {
+      p = "<script>";
+    } else if (i == 3) {
+      p = "<expr>";
+    } else if (i == 4 && !expand_buffer) {
+      p = "<buffer>";
+    } else if (i == 5) {
+      p = "<nowait>";
+    } else if (i == 6) {
+      p = "<special>";
+    } else {
+      continue;
+    }
+
+    bool match;
+    int score = 0;
+    if (!fuzzy) {
+      match = vim_regexec(regmatch, p, (colnr_T)0);
+    } else {
+      score = fuzzy_match_str(p, pat);
+      match = (score != 0);
+    }
+
+    if (!match) {
+      continue;
+    }
+
+    if (fuzzy) {
+      GA_APPEND(fuzmatch_str_T, &ga, ((fuzmatch_str_T){
+        .idx = ga.ga_len,
+        .str = xstrdup(p),
+        .score = score,
+      }));
+    } else {
+      GA_APPEND(char *, &ga, xstrdup(p));
+    }
+  }
+
+  for (int hash = 0; hash < 256; hash++) {
+    mapblock_T *mp;
+    if (expand_isabbrev) {
+      if (hash > 0) {    // only one abbrev list
+        break;  // for (hash)
+      }
+      mp = first_abbr;
+    } else if (expand_buffer) {
+      mp = curbuf->b_maphash[hash];
+    } else {
+      mp = maphash[hash];
+    }
+    for (; mp; mp = mp->m_next) {
+      if (!(mp->m_mode & expand_mapmodes)) {
         continue;
       }
 
-      if (vim_regexec(regmatch, p, (colnr_T)0)) {
-        if (round == 1) {
-          count++;
-        } else {
-          (*file)[count++] = xstrdup(p);
-        }
+      char *p = (char *)translate_mapping((char_u *)mp->m_keys, CPO_TO_CPO_FLAGS);
+      if (p == NULL) {
+        continue;
       }
-    }
 
-    for (hash = 0; hash < 256; hash++) {
-      if (expand_isabbrev) {
-        if (hash > 0) {    // only one abbrev list
-          break;           // for (hash)
-        }
-        mp = first_abbr;
-      } else if (expand_buffer) {
-        mp = curbuf->b_maphash[hash];
+      bool match;
+      int score = 0;
+      if (!fuzzy) {
+        match = vim_regexec(regmatch, p, (colnr_T)0);
       } else {
-        mp = maphash[hash];
+        score = fuzzy_match_str(p, pat);
+        match = (score != 0);
       }
-      for (; mp; mp = mp->m_next) {
-        if (mp->m_mode & expand_mapmodes) {
-          p = (char *)translate_mapping((char_u *)mp->m_keys, CPO_TO_CPO_FLAGS);
-          if (p != NULL && vim_regexec(regmatch, p, (colnr_T)0)) {
-            if (round == 1) {
-              count++;
-            } else {
-              (*file)[count++] = p;
-              p = NULL;
-            }
-          }
-          xfree(p);
-        }
-      }       // for (mp)
-    }     // for (hash)
 
-    if (count == 0) {  // no match found
-      break;       // for (round)
-    }
+      if (!match) {
+        xfree(p);
+        continue;
+      }
 
-    if (round == 1) {
-      *file = xmalloc((size_t)count * sizeof(char *));
-    }
-  }   // for (round)
+      if (fuzzy) {
+        GA_APPEND(fuzmatch_str_T, &ga, ((fuzmatch_str_T){
+          .idx = ga.ga_len,
+          .str = p,
+          .score = score,
+        }));
+      } else {
+        GA_APPEND(char *, &ga, p);
+      }
+    }  // for (mp)
+  }  // for (hash)
 
+  if (ga.ga_len == 0) {
+    return FAIL;
+  }
+
+  if (!fuzzy) {
+    *matches = ga.ga_data;
+    *numMatches = ga.ga_len;
+  } else {
+    fuzzymatches_to_strmatches(ga.ga_data, matches, ga.ga_len, false);
+    *numMatches = ga.ga_len;
+  }
+
+  int count = *numMatches;
   if (count > 1) {
     // Sort the matches
-    sort_strings(*file, count);
+    // Fuzzy matching already sorts the matches
+    if (!fuzzy) {
+      sort_strings(*matches, count);
+    }
 
     // Remove multiple entries
-    char **ptr1 = *file;
+    char **ptr1 = *matches;
     char **ptr2 = ptr1 + 1;
     char **ptr3 = ptr1 + count;
 
@@ -1368,7 +1412,7 @@ int ExpandMappings(regmatch_T *regmatch, int *num_file, char ***file)
     }
   }
 
-  *num_file = count;
+  *numMatches = count;
   return count == 0 ? FAIL : OK;
 }
 

@@ -3127,7 +3127,7 @@ bool in_cinkeys(int keytyped, int when, bool line_is_empty)
         // make up some named keys <o>, <O>, <e>, <0>, <>>, <<>, <*>,
         // <:> and <!> so that people can re-indent on o, O, e, 0, <,
         // >, *, : and ! keys if they really really want to.
-        if (vim_strchr("<>!*oOe0:", look[1]) != NULL
+        if (vim_strchr("<>!*oOe0:", (uint8_t)look[1]) != NULL
             && keytyped == look[1]) {
           return true;
         }
@@ -3182,7 +3182,7 @@ bool in_cinkeys(int keytyped, int when, bool line_is_empty)
           // TODO(@brammool): multi-byte
           if (keytyped == (int)(uint8_t)p[-1]
               || (icase && keytyped < 256
-                  && TOLOWER_LOC(keytyped) == TOLOWER_LOC((int)p[-1]))) {
+                  && TOLOWER_LOC(keytyped) == TOLOWER_LOC((uint8_t)p[-1]))) {
             line = get_cursor_pos_ptr();
             assert(p >= look && (uintmax_t)(p - look) <= SIZE_MAX);
             if ((curwin->w_cursor.col == (colnr_T)(p - look)
@@ -3661,8 +3661,7 @@ static bool ins_start_select(int c)
 static void ins_insert(int replaceState)
 {
   set_vim_var_string(VV_INSERTMODE, ((State & REPLACE_FLAG) ? "i" :
-                                     replaceState == MODE_VREPLACE ? "v" :
-                                     "r"), 1);
+                                     replaceState == MODE_VREPLACE ? "v" : "r"), 1);
   ins_apply_autocmds(EVENT_INSERTCHANGE);
   if (State & REPLACE_FLAG) {
     State = MODE_INSERT | (State & MODE_LANGMAP);
