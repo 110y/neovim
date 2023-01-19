@@ -362,15 +362,15 @@ static void f_add(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   rettv->vval.v_number = 1;  // Default: failed.
   if (argvars[0].v_type == VAR_LIST) {
     list_T *const l = argvars[0].vval.v_list;
-    if (!var_check_lock(tv_list_locked(l), N_("add() argument"),
-                        TV_TRANSLATE)) {
+    if (!value_check_lock(tv_list_locked(l), N_("add() argument"),
+                          TV_TRANSLATE)) {
       tv_list_append_tv(l, &argvars[1]);
       tv_copy(&argvars[0], rettv);
     }
   } else if (argvars[0].v_type == VAR_BLOB) {
     blob_T *const b = argvars[0].vval.v_blob;
     if (b != NULL
-        && !var_check_lock(b->bv_lock, N_("add() argument"), TV_TRANSLATE)) {
+        && !value_check_lock(b->bv_lock, N_("add() argument"), TV_TRANSLATE)) {
       bool error = false;
       const varnumber_T n = tv_get_number_chk(&argvars[1], &error);
 
@@ -557,7 +557,7 @@ static void f_call(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     func = partial_name(partial);
   } else if (nlua_is_table_from_lua(&argvars[0])) {
     // TODO(tjdevries): UnifiedCallback
-    func = (char *)nlua_register_table_as_callable(&argvars[0]);
+    func = nlua_register_table_as_callable(&argvars[0]);
     owned = true;
   } else {
     func = (char *)tv_get_string(&argvars[0]);
@@ -1419,7 +1419,7 @@ static void f_diff_hlID(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
       hlID = HLF_CHD;  // Changed line.
     }
   }
-  rettv->vval.v_number = hlID == (hlf_T)0 ? 0 : (int)(hlID + 1);
+  rettv->vval.v_number = hlID == (hlf_T)0 ? 0 : (hlID + 1);
 }
 
 /// "empty({expr})" function
@@ -1695,7 +1695,7 @@ static void f_exepath(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 
 #ifdef BACKSLASH_IN_FILENAME
   if (path != NULL) {
-    slash_adjust((char_u *)path);
+    slash_adjust(path);
   }
 #endif
 
@@ -1749,7 +1749,7 @@ static void f_expand(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   int options = WILD_SILENT|WILD_USE_NL|WILD_LIST_NOTFOUND;
   bool error = false;
 #ifdef BACKSLASH_IN_FILENAME
-  char_u *p_csl_save = p_csl;
+  char *p_csl_save = p_csl;
 
   // avoid using 'completeslash' here
   p_csl = empty_option;
@@ -1770,7 +1770,7 @@ static void f_expand(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     }
     size_t len;
     char *errormsg = NULL;
-    char *result = (char *)eval_vars((char *)s, (char_u *)s, &len, NULL, &errormsg, NULL, false);
+    char *result = eval_vars((char *)s, s, &len, NULL, &errormsg, NULL, false);
     if (p_verbose == 0) {
       emsg_off--;
     } else if (errormsg != NULL) {
@@ -1896,9 +1896,9 @@ static void f_flatten(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 
   list_T *list = argvars[0].vval.v_list;
   if (list != NULL
-      && !var_check_lock(tv_list_locked(list),
-                         N_("flatten() argument"),
-                         TV_TRANSLATE)
+      && !value_check_lock(tv_list_locked(list),
+                           N_("flatten() argument"),
+                           TV_TRANSLATE)
       && tv_list_flatten(list, maxdepth) == OK) {
     tv_copy(&argvars[0], rettv);
   }
@@ -1915,7 +1915,7 @@ static void f_extend(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 
     list_T *const l1 = argvars[0].vval.v_list;
     list_T *const l2 = argvars[1].vval.v_list;
-    if (!var_check_lock(tv_list_locked(l1), arg_errmsg, TV_TRANSLATE)) {
+    if (!value_check_lock(tv_list_locked(l1), arg_errmsg, TV_TRANSLATE)) {
       listitem_T *item;
       if (argvars[2].v_type != VAR_UNKNOWN) {
         long before = (long)tv_get_number_chk(&argvars[2], &error);
@@ -1944,13 +1944,13 @@ static void f_extend(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     dict_T *const d1 = argvars[0].vval.v_dict;
     dict_T *const d2 = argvars[1].vval.v_dict;
     if (d1 == NULL) {
-      const bool locked = var_check_lock(VAR_FIXED, arg_errmsg, TV_TRANSLATE);
+      const bool locked = value_check_lock(VAR_FIXED, arg_errmsg, TV_TRANSLATE);
       (void)locked;
       assert(locked == true);
     } else if (d2 == NULL) {
       // Do nothing
       tv_copy(&argvars[0], rettv);
-    } else if (!var_check_lock(d1->dv_lock, arg_errmsg, TV_TRANSLATE)) {
+    } else if (!value_check_lock(d1->dv_lock, arg_errmsg, TV_TRANSLATE)) {
       const char *action = "force";
       // Check the third argument.
       if (argvars[2].v_type != VAR_UNKNOWN) {
@@ -2022,7 +2022,7 @@ static void f_filewritable(typval_T *argvars, typval_T *rettv, EvalFuncData fptr
 static void findfilendir(typval_T *argvars, typval_T *rettv, int find_what)
 {
   char *fresult = NULL;
-  char *path = *curbuf->b_p_path == NUL ? (char *)p_path : curbuf->b_p_path;
+  char *path = *curbuf->b_p_path == NUL ? p_path : curbuf->b_p_path;
   int count = 1;
   bool first = true;
   bool error = false;
@@ -3556,8 +3556,8 @@ static void f_insert(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     blob_T *const b = argvars[0].vval.v_blob;
 
     if (b == NULL
-        || var_check_lock(b->bv_lock, N_("insert() argument"),
-                          TV_TRANSLATE)) {
+        || value_check_lock(b->bv_lock, N_("insert() argument"),
+                            TV_TRANSLATE)) {
       return;
     }
 
@@ -3592,8 +3592,8 @@ static void f_insert(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     tv_copy(&argvars[0], rettv);
   } else if (argvars[0].v_type != VAR_LIST) {
     semsg(_(e_listblobarg), "insert()");
-  } else if (!var_check_lock(tv_list_locked((l = argvars[0].vval.v_list)),
-                             N_("insert() argument"), TV_TRANSLATE)) {
+  } else if (!value_check_lock(tv_list_locked((l = argvars[0].vval.v_list)),
+                               N_("insert() argument"), TV_TRANSLATE)) {
     long before = 0;
     if (argvars[2].v_type != VAR_UNKNOWN) {
       before = tv_get_number_chk(&argvars[2], &error);
@@ -5985,8 +5985,8 @@ static void f_reverse(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     semsg(_(e_listblobarg), "reverse()");
   } else {
     list_T *const l = argvars[0].vval.v_list;
-    if (!var_check_lock(tv_list_locked(l), N_("reverse() argument"),
-                        TV_TRANSLATE)) {
+    if (!value_check_lock(tv_list_locked(l), N_("reverse() argument"),
+                          TV_TRANSLATE)) {
       tv_list_reverse(l);
       tv_list_set_ret(rettv, l);
     }
@@ -7827,7 +7827,7 @@ static void f_strftime(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     vimconv_T conv;
 
     conv.vc_type = CONV_NONE;
-    char *enc = (char *)enc_locale();
+    char *enc = enc_locale();
     convert_setup(&conv, p_enc, enc);
     if (conv.vc_type != CONV_NONE) {
       p = string_convert(&conv, p, NULL);
@@ -8097,7 +8097,7 @@ static void f_strptime(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   vimconv_T conv = {
     .vc_type = CONV_NONE,
   };
-  char *enc = (char *)enc_locale();
+  char *enc = enc_locale();
   convert_setup(&conv, p_enc, enc);
   if (conv.vc_type != CONV_NONE) {
     fmt = string_convert(&conv, fmt, NULL);
