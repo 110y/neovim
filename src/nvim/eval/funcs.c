@@ -3082,9 +3082,7 @@ static void f_has(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     "fork",
 #endif
     "gettext",
-#if defined(HAVE_ICONV)
     "iconv",
-#endif
     "insert_expand",
     "jumplist",
     "keymap",
@@ -6239,7 +6237,9 @@ static int search_cmn(typval_T *argvars, pos_T *match_pos, int *flagsp)
       // didn't find it or no skip argument
       break;
     }
-    firstpos = pos;
+    if (firstpos.lnum == 0) {
+      firstpos = pos;
+    }
 
     // If the skip expression matches, ignore this match.
     {
