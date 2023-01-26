@@ -615,7 +615,7 @@ char *check_stl_option(char *s)
       continue;
     }
     if (vim_strchr(STL_ALL, (uint8_t)(*s)) == NULL) {
-      return illegal_char(errbuf, sizeof(errbuf), *s);
+      return illegal_char(errbuf, sizeof(errbuf), (uint8_t)(*s));
     }
     if (*s == '{') {
       bool reevaluate = (*++s == '%');
@@ -957,7 +957,7 @@ static void did_set_comments(char **varp, char *errbuf, size_t errbuflen, char *
     while (*s && *s != ':') {
       if (vim_strchr(COM_ALL, (uint8_t)(*s)) == NULL
           && !ascii_isdigit(*s) && *s != '-') {
-        *errmsg = illegal_char(errbuf, errbuflen, *s);
+        *errmsg = illegal_char(errbuf, errbuflen, (uint8_t)(*s));
         break;
       }
       s++;
@@ -1029,7 +1029,7 @@ static void did_set_shada(vimoption_T **opt, int *opt_idx, bool *free_oldval, ch
   for (char *s = p_shada; *s;) {
     // Check it's a valid character
     if (vim_strchr("!\"%'/:<@cfhnrs", (uint8_t)(*s)) == NULL) {
-      *errmsg = illegal_char(errbuf, errbuflen, *s);
+      *errmsg = illegal_char(errbuf, errbuflen, (uint8_t)(*s));
       break;
     }
     if (*s == 'n') {          // name is always last one
@@ -1236,7 +1236,7 @@ static void did_set_complete(char **varp, char *errbuf, size_t errbuflen, char *
       break;
     }
     if (vim_strchr(".wbuksid]tU", (uint8_t)(*s)) == NULL) {
-      *errmsg = illegal_char(errbuf, errbuflen, *s);
+      *errmsg = illegal_char(errbuf, errbuflen, (uint8_t)(*s));
       break;
     }
     if (*++s != NUL && *s != ',' && *s != ' ') {
@@ -1497,12 +1497,12 @@ static void did_set_vartabstop(buf_T *buf, win_T *win, char **varp, char **errms
   }
 }
 
-static void did_set_optexpr(win_T *win, char **p_opt, char **varp, char **gvarp)
+static void did_set_optexpr(char **varp)
 {
-  char *name = get_scriptlocal_funcname(*p_opt);
+  char *name = get_scriptlocal_funcname(*varp);
   if (name != NULL) {
-    free_string_option(*p_opt);
-    *p_opt = name;
+    free_string_option(*varp);
+    *varp = name;
   }
 }
 
@@ -1511,8 +1511,8 @@ static void did_set_option_listflag(char **varp, char *flags, char *errbuf, size
                                     char **errmsg)
 {
   for (char *s = *varp; *s; s++) {
-    if (vim_strchr(flags, *s) == NULL) {
-      *errmsg = illegal_char(errbuf, errbuflen, *s);
+    if (vim_strchr(flags, (uint8_t)(*s)) == NULL) {
+      *errmsg = illegal_char(errbuf, errbuflen, (uint8_t)(*s));
       break;
     }
   }
@@ -1808,23 +1808,18 @@ static char *did_set_string_option_for(buf_T *buf, win_T *win, int opt_idx, char
     did_set_varsoftabstop(buf, varp, &errmsg);
   } else if (varp == &buf->b_p_vts) {  // 'vartabstop'
     did_set_vartabstop(buf, win, varp, &errmsg);
-  } else if (varp == &p_dex) {  // 'diffexpr'
-    did_set_optexpr(win, &p_dex, varp, gvarp);
-  } else if (varp == &win->w_p_fde) {  // 'foldexpr'
-    did_set_optexpr(win, &win->w_p_fde, varp, gvarp);
-    if (foldmethodIsExpr(win)) {
+  } else if (varp == &p_dex  // 'diffexpr'
+             || gvarp == &win->w_allbuf_opt.wo_fde  // 'foldexpr'
+             || gvarp == &win->w_allbuf_opt.wo_fdt  // 'foldtext'
+             || gvarp == &p_fex  // 'formatexpr'
+             || gvarp == &p_inex  // 'includeexpr'
+             || gvarp == &p_inde  // 'indentexpr'
+             || varp == &p_pex  // 'patchexpr'
+             || varp == &p_ccv) {  // 'charconvert'
+    did_set_optexpr(varp);
+    if (varp == &win->w_p_fde && foldmethodIsExpr(win)) {
       foldUpdateAll(win);
     }
-  } else if (varp == &win->w_p_fdt) {  // 'foldtext'
-    did_set_optexpr(win, &win->w_p_fdt, varp, gvarp);
-  } else if (varp == &p_pex) {  // 'patchexpr'
-    did_set_optexpr(win, &p_pex, varp, gvarp);
-  } else if (gvarp == &p_fex) {  // 'formatexpr'
-    did_set_optexpr(win, &buf->b_p_fex, varp, gvarp);
-  } else if (gvarp == &p_inex) {  // 'includeexpr'
-    did_set_optexpr(win, &buf->b_p_inex, varp, gvarp);
-  } else if (gvarp == &p_inde) {  // 'indentexpr'
-    did_set_optexpr(win, &buf->b_p_inde, varp, gvarp);
   } else if (gvarp == &p_cfu) {  // 'completefunc'
     set_completefunc_option(&errmsg);
   } else if (gvarp == &p_ofu) {  // 'omnifunc'
