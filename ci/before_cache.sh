@@ -5,14 +5,9 @@ set -o pipefail
 
 CI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source-path=SCRIPTDIR
-source "${CI_DIR}/common/build.sh"
-# shellcheck source-path=SCRIPTDIR
 source "${CI_DIR}/common/suite.sh"
 
-mkdir -p "${HOME}/.cache"
-
-echo "before_cache.sh: cache size"
-du -chd 1 "${HOME}/.cache" | sort -rh | head -20
+mkdir -p "$CACHE_DIR"
 
 # Update the third-party dependency cache only if the build was successful.
 if ended_successfully && [ -d "${DEPS_BUILD_DIR}" ]; then
@@ -22,5 +17,5 @@ if ended_successfully && [ -d "${DEPS_BUILD_DIR}" ]; then
   mv "${DEPS_BUILD_DIR}" "${CACHE_NVIM_DEPS_DIR}"
 
   touch "${CACHE_MARKER}"
-  echo "Updated third-party dependencies (timestamp: $(_stat "${CACHE_MARKER}"))."
+  echo "Updated third-party dependencies."
 fi
