@@ -65,15 +65,15 @@ else()
     file(MAKE_DIRECTORY ${DEPS_BUILD_DIR})
     execute_process(
       COMMAND ${CMAKE_COMMAND} -G ${CMAKE_GENERATOR}
-        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-        -DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}
-        -DCMAKE_C_FLAGS_MINSIZEREL=${CMAKE_C_FLAGS_MINSIZEREL}
-        -DCMAKE_C_FLAGS_RELWITHDEBINFO=${CMAKE_C_FLAGS_RELWITHDEBINFO}
-        -DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}
-        -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+        -D CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+        -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -D CMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -D CMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+        -D CMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}
+        -D CMAKE_C_FLAGS_MINSIZEREL=${CMAKE_C_FLAGS_MINSIZEREL}
+        -D CMAKE_C_FLAGS_RELWITHDEBINFO=${CMAKE_C_FLAGS_RELWITHDEBINFO}
+        -D CMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}
+        -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
         ${PROJECT_SOURCE_DIR}/cmake.deps
       WORKING_DIRECTORY ${DEPS_BUILD_DIR})
     execute_process(
@@ -244,9 +244,9 @@ endif()
 # Lint
 #
 find_program(LUACHECK_PRG luacheck)
+find_program(SHELLCHECK_PRG shellcheck)
 find_program(STYLUA_PRG stylua)
 find_program(UNCRUSTIFY_PRG uncrustify)
-find_program(SHELLCHECK_PRG shellcheck)
 
 add_glob_target(
   REQUIRED
@@ -287,7 +287,7 @@ add_custom_target(lintcommit
 add_dependencies(lintcommit nvim)
 
 add_custom_target(lint)
-add_dependencies(lint check-single-includes lintc lintlua lintsh lintcommit)
+add_dependencies(lint clang-tidy lintc lintlua lintsh lintcommit)
 
 #
 # Format
@@ -310,12 +310,18 @@ install_helper(
 # Go down the tree.
 #
 
+if(EXISTS "${DEPS_PREFIX}/share/nvim-qt")
+  option(USE_BUNDLED_NVIMQT "Bundle neovim-qt" ON)
+else()
+  option(USE_BUNDLED_NVIMQT "Bundle neovim-qt" OFF)
+endif()
+
 add_subdirectory(src/nvim)
 add_subdirectory(cmake.config)
 add_subdirectory(test/functional/fixtures)  # compile test programs
 add_subdirectory(runtime)
 get_directory_property(GENERATED_HELP_TAGS DIRECTORY runtime DEFINITION GENERATED_HELP_TAGS)
-if(WIN32)
+if(WIN32 AND USE_BUNDLED_NVIMQT)
   install_helper(
     FILES ${DEPS_PREFIX}/share/nvim-qt/runtime/plugin/nvim_gui_shim.vim
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/nvim-qt/runtime/plugin)
@@ -341,15 +347,15 @@ if(BUSTED_PRG)
   if(LUA_HAS_FFI)
     add_custom_target(unittest
       COMMAND ${CMAKE_COMMAND}
-        -DBUSTED_PRG=${BUSTED_PRG}
-        -DLUA_PRG=${LUA_PRG}
-        -DNVIM_PRG=$<TARGET_FILE:nvim>
-        -DWORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-        -DBUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
-        -DTEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
-        -DBUILD_DIR=${CMAKE_BINARY_DIR}
-        -DTEST_TYPE=unit
-        -DCIRRUS_CI=$ENV{CIRRUS_CI}
+        -D BUSTED_PRG=${BUSTED_PRG}
+        -D LUA_PRG=${LUA_PRG}
+        -D NVIM_PRG=$<TARGET_FILE:nvim>
+        -D WORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -D BUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
+        -D TEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
+        -D BUILD_DIR=${CMAKE_BINARY_DIR}
+        -D TEST_TYPE=unit
+        -D CIRRUS_CI=$ENV{CIRRUS_CI}
         -P ${PROJECT_SOURCE_DIR}/cmake/RunTests.cmake
       DEPENDS ${UNITTEST_PREREQS}
       USES_TERMINAL)
@@ -364,15 +370,15 @@ if(BUSTED_PRG)
 
   add_custom_target(functionaltest
     COMMAND ${CMAKE_COMMAND}
-      -DBUSTED_PRG=${BUSTED_PRG}
-      -DLUA_PRG=${LUA_PRG}
-      -DNVIM_PRG=$<TARGET_FILE:nvim>
-      -DWORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-      -DBUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
-      -DTEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
-      -DBUILD_DIR=${CMAKE_BINARY_DIR}
-      -DTEST_TYPE=functional
-      -DCIRRUS_CI=$ENV{CIRRUS_CI}
+      -D BUSTED_PRG=${BUSTED_PRG}
+      -D LUA_PRG=${LUA_PRG}
+      -D NVIM_PRG=$<TARGET_FILE:nvim>
+      -D WORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+      -D BUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
+      -D TEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
+      -D BUILD_DIR=${CMAKE_BINARY_DIR}
+      -D TEST_TYPE=functional
+      -D CIRRUS_CI=$ENV{CIRRUS_CI}
       -P ${PROJECT_SOURCE_DIR}/cmake/RunTests.cmake
     DEPENDS ${FUNCTIONALTEST_PREREQS}
     USES_TERMINAL)
@@ -380,15 +386,15 @@ if(BUSTED_PRG)
 
   add_custom_target(benchmark
     COMMAND ${CMAKE_COMMAND}
-      -DBUSTED_PRG=${BUSTED_PRG}
-      -DLUA_PRG=${LUA_PRG}
-      -DNVIM_PRG=$<TARGET_FILE:nvim>
-      -DWORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-      -DBUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
-      -DTEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
-      -DBUILD_DIR=${CMAKE_BINARY_DIR}
-      -DTEST_TYPE=benchmark
-      -DCIRRUS_CI=$ENV{CIRRUS_CI}
+      -D BUSTED_PRG=${BUSTED_PRG}
+      -D LUA_PRG=${LUA_PRG}
+      -D NVIM_PRG=$<TARGET_FILE:nvim>
+      -D WORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+      -D BUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
+      -D TEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
+      -D BUILD_DIR=${CMAKE_BINARY_DIR}
+      -D TEST_TYPE=benchmark
+      -D CIRRUS_CI=$ENV{CIRRUS_CI}
       -P ${PROJECT_SOURCE_DIR}/cmake/RunTests.cmake
     DEPENDS ${BENCHMARK_PREREQS}
     USES_TERMINAL)
@@ -398,15 +404,15 @@ endif()
 if(BUSTED_LUA_PRG)
   add_custom_target(functionaltest-lua
     COMMAND ${CMAKE_COMMAND}
-      -DBUSTED_PRG=${BUSTED_LUA_PRG}
-      -DLUA_PRG=${LUA_PRG}
-      -DNVIM_PRG=$<TARGET_FILE:nvim>
-      -DWORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
-      -DBUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
-      -DTEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
-      -DBUILD_DIR=${CMAKE_BINARY_DIR}
-      -DTEST_TYPE=functional
-      -DCIRRUS_CI=$ENV{CIRRUS_CI}
+      -D BUSTED_PRG=${BUSTED_LUA_PRG}
+      -D LUA_PRG=${LUA_PRG}
+      -D NVIM_PRG=$<TARGET_FILE:nvim>
+      -D WORKING_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+      -D BUSTED_OUTPUT_TYPE=${BUSTED_OUTPUT_TYPE}
+      -D TEST_DIR=${CMAKE_CURRENT_SOURCE_DIR}/test
+      -D BUILD_DIR=${CMAKE_BINARY_DIR}
+      -D TEST_TYPE=functional
+      -D CIRRUS_CI=$ENV{CIRRUS_CI}
       -P ${PROJECT_SOURCE_DIR}/cmake/RunTests.cmake
     DEPENDS ${FUNCTIONALTEST_PREREQS}
     USES_TERMINAL)
