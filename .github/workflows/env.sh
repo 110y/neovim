@@ -3,14 +3,14 @@ set -e -u
 
 FLAVOR=${1:-}
 
-BUILD_DIR=$CI_BUILD_DIR/build
-BIN_DIR=$CI_BUILD_DIR/bin
+BUILD_DIR=$GITHUB_WORKSPACE/build
+BIN_DIR=$GITHUB_WORKSPACE/bin
 DEPS_BUILD_DIR=$HOME/nvim-deps
-INSTALL_PREFIX=$CI_BUILD_DIR/nvim-install
+INSTALL_PREFIX=$GITHUB_WORKSPACE/nvim-install
 LOG_DIR=$BUILD_DIR/log
 NVIM_LOG_FILE=$BUILD_DIR/.nvimlog
 VALGRIND_LOG=$LOG_DIR/valgrind-%p.log
-CACHE_DIR=$CI_BUILD_DIR/.cache
+CACHE_DIR=$GITHUB_WORKSPACE/.cache
 CACHE_UNCRUSTIFY=$CACHE_DIR/uncrustify
 DEPS_CMAKE_FLAGS=
 FUNCTIONALTEST=functionaltest
@@ -23,7 +23,7 @@ TSAN_OPTIONS=
 case "$FLAVOR" in
   asan)
     CLANG_SANITIZER=ASAN_UBSAN
-    ASAN_OPTIONS="detect_leaks=1:check_initialization_order=1:log_path=$LOG_DIR/asan:intercept_tls_get_addr=0"
+    ASAN_OPTIONS="detect_leaks=1:check_initialization_order=1:handle_abort=1:handle_sigill=1:log_path=$LOG_DIR/asan:intercept_tls_get_addr=0"
     UBSAN_OPTIONS="print_stacktrace=1 log_path=$LOG_DIR/ubsan"
     ;;
   tsan)

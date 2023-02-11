@@ -78,8 +78,7 @@ if(ENABLE_IWYU)
 endif()
 
 if(MSVC)
-  # TODO(dundargoc): bump warning level
-  target_compile_options(main_lib INTERFACE -W2)
+  target_compile_options(main_lib INTERFACE -W3)
 
   # Disable warnings that give too many false positives.
   target_compile_options(main_lib INTERFACE -wd4311 -wd4146)
@@ -252,11 +251,11 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
   target_compile_definitions(main_lib INTERFACE _GNU_SOURCE)
 endif()
 
-option(USE_GCOV "Enable gcov support" OFF)
-if(USE_GCOV)
+option(ENABLE_GCOV "Enable gcov support" OFF)
+if(ENABLE_GCOV)
   if(CLANG_TSAN)
     # GCOV and TSAN results in false data race reports
-    message(FATAL_ERROR "USE_GCOV cannot be used with CLANG_TSAN")
+    message(FATAL_ERROR "ENABLE_GCOV cannot be used with CLANG_TSAN")
   endif()
   message(STATUS "Enabling gcov support")
   target_compile_options(main_lib INTERFACE --coverage)
@@ -406,7 +405,7 @@ list(REMOVE_ITEM NVIM_SOURCES ${to_remove})
 # xdiff, mpack, lua-cjson: inlined external project, we don't maintain it. #9306
 if(MSVC)
   set_source_files_properties(
-    ${EXTERNAL_SOURCES} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} /wd4090 /wd4244")
+    ${EXTERNAL_SOURCES} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -wd4090 -wd4244 -wd4267")
 else()
   set_source_files_properties(
     ${EXTERNAL_SOURCES} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -Wno-conversion -Wno-missing-noreturn -Wno-missing-format-attribute -Wno-double-promotion -Wno-strict-prototypes")
