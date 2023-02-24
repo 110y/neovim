@@ -242,6 +242,7 @@ local extension = {
   csh = function(path, bufnr)
     return require('vim.filetype.detect').csh(path, bufnr)
   end,
+  cpon = 'cpon',
   moc = 'cpp',
   hh = 'cpp',
   tlh = 'cpp',
@@ -295,6 +296,7 @@ local extension = {
   desc = 'desc',
   directory = 'desktop',
   desktop = 'desktop',
+  dhall = 'dhall',
   diff = 'diff',
   rej = 'diff',
   Dockerfile = 'dockerfile',
@@ -1056,6 +1058,7 @@ local extension = {
   uc = 'uc',
   uit = 'uil',
   uil = 'uil',
+  ungram = 'ungrammar',
   sba = 'vb',
   vb = 'vb',
   dsm = 'vb',
