@@ -118,7 +118,7 @@ endif()
 
 # If the macOS deployment target is not set manually (via $MACOSX_DEPLOYMENT_TARGET),
 # fall back to local system version. Needs to be done here and in top-level CMakeLists.txt.
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+if(APPLE)
   if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     execute_process(COMMAND sw_vers -productVersion
                     OUTPUT_VARIABLE MACOS_VERSION
@@ -156,7 +156,6 @@ set(LIBTERMKEY_SHA256 6945bd3c4aaa83da83d80a045c5563da4edd7d0374c62c0d35aec09eb3
 set(LIBVTERM_URL https://www.leonerd.org.uk/code/libvterm/libvterm-0.3.1.tar.gz)
 set(LIBVTERM_SHA256 25a8ad9c15485368dfd0a8a9dca1aec8fea5c27da3fa74ec518d5d3787f0c397)
 
-set(LUV_VERSION 1.44.2-1)
 set(LUV_URL https://github.com/luvit/luv/archive/e8e7b7e13225348a8806118a3ea9e021383a9536.tar.gz)
 set(LUV_SHA256 531dfbcb6fffe3fdfa806860b39035e54b07ee1ff3bb2af813e175febf7e9ccc)
 
@@ -190,6 +189,9 @@ set(TREESITTER_VIM_SHA256 1b1cd39e33c8fb02fa7fe3977e844883c2a8508a7edd621f2d21e3
 
 set(TREESITTER_HELP_URL https://github.com/neovim/tree-sitter-vimdoc/archive/v1.3.0.tar.gz)
 set(TREESITTER_HELP_SHA256 f33f6d49c7d71feb2fd68ef2b2684da150f9f8e486ad9726213631d673942331)
+
+set(TREESITTER_QUERY_URL https://github.com/nvim-treesitter/tree-sitter-query/archive/0717de07078a20a8608c98ad5f26c208949d0e15.tar.gz)
+set(TREESITTER_QUERY_SHA256 2f2c79a59e3ff550aef849925e589d69b8a146b3af935504366cc973399d26e1)
 
 set(TREESITTER_URL https://github.com/tree-sitter/tree-sitter/archive/c51896d32dcc11a38e41f36e3deb1a6a9c4f4b14.tar.gz)
 set(TREESITTER_SHA256 243e07541a9dd71681984b65bffed2d4a259bef0a4ad28cff55cc1c6878b8d18)
