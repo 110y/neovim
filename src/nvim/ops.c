@@ -2684,8 +2684,10 @@ static void op_yank_reg(oparg_T *oap, bool message, yankreg_T *reg, bool append)
           getvcol(curwin, &oap->start, &cs, NULL, &ce);
           if (ce != cs && oap->start.coladd > 0) {
             // Part of a tab selected -- but don't double-count it.
-            bd.startspaces = (ce - cs + 1)
-                             - oap->start.coladd;
+            bd.startspaces = (ce - cs + 1) - oap->start.coladd;
+            if (bd.startspaces < 0) {
+              bd.startspaces = 0;
+            }
             startcol++;
           }
         }
@@ -4656,11 +4658,12 @@ int do_addsub(int op_type, pos_T *pos, int length, linenr_T Prenum1)
                 : length);
     }
 
+    bool overflow = false;
     vim_str2nr(ptr + col, &pre, &length,
                0 + (do_bin ? STR2NR_BIN : 0)
                + (do_oct ? STR2NR_OCT : 0)
                + (do_hex ? STR2NR_HEX : 0),
-               NULL, &n, maxlen, false);
+               NULL, &n, maxlen, false, &overflow);
 
     // ignore leading '-' for hex, octal and bin numbers
     if (pre && negative) {
@@ -4680,8 +4683,10 @@ int do_addsub(int op_type, pos_T *pos, int length, linenr_T Prenum1)
 
     oldn = n;
 
-    n = subtract ? n - (uvarnumber_T)Prenum1
-                 : n + (uvarnumber_T)Prenum1;
+    if (!overflow) {  // if number is too big don't add/subtract
+      n = subtract ? n - (uvarnumber_T)Prenum1
+                   : n + (uvarnumber_T)Prenum1;
+    }
 
     // handle wraparound for decimal numbers
     if (!pre) {
