@@ -28,6 +28,7 @@
 for k, v in pairs({
   treesitter = true,
   filetype = true,
+  loader = true,
   F = true,
   lsp = true,
   highlight = true,
@@ -338,7 +339,8 @@ vim.cmd = setmetatable({}, {
     if type(command) == 'table' then
       return vim.api.nvim_cmd(command, {})
     else
-      return vim.api.nvim_exec2(command, { output = false }).output
+      vim.api.nvim_exec2(command, {})
+      return ''
     end
   end,
   __index = function(t, command)
