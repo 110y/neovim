@@ -623,9 +623,9 @@ static void block_insert(oparg_T *oap, char *s, int b_insert, struct block_def *
     }
   }   // for all lnum
 
-  changed_lines(oap->start.lnum + 1, 0, oap->end.lnum + 1, 0L, true);
-
   State = oldstate;
+
+  changed_lines(oap->start.lnum + 1, 0, oap->end.lnum + 1, 0L, true);
 }
 
 /// Handle reindenting a block of lines.
@@ -5628,7 +5628,7 @@ static void op_colon(oparg_T *oap)
 static Callback opfunc_cb;
 
 /// Process the 'operatorfunc' option value.
-void set_operatorfunc_option(char **errmsg)
+void set_operatorfunc_option(const char **errmsg)
 {
   if (option_set_callback_func(p_opfunc, &opfunc_cb) == FAIL) {
     *errmsg = e_invarg;
