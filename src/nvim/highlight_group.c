@@ -1003,7 +1003,7 @@ void do_highlight(const char *line, const bool forceit, const bool init)
     // ":highlight clear [group]" command.
     line = linep;
     if (ends_excmd((uint8_t)(*line))) {
-      do_unlet(S_LEN("colors_name"), true);
+      do_unlet(S_LEN("g:colors_name"), true);
       restore_cterm_colors();
 
       // Clear all default highlight groups and load the defaults.
@@ -3002,7 +3002,7 @@ RgbValue name_to_color(const char *name, int *idx)
       && isxdigit((uint8_t)name[6]) && name[7] == NUL) {
     // rgb hex string
     *idx = kColorIdxHex;
-    return (RgbValue)strtol((char *)(name + 1), NULL, 16);
+    return (RgbValue)strtol(name + 1, NULL, 16);
   } else if (!STRICMP(name, "bg") || !STRICMP(name, "background")) {
     *idx = kColorIdxBg;
     return normal_bg;

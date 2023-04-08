@@ -2002,7 +2002,7 @@ static const char *set_bool_option(const int opt_idx, char *const varp, const in
   // Disallow changing some options from secure mode
   if ((secure || sandbox != 0)
       && (options[opt_idx].flags & P_SECURE)) {
-    return (char *)e_secure;
+    return e_secure;
   }
 
   // Save the global value before changing anything. This is needed as for
@@ -5676,7 +5676,7 @@ static Dictionary vimoption2dict(vimoption_T *opt, int req_scope, buf_T *buf, wi
   char *def_val = opt->def_val;
   if (opt->flags & P_STRING) {
     type = "string";
-    def = CSTR_TO_OBJ(def_val ? (char *)def_val : "");
+    def = CSTR_TO_OBJ(def_val ? def_val : "");
   } else if (opt->flags & P_NUM) {
     type = "number";
     def = INTEGER_OBJ((Integer)(intptr_t)def_val);

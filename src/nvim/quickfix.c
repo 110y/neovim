@@ -374,8 +374,8 @@ int qf_init(win_T *wp, const char *restrict efile, char *restrict errorformat, i
     qi = ll_get_or_alloc_list(wp);
   }
 
-  return qf_init_ext(qi, qi->qf_curlist, (char *)efile, curbuf, NULL, errorformat,
-                     newlist, (linenr_T)0, (linenr_T)0, (char *)qf_title, enc);
+  return qf_init_ext(qi, qi->qf_curlist, efile, curbuf, NULL, errorformat,
+                     newlist, (linenr_T)0, (linenr_T)0, qf_title, enc);
 }
 
 // Maximum number of bytes allowed per line while reading an errorfile.
@@ -531,7 +531,7 @@ static int efm_to_regpat(const char *efm, int len, efm_T *fmt_ptr, char *regpat)
         }
       }
       if (idx < FMT_PATTERNS) {
-        ptr = efmpat_to_regpat((char *)efmp, ptr, fmt_ptr, idx, round);
+        ptr = efmpat_to_regpat(efmp, ptr, fmt_ptr, idx, round);
         if (ptr == NULL) {
           return FAIL;
         }
@@ -1241,7 +1241,7 @@ static char *qf_cmdtitle(char *cmd)
 {
   static char qftitle_str[IOSIZE];
 
-  snprintf((char *)qftitle_str, IOSIZE, ":%s", cmd);
+  snprintf(qftitle_str, IOSIZE, ":%s", cmd);
 
   return qftitle_str;
 }
@@ -3228,7 +3228,7 @@ void qf_list(exarg_T *eap)
 static void qf_fmt_text(garray_T *gap, const char *restrict text)
   FUNC_ATTR_NONNULL_ALL
 {
-  const char *p = (char *)text;
+  const char *p = text;
 
   while (*p != NUL) {
     if (*p == '\n') {
@@ -3281,7 +3281,7 @@ static void qf_msg(qf_info_T *qi, int which, char *lead)
   int count = qi->qf_lists[which].qf_count;
   char buf[IOSIZE];
 
-  vim_snprintf((char *)buf, IOSIZE, _("%serror list %d of %d; %d errors "),
+  vim_snprintf(buf, IOSIZE, _("%serror list %d of %d; %d errors "),
                lead,
                which + 1,
                qi->qf_listcount,
@@ -3506,7 +3506,7 @@ static char *qf_types(int c, int nr)
   }
 
   static char buf[20];
-  snprintf((char *)buf, sizeof(buf), "%s %3d", p, nr);
+  snprintf(buf, sizeof(buf), "%s %3d", p, nr);
   return buf;
 }
 
@@ -4286,11 +4286,11 @@ static char *make_get_fullcmd(const char *makecmd, const char *fname)
     len += strlen(p_sp) + strlen(fname) + 3;
   }
   char *const cmd = xmalloc(len);
-  snprintf(cmd, len, "%s%s%s", p_shq, (char *)makecmd, p_shq);
+  snprintf(cmd, len, "%s%s%s", p_shq, makecmd, p_shq);
 
   // If 'shellpipe' empty: don't redirect to 'errorfile'.
   if (*p_sp != NUL) {
-    append_redir(cmd, len, p_sp, (char *)fname);
+    append_redir(cmd, len, p_sp, fname);
   }
 
   // Display the fully formed command.  Output a newline if there's something
@@ -7112,7 +7112,7 @@ static void hgr_search_in_rtp(qf_list_T *qfl, regmatch_T *p_regmatch, const char
   while (*p != NUL && !got_int) {
     copy_option_part(&p, NameBuff, MAXPATHL, ",");
 
-    hgr_search_files_in_dir(qfl, NameBuff, p_regmatch, (char *)lang);
+    hgr_search_files_in_dir(qfl, NameBuff, p_regmatch, lang);
   }
 }
 

@@ -396,11 +396,11 @@ void eval_init(void)
 
     // add to v: scope dict, unless the value is not always available
     if (p->vv_type != VAR_UNKNOWN) {
-      hash_add(&vimvarht, (char *)p->vv_di.di_key);
+      hash_add(&vimvarht, p->vv_di.di_key);
     }
     if (p->vv_flags & VV_COMPAT) {
       // add to compat scope dict
-      hash_add(&compat_hashtab, (char *)p->vv_di.di_key);
+      hash_add(&compat_hashtab, p->vv_di.di_key);
     }
   }
   vimvars[VV_VERSION].vv_nr = VIM_VERSION_100;
@@ -984,7 +984,7 @@ void prepare_vimvar(int idx, typval_T *save_tv)
 {
   *save_tv = vimvars[idx].vv_tv;
   if (vimvars[idx].vv_type == VAR_UNKNOWN) {
-    hash_add(&vimvarht, (char *)vimvars[idx].vv_di.di_key);
+    hash_add(&vimvarht, vimvars[idx].vv_di.di_key);
   }
 }
 
@@ -997,7 +997,7 @@ void restore_vimvar(int idx, typval_T *save_tv)
     return;
   }
 
-  hashitem_T *hi = hash_find(&vimvarht, (char *)vimvars[idx].vv_di.di_key);
+  hashitem_T *hi = hash_find(&vimvarht, vimvars[idx].vv_di.di_key);
   if (HASHITEM_EMPTY(hi)) {
     internal_error("restore_vimvar()");
   } else {
@@ -1145,7 +1145,7 @@ void *call_func_retlist(const char *func, int argc, typval_T *argv)
   typval_T rettv;
 
   // All arguments are passed as strings, no conversion to number.
-  if (call_vim_function((char *)func, argc, argv, &rettv) == FAIL) {
+  if (call_vim_function(func, argc, argv, &rettv) == FAIL) {
     return NULL;
   }
 
@@ -1763,7 +1763,7 @@ notify:
       } else {
         dictitem_T *di_ = lp->ll_di;
         assert(di_->di_key != NULL);
-        tv_dict_watcher_notify(dict, (char *)di_->di_key, lp->ll_tv, &oldtv);
+        tv_dict_watcher_notify(dict, di_->di_key, lp->ll_tv, &oldtv);
         tv_clear(&oldtv);
       }
     }
@@ -1785,7 +1785,7 @@ void *eval_for_line(const char *arg, bool *errp, char **nextcmdp, int skip)
 
   *errp = true;  // Default: there is an error.
 
-  expr = skip_var_list((char *)arg, &fi->fi_varcount, &fi->fi_semicolon);
+  expr = skip_var_list(arg, &fi->fi_varcount, &fi->fi_semicolon);
   if (expr == NULL) {
     return fi;
   }
@@ -3035,7 +3035,7 @@ static int eval7_leader(typval_T *const rettv, const bool numeric_only,
                         const char *const start_leader, const char **const end_leaderp)
   FUNC_ATTR_NONNULL_ALL
 {
-  const char *end_leader = (char *)(*end_leaderp);
+  const char *end_leader = *end_leaderp;
   int ret = OK;
   bool error = false;
   varnumber_T val = 0;
@@ -3263,7 +3263,7 @@ static int eval_index(char **arg, typval_T *rettv, int evaluate, int verbose)
   bool empty2 = false;
   ptrdiff_t len = -1;
   int range = false;
-  char *key = NULL;
+  const char *key = NULL;
 
   switch (rettv->v_type) {
   case VAR_FUNC:
@@ -3512,7 +3512,7 @@ static int eval_index(char **arg, typval_T *rettv, int evaluate, int verbose)
       }
 
       if (len == -1) {
-        key = (char *)tv_get_string_chk(&var1);
+        key = tv_get_string_chk(&var1);
         if (key == NULL) {
           tv_clear(&var1);
           return FAIL;
@@ -4828,7 +4828,7 @@ void filter_map(typval_T *argvars, typval_T *rettv, int map)
             break;
           }
 
-          vimvars[VV_KEY].vv_str = xstrdup((char *)di->di_key);
+          vimvars[VV_KEY].vv_str = xstrdup(di->di_key);
           int r = filter_map_one(&di->di_tv, expr, map, &rem);
           tv_clear(&vimvars[VV_KEY].vv_tv);
           if (r == FAIL || did_emsg) {
@@ -7607,7 +7607,7 @@ const void *var_shada_iter(const void *const iter, const char **const name, typv
   } else {
     hi = (const hashitem_T *)iter;
   }
-  *name = (char *)TV_DICT_HI2DI(hi)->di_key;
+  *name = TV_DICT_HI2DI(hi)->di_key;
   tv_copy(&TV_DICT_HI2DI(hi)->di_tv, rettv);
   while ((size_t)(++hi - hifirst) < hinum) {
     if (!HASHITEM_EMPTY(hi) && (var_flavour(hi->hi_key) & flavour)) {
@@ -7631,10 +7631,10 @@ int store_session_globals(FILE *fd)
   TV_DICT_ITER(&globvardict, this_var, {
     if ((this_var->di_tv.v_type == VAR_NUMBER
          || this_var->di_tv.v_type == VAR_STRING)
-        && var_flavour((char *)this_var->di_key) == VAR_FLAVOUR_SESSION) {
+        && var_flavour(this_var->di_key) == VAR_FLAVOUR_SESSION) {
       // Escape special characters with a backslash.  Turn a LF and
       // CR into \n and \r.
-      char *const p = (char *)vim_strsave_escaped(tv_get_string(&this_var->di_tv), "\\\"\n\r");
+      char *const p = vim_strsave_escaped(tv_get_string(&this_var->di_tv), "\\\"\n\r");
       for (char *t = p; *t != NUL; t++) {
         if (*t == '\n') {
           *t = 'n';
@@ -7653,7 +7653,7 @@ int store_session_globals(FILE *fd)
       }
       xfree(p);
     } else if (this_var->di_tv.v_type == VAR_FLOAT
-               && var_flavour((char *)this_var->di_key) == VAR_FLAVOUR_SESSION) {
+               && var_flavour(this_var->di_key) == VAR_FLAVOUR_SESSION) {
       float_T f = this_var->di_tv.vval.v_float;
       int sign = ' ';
 
@@ -7944,7 +7944,7 @@ repeat:
       // "path/to/this.file.ext" :r:r:r
       //  ^       ^------------- tail
       //  +--------------------- *fnamep
-      if (s > MAX(tail, (char *)(*fnamep))) {
+      if (s > MAX(tail, *fnamep)) {
         *fnamelen = (size_t)(s - *fnamep);
       }
     }
