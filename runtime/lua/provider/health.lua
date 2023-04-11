@@ -372,6 +372,13 @@ local function version_info(python)
   return { python_version, nvim_version, pypi_version, version_status }
 end
 
+-- Resolves Python executable path by invoking and checking `sys.executable`.
+local function python_exepath(invocation)
+  return vim.fs.normalize(
+    system(vim.fn.fnameescape(invocation) .. ' -c "import sys; sys.stdout.write(sys.executable)"')
+  )
+end
+
 local function python()
   start('Python 3 provider (optional)')
 
@@ -390,8 +397,8 @@ local function python()
   local pyenv = pyenv_table[1]
   local pyenv_root = pyenv_table[2]
 
-  if vim.g['host_prog_var'] then
-    local message = 'Using: g:' .. host_prog_var .. ' = "' .. vim.g['host_prog_var'] .. '"'
+  if vim.g[host_prog_var] then
+    local message = 'Using: g:' .. host_prog_var .. ' = "' .. vim.g[host_prog_var] .. '"'
     info(message)
   end
 
@@ -404,7 +411,7 @@ local function python()
       'No Python executable found that can `import neovim`. '
         .. 'Using the first available executable for diagnostics.'
     )
-  elseif vim.g['host_prog_var'] then
+  elseif vim.g[host_prog_var] then
     python_exe = pyname
   end
 
@@ -415,7 +422,7 @@ local function python()
       'You may disable this provider (and warning) by adding `let g:loaded_python3_provider = 0` to your init.vim',
     })
   elseif not is_blank(pyname) and is_blank(python_exe) then
-    if not vim.g['host_prog_var'] then
+    if not vim.g[host_prog_var] then
       local message = '`g:'
         .. host_prog_var
         .. '` is not set.  Searching for '
@@ -569,20 +576,9 @@ local function python()
       ok('Latest pynvim is installed.')
     end
   end
-end
 
--- Resolves Python executable path by invoking and checking `sys.executable`.
-local function python_exepath(invocation)
-  return vim.fs.normalize(
-    system(vim.fn.fnameescape(invocation) .. ' -c "import sys; sys.stdout.write(sys.executable)"')
-  )
-end
-
--- Checks that $VIRTUAL_ENV Python executables are found at front of $PATH in
--- Nvim and subshells.
-local function virtualenv()
   start('Python virtualenv')
-  if not os.getenv('VIRTUAL_ENV') then
+  if not virtual_env then
     ok('no $VIRTUAL_ENV')
     return
   end
@@ -592,11 +588,12 @@ local function virtualenv()
   -- The virtualenv should contain some Python executables, and those
   -- executables should be first both on Nvim's $PATH and the $PATH of
   -- subshells launched from Nvim.
-  local bin_dir = (iswin and '/Scripts' or '/bin')
-  local venv_bins = vim.fn.glob(os.getenv('VIRTUAL_ENV') .. bin_dir .. '/python*', true, true)
-  -- XXX: Remove irrelevant executables found in bin/.
-  venv_bins = vim.fn.filter(venv_bins, 'v:val !~# "python-config"')
-  if vim.tbl_coun(venv_bins) > 0 then
+  local bin_dir = iswin and 'Scripts' or 'bin'
+  local venv_bins = vim.tbl_filter(function(v)
+    -- XXX: Remove irrelevant executables found in bin/.
+    return not v:match('python%-config')
+  end, vim.fn.glob(string.format('%s/%s/python*', virtual_env, bin_dir), true, true))
+  if vim.tbl_count(venv_bins) > 0 then
     for _, venv_bin in pairs(venv_bins) do
       venv_bin = vim.fs.normalize(venv_bin)
       local py_bin_basename = vim.fs.basename(venv_bin)
@@ -631,7 +628,7 @@ local function virtualenv()
       .. ' directory.'
   end
 
-  local msg = '$VIRTUAL_ENV is set to: ' .. os.getenv('VIRTUAL_ENV')
+  local msg = '$VIRTUAL_ENV is set to: ' .. virtual_env
   if vim.tbl_count(errors) > 0 then
     if vim.tbl_count(venv_bins) > 0 then
       msg = msg
@@ -911,7 +908,6 @@ end
 function M.check()
   clipboard()
   python()
-  virtualenv()
   ruby()
   node()
   perl()
