@@ -1550,7 +1550,7 @@ static void f_eval(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   }
 
   const char *const expr_start = s;
-  if (s == NULL || eval1((char **)&s, rettv, true) == FAIL) {
+  if (s == NULL || eval1((char **)&s, rettv, &EVALARG_EVALUATE) == FAIL) {
     if (expr_start != NULL && !aborting()) {
       semsg(_(e_invexpr2), expr_start);
     }
@@ -1722,7 +1722,7 @@ static void f_exists(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
       xfree(exp);
     }
   } else if (*p == '&' || *p == '+') {  // Option.
-    n = (get_option_tv(&p, NULL, true) == OK);
+    n = (eval_option(&p, NULL, true) == OK);
     if (*skipwhite(p) != NUL) {
       n = false;  // Trailing garbage.
     }

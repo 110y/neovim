@@ -175,25 +175,16 @@ static list_T *heredoc_get(exarg_T *eap, char *cmd)
 /// ":let var ..= expr" assignment command.
 /// ":let [var1, var2] = expr" unpack list.
 /// ":let [name, ..., ; lastname] = expr" unpack list.
-void ex_let(exarg_T *eap)
-{
-  ex_let_const(eap, false);
-}
-
+///
 /// ":cons[t] var = expr1" define constant
 /// ":cons[t] [name1, name2, ...] = expr1" define constants unpacking list
 /// ":cons[t] [name, ..., ; lastname] = expr" define constants unpacking list
-void ex_const(exarg_T *eap)
+void ex_let(exarg_T *eap)
 {
-  ex_let_const(eap, true);
-}
-
-static void ex_let_const(exarg_T *eap, const bool is_const)
-{
+  const bool is_const = eap->cmdidx == CMD_const;
   char *arg = eap->arg;
   char *expr = NULL;
   typval_T rettv;
-  int i;
   int var_count = 0;
   int semicolon = 0;
   char op[2];
@@ -208,8 +199,10 @@ static void ex_let_const(exarg_T *eap, const bool is_const)
     argend--;
   }
   expr = skipwhite(argend);
-  if (*expr != '=' && !((vim_strchr("+-*/%.", (uint8_t)(*expr)) != NULL
-                         && expr[1] == '=') || strncmp(expr, "..=", 3) == 0)) {
+  bool concat = strncmp(expr, "..=", 3) == 0;
+  bool has_assign = *expr == '=' || (vim_strchr("+-*/%.", (uint8_t)(*expr)) != NULL
+                                     && expr[1] == '=');
+  if (!has_assign && !concat) {
     // ":let" without "=": list variables
     if (*arg == '[') {
       emsg(_(e_invarg));
@@ -227,7 +220,10 @@ static void ex_let_const(exarg_T *eap, const bool is_const)
       list_vim_vars(&first);
     }
     eap->nextcmd = check_nextcmd(arg);
-  } else if (expr[0] == '=' && expr[1] == '<' && expr[2] == '<') {
+    return;
+  }
+
+  if (expr[0] == '=' && expr[1] == '<' && expr[2] == '<') {
     // HERE document
     list_T *l = heredoc_get(eap, expr + 3);
     if (l != NULL) {
@@ -239,36 +235,43 @@ static void ex_let_const(exarg_T *eap, const bool is_const)
       }
       tv_clear(&rettv);
     }
+    return;
+  }
+
+  rettv.v_type = VAR_UNKNOWN;
+
+  op[0] = '=';
+  op[1] = NUL;
+  if (*expr != '=') {
+    if (vim_strchr("+-*/%.", (uint8_t)(*expr)) != NULL) {
+      op[0] = *expr;  // +=, -=, *=, /=, %= or .=
+      if (expr[0] == '.' && expr[1] == '.') {  // ..=
+        expr++;
+      }
+    }
+    expr += 2;
   } else {
-    op[0] = '=';
-    op[1] = NUL;
-    if (*expr != '=') {
-      if (vim_strchr("+-*/%.", (uint8_t)(*expr)) != NULL) {
-        op[0] = *expr;  // +=, -=, *=, /=, %= or .=
-        if (expr[0] == '.' && expr[1] == '.') {  // ..=
-          expr++;
-        }
-      }
-      expr += 2;
-    } else {
-      expr += 1;
-    }
+    expr += 1;
+  }
 
-    expr = skipwhite(expr);
+  expr = skipwhite(expr);
 
-    if (eap->skip) {
-      emsg_skip++;
-    }
-    i = eval0(expr, &rettv, &eap->nextcmd, !eap->skip);
-    if (eap->skip) {
-      if (i != FAIL) {
-        tv_clear(&rettv);
-      }
-      emsg_skip--;
-    } else if (i != FAIL) {
-      (void)ex_let_vars(eap->arg, &rettv, false, semicolon, var_count, is_const, op);
-      tv_clear(&rettv);
-    }
+  if (eap->skip) {
+    emsg_skip++;
+  }
+  evalarg_T evalarg;
+  fill_evalarg_from_eap(&evalarg, eap, eap->skip);
+  int eval_res = eval0(expr, &rettv, eap, &evalarg);
+  if (eap->skip) {
+    emsg_skip--;
+  }
+  clear_evalarg(&evalarg, eap);
+
+  if (!eap->skip && eval_res != FAIL) {
+    (void)ex_let_vars(eap->arg, &rettv, false, semicolon, var_count, is_const, op);
+  }
+  if (eval_res != FAIL) {
+    tv_clear(&rettv);
   }
 }
 
@@ -500,13 +503,12 @@ static const char *list_arg_vars(exarg_T *eap, const char *arg, int *first)
         if (tofree != NULL) {
           name = tofree;
         }
-        if (get_var_tv(name, len, &tv, NULL, true, false)
-            == FAIL) {
+        if (eval_variable(name, len, &tv, NULL, true, false) == FAIL) {
           error = true;
         } else {
           // handle d.key, l[idx], f(expr)
           const char *const arg_subsc = arg;
-          if (handle_subscript(&arg, &tv, true, true) == FAIL) {
+          if (handle_subscript(&arg, &tv, &EVALARG_EVALUATE, true) == FAIL) {
             error = true;
           } else {
             if (arg == arg_subsc && len == 2 && name[1] == ':') {
@@ -1073,8 +1075,8 @@ static int do_lock_var(lval_T *lp, char *name_end FUNC_ATTR_UNUSED, exarg_T *eap
 /// @param dip  non-NULL when typval's dict item is needed
 /// @param verbose  may give error message
 /// @param no_autoload  do not use script autoloading
-int get_var_tv(const char *name, int len, typval_T *rettv, dictitem_T **dip, bool verbose,
-               bool no_autoload)
+int eval_variable(const char *name, int len, typval_T *rettv, dictitem_T **dip, bool verbose,
+                  bool no_autoload)
 {
   int ret = OK;
   typval_T *tv = NULL;
@@ -1561,7 +1563,7 @@ static void get_var_from(const char *varname, typval_T *rettv, typval_T *deftv, 
             tv_dict_set_ret(rettv, opts);
             done = true;
           }
-        } else if (get_option_tv(&varname, rettv, true) == OK) {
+        } else if (eval_option(&varname, rettv, true) == OK) {
           // Local option
           done = true;
         }
@@ -1710,10 +1712,10 @@ bool var_exists(const char *var)
     if (tofree != NULL) {
       name = tofree;
     }
-    n = get_var_tv(name, len, &tv, NULL, false, true) == OK;
+    n = eval_variable(name, len, &tv, NULL, false, true) == OK;
     if (n) {
       // Handle d.key, l[idx], f(expr).
-      n = handle_subscript(&var, &tv, true, false) == OK;
+      n = handle_subscript(&var, &tv, &EVALARG_EVALUATE, false) == OK;
       if (n) {
         tv_clear(&tv);
       }
