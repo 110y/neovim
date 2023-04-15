@@ -2015,12 +2015,11 @@ static void list_functions(regmatch_T *regmatch)
     if (!HASHITEM_EMPTY(hi)) {
       ufunc_T *fp = HI2UF(hi);
       todo--;
-      if ((fp->uf_flags & FC_DEAD) == 0
-          && (regmatch == NULL
-              ? (!message_filtered(fp->uf_name)
-                 && !func_name_refcount(fp->uf_name))
-              : (!isdigit((uint8_t)(*fp->uf_name))
-                 && vim_regexec(regmatch, fp->uf_name, 0)))) {
+      if (regmatch == NULL
+          ? (!message_filtered(fp->uf_name)
+             && !func_name_refcount(fp->uf_name))
+          : (!isdigit((uint8_t)(*fp->uf_name))
+             && vim_regexec(regmatch, fp->uf_name, 0))) {
         list_func_head(fp, false, false);
         if (changed != func_hashtab.ht_changed) {
           emsg(_("E454: function list was modified"));
@@ -2483,10 +2482,19 @@ void ex_function(exarg_T *eap)
                 && (!ASCII_ISALNUM(p[2])
                     || (p[2] == 't' && !ASCII_ISALNUM(p[3]))))) {
           p = skipwhite(arg + 3);
-          if (strncmp(p, "trim", 4) == 0) {
-            // Ignore leading white space.
-            p = skipwhite(p + 4);
-            heredoc_trimmed = xstrnsave(theline, (size_t)(skipwhite(theline) - theline));
+          while (true) {
+            if (strncmp(p, "trim", 4) == 0) {
+              // Ignore leading white space.
+              p = skipwhite(p + 4);
+              heredoc_trimmed = xstrnsave(theline, (size_t)(skipwhite(theline) - theline));
+              continue;
+            }
+            if (strncmp(p, "eval", 4) == 0) {
+              // Ignore leading white space.
+              p = skipwhite(p + 4);
+              continue;
+            }
+            break;
           }
           skip_until = xstrnsave(p, (size_t)(skiptowhite(p) - p));
           do_concat = false;
