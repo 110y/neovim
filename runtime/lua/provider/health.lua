@@ -1,10 +1,10 @@
 local M = {}
 
-local start = vim.health.report_start
-local ok = vim.health.report_ok
-local info = vim.health.report_info
-local warn = vim.health.report_warn
-local error = vim.health.report_error
+local start = vim.health.start
+local ok = vim.health.ok
+local info = vim.health.info
+local warn = vim.health.warn
+local error = vim.health.error
 local iswin = vim.loop.os_uname().sysname == 'Windows_NT'
 
 local shell_error_code = 0
@@ -850,7 +850,7 @@ local function perl()
 
   local latest_cpan_cmd = {
     perl_exec,
-    '-MApp::cpanminus::fatscript',
+    '-MApp::cpanminus::script',
     '-e',
     'my $app = App::cpanminus::script->new; $app->parse_options ("--info", "-q", "Neovim::Ext"); exit $app->doit',
   }
@@ -886,7 +886,7 @@ local function perl()
 
   local current_cpan_cmd = { perl_exec, '-W', '-MNeovim::Ext', '-e', 'print $Neovim::Ext::VERSION' }
   local current_cpan = system(current_cpan_cmd)
-  if shell_error then
+  if shell_error() then
     error(
       'Failed to run: ' .. table.concat(current_cpan_cmd, ' '),
       { 'Report this issue with the output of: ', table.concat(current_cpan_cmd, ' ') }

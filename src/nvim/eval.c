@@ -96,6 +96,7 @@ static const char *e_string_list_or_blob_required = N_("E1098: String, List or B
 static const char e_expression_too_recursive_str[] = N_("E1169: Expression too recursive: %s");
 static const char e_dot_can_only_be_used_on_dictionary_str[]
   = N_("E1203: Dot can only be used on a dictionary: %s");
+static const char e_empty_function_name[] = N_("E1192: Empty function name");
 
 static char * const namespace_char = "abglstvw";
 
@@ -2219,6 +2220,7 @@ static int eval_func(char **const arg, evalarg_T *const evalarg, char *const nam
   const bool evaluate = flags & EVAL_EVALUATE;
   char *s = name;
   int len = name_len;
+  bool found_var = false;
 
   if (!evaluate) {
     check_vars(s, (size_t)len);
@@ -2227,7 +2229,7 @@ static int eval_func(char **const arg, evalarg_T *const evalarg, char *const nam
   // If "s" is the name of a variable of type VAR_FUNC
   // use its contents.
   partial_T *partial;
-  s = deref_func_name(s, &len, &partial, !evaluate);
+  s = deref_func_name(s, &len, &partial, !evaluate, &found_var);
 
   // Need to make a copy, in case evaluating the arguments makes
   // the name invalid.
@@ -2240,6 +2242,7 @@ static int eval_func(char **const arg, evalarg_T *const evalarg, char *const nam
   funcexe.fe_evaluate = evaluate;
   funcexe.fe_partial = partial;
   funcexe.fe_basetv = basetv;
+  funcexe.fe_found_var = found_var;
   int ret = get_func_tv(s, len, rettv, arg, evalarg, &funcexe);
 
   xfree(s);
@@ -3260,6 +3263,7 @@ static int call_func_rettv(char **const arg, evalarg_T *const evalarg, typval_T 
   typval_T functv;
   const char *funcname;
   bool is_lua = false;
+  int ret;
 
   // need to copy the funcref so that we can clear rettv
   if (evaluate) {
@@ -3273,6 +3277,11 @@ static int call_func_rettv(char **const arg, evalarg_T *const evalarg, typval_T 
       funcname = is_lua ? lua_funcname : partial_name(pt);
     } else {
       funcname = functv.vval.v_string;
+      if (funcname == NULL || *funcname == NUL) {
+        emsg(_(e_empty_function_name));
+        ret = FAIL;
+        goto theend;
+      }
     }
   } else {
     funcname = "";
@@ -3285,9 +3294,10 @@ static int call_func_rettv(char **const arg, evalarg_T *const evalarg, typval_T 
   funcexe.fe_partial = pt;
   funcexe.fe_selfdict = selfdict;
   funcexe.fe_basetv = basetv;
-  const int ret = get_func_tv(funcname, is_lua ? (int)(*arg - funcname) : -1, rettv,
-                              arg, evalarg, &funcexe);
+  ret = get_func_tv(funcname, is_lua ? (int)(*arg - funcname) : -1, rettv,
+                    arg, evalarg, &funcexe);
 
+theend:
   // Clear the funcref afterwards, so that deleting it while
   // evaluating the arguments is possible (see test55).
   if (evaluate) {
@@ -4175,11 +4185,13 @@ int eval_interp_string(char **arg, typval_T *rettv, bool evaluate)
 char *partial_name(partial_T *pt)
   FUNC_ATTR_PURE
 {
-  if (pt->pt_name != NULL) {
-    return pt->pt_name;
-  }
-  if (pt->pt_func != NULL) {
-    return pt->pt_func->uf_name;
+  if (pt != NULL) {
+    if (pt->pt_name != NULL) {
+      return pt->pt_name;
+    }
+    if (pt->pt_func != NULL) {
+      return pt->pt_func->uf_name;
+    }
   }
   return "";
 }
@@ -7454,7 +7466,7 @@ hashtab_T *find_var_ht_dict(const char *name, const size_t name_len, const char 
     if (funccal == NULL) {  // global variable
       *d = &globvardict;
     } else {  // l: variable
-      *d = &funccal->l_vars;
+      *d = &funccal->fc_l_vars;
     }
     goto end;
   }
@@ -7478,9 +7490,9 @@ hashtab_T *find_var_ht_dict(const char *name, const size_t name_len, const char 
   } else if (*name == 'v') {  // v: variable
     *d = &vimvardict;
   } else if (*name == 'a' && funccal != NULL) {  // function argument
-    *d = &funccal->l_avars;
+    *d = &funccal->fc_l_avars;
   } else if (*name == 'l' && funccal != NULL) {  // local variable
-    *d = &funccal->l_vars;
+    *d = &funccal->fc_l_vars;
   } else if (*name == 's'  // script variable
              && (current_sctx.sc_sid > 0 || current_sctx.sc_sid == SID_STR
                  || current_sctx.sc_sid == SID_LUA)
@@ -8363,6 +8375,10 @@ char *do_string_sub(char *str, char *pat, char *sub, typval_T *expr, const char 
       // - The substituted text.
       // - The text after the match.
       sublen = vim_regsub(&regmatch, sub, expr, tail, 0, REGSUB_MAGIC);
+      if (sublen <= 0) {
+        ga_clear(&ga);
+        break;
+      }
       ga_grow(&ga, (int)((end - tail) + sublen -
                          (regmatch.endp[0] - regmatch.startp[0])));
 
@@ -8597,33 +8613,27 @@ void eval_fmt_source_name_line(char *buf, size_t bufsize)
 /// ":checkhealth [plugins]"
 void ex_checkhealth(exarg_T *eap)
 {
-  bool found = !!find_func("health#check");
-  if (!found
-      && script_autoload("health#check", sizeof("health#check") - 1, false)) {
-    found = !!find_func("health#check");
-  }
-  if (!found) {
-    const char *vimruntime_env = os_getenv("VIMRUNTIME");
-    if (vimruntime_env == NULL) {
-      emsg(_("E5009: $VIMRUNTIME is empty or unset"));
-    } else {
-      bool rtp_ok = NULL != strstr(p_rtp, vimruntime_env);
-      if (rtp_ok) {
-        semsg(_("E5009: Invalid $VIMRUNTIME: %s"), vimruntime_env);
-      } else {
-        emsg(_("E5009: Invalid 'runtimepath'"));
-      }
-    }
+  Error err = ERROR_INIT;
+  MAXSIZE_TEMP_ARRAY(args, 1);
+  ADD_C(args, STRING_OBJ(cstr_as_string(eap->arg)));
+  NLUA_EXEC_STATIC("return vim.health._check(...)", args, &err);
+  if (!ERROR_SET(&err)) {
     return;
   }
 
-  size_t bufsize = strlen(eap->arg) + sizeof("call health#check('')");
-  char *buf = xmalloc(bufsize);
-  snprintf(buf, bufsize, "call health#check('%s')", eap->arg);
-
-  do_cmdline_cmd(buf);
-
-  xfree(buf);
+  const char *vimruntime_env = os_getenv("VIMRUNTIME");
+  if (vimruntime_env == NULL) {
+    emsg(_("E5009: $VIMRUNTIME is empty or unset"));
+  } else {
+    bool rtp_ok = NULL != strstr(p_rtp, vimruntime_env);
+    if (rtp_ok) {
+      semsg(_("E5009: Invalid $VIMRUNTIME: %s"), vimruntime_env);
+    } else {
+      emsg(_("E5009: Invalid 'runtimepath'"));
+    }
+  }
+  semsg_multiline(err.msg);
+  api_clear_error(&err);
 }
 
 void invoke_prompt_callback(void)

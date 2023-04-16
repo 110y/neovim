@@ -890,7 +890,7 @@ EXTERN const char e_invarg2[] INIT(= N_("E475: Invalid argument: %s"));
 EXTERN const char e_invargval[] INIT(= N_("E475: Invalid value for argument %s"));
 EXTERN const char e_invargNval[] INIT(= N_("E475: Invalid value for argument %s: %s"));
 EXTERN const char e_duparg2[] INIT(= N_("E983: Duplicate argument: %s"));
-EXTERN const char e_invexpr2[] INIT(= N_("E15: Invalid expression: %s"));
+EXTERN const char e_invexpr2[] INIT(= N_("E15: Invalid expression: \"%s\""));
 EXTERN const char e_invrange[] INIT(= N_("E16: Invalid range"));
 EXTERN const char e_invcmd[] INIT(= N_("E476: Invalid command"));
 EXTERN const char e_isadir2[] INIT(= N_("E17: \"%s\" is a directory"));
@@ -986,6 +986,8 @@ EXTERN const char e_maxmempat[] INIT(= N_("E363: pattern uses more memory than '
 EXTERN const char e_emptybuf[] INIT(= N_("E749: empty buffer"));
 EXTERN const char e_nobufnr[] INIT(= N_("E86: Buffer %" PRId64 " does not exist"));
 
+EXTERN const char e_str_not_inside_function[] INIT(= N_("E193: %s not inside a function"));
+
 EXTERN const char e_invalpat[] INIT(= N_("E682: Invalid search pattern or delimiter"));
 EXTERN const char e_bufloaded[] INIT(= N_("E139: File is loaded in another buffer"));
 EXTERN const char e_notset[] INIT(= N_("E764: Option '%s' is not set"));
@@ -1000,6 +1002,7 @@ EXTERN const char e_fnametoolong[] INIT(= N_("E856: Filename too long"));
 EXTERN const char e_float_as_string[] INIT(= N_("E806: using Float as a String"));
 EXTERN const char e_inval_string[] INIT(= N_("E908: using an invalid value as a String"));
 EXTERN const char e_cannot_edit_other_buf[] INIT(= N_("E788: Not allowed to edit another buffer now"));
+EXTERN const char e_not_callable_type_str[] INIT(= N_("E1085: Not a callable type: %s"));
 
 EXTERN const char e_cmdmap_err[] INIT(= N_("E5520: <Cmd> mapping must end with <CR>"));
 EXTERN const char e_cmdmap_repeated[]
