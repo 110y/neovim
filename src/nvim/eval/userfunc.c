@@ -72,7 +72,7 @@ static funccall_T *current_funccal = NULL;
 // item in it is still being used.
 static funccall_T *previous_funccal = NULL;
 
-static const char *e_unknownfunc = N_("E117: Unknown function: %s");
+static const char *e_unknown_function_str = N_("E117: Unknown function: %s");
 static const char *e_funcexts = N_("E122: Function %s already exists, add ! to replace it");
 static const char *e_funcdict = N_("E717: Dictionary entry already exists");
 static const char *e_funcref = N_("E718: Funcref required");
@@ -536,6 +536,7 @@ int get_func_tv(const char *name, int len, typval_T *rettv, char **arg, evalarg_
                                 : funcexe->fe_partial->pt_argc),
                                argvars, &argcount);
 
+  assert(ret == OK || ret == FAIL);  // suppress clang false positive
   if (ret == OK) {
     int i = 0;
 
@@ -881,6 +882,27 @@ static void func_clear_free(ufunc_T *fp, bool force)
   func_free(fp);
 }
 
+/// Allocate a funccall_T, link it in current_funccal and fill in "fp" and "rettv".
+/// Must be followed by one call to remove_funccal() or cleanup_function_call().
+funccall_T *create_funccal(ufunc_T *fp, typval_T *rettv)
+{
+  funccall_T *fc = xcalloc(1, sizeof(funccall_T));
+  fc->fc_caller = current_funccal;
+  current_funccal = fc;
+  fc->fc_func = fp;
+  func_ptr_ref(fp);
+  fc->fc_rettv = rettv;
+  return fc;
+}
+
+/// Restore current_funccal.
+void remove_funccal(void)
+{
+  funccall_T *fc = current_funccal;
+  current_funccal = fc->fc_caller;
+  free_funccal(fc);
+}
+
 /// Call a user function
 ///
 /// @param fp  Function to call.
@@ -895,7 +917,6 @@ void call_user_func(ufunc_T *fp, int argcount, typval_T *argvars, typval_T *rett
   FUNC_ATTR_NONNULL_ARG(1, 3, 4)
 {
   bool using_sandbox = false;
-  funccall_T *fc;
   int save_did_emsg;
   static int depth = 0;
   dictitem_T *v;
@@ -930,19 +951,13 @@ void call_user_func(ufunc_T *fp, int argcount, typval_T *argvars, typval_T *rett
   // check for CTRL-C hit
   line_breakcheck();
   // prepare the funccall_T structure
-  fc = xcalloc(1, sizeof(funccall_T));
-  fc->fc_caller = current_funccal;
-  current_funccal = fc;
-  fc->fc_func = fp;
-  fc->fc_rettv = rettv;
+  funccall_T *fc = create_funccal(fp, rettv);
   fc->fc_level = ex_nesting_level;
   // Check if this function has a breakpoint.
   fc->fc_breakpoint = dbg_find_breakpoint(false, fp->uf_name, (linenr_T)0);
   fc->fc_dbg_tick = debug_tick;
-
   // Set up fields for closure.
   ga_init(&fc->fc_ufuncs, sizeof(ufunc_T *), 1);
-  func_ptr_ref(fp);
 
   if (strncmp(fp->uf_name, "<lambda>", 8) == 0) {
     islambda = true;
@@ -1290,6 +1305,21 @@ static bool func_name_refcount(const char *name)
   return isdigit((uint8_t)(*name)) || *name == '<';
 }
 
+/// Check the argument count for user function "fp".
+/// @return  FCERR_UNKNOWN if OK, FCERR_TOOFEW or FCERR_TOOMANY otherwise.
+static int check_user_func_argcount(ufunc_T *fp, int argcount)
+  FUNC_ATTR_NONNULL_ALL
+{
+  const int regular_args = fp->uf_args.ga_len;
+
+  if (argcount < regular_args - fp->uf_def_args.ga_len) {
+    return FCERR_TOOFEW;
+  } else if (!fp->uf_varargs && argcount > regular_args) {
+    return FCERR_TOOMANY;
+  }
+  return FCERR_UNKNOWN;
+}
+
 /// Call a user function after checking the arguments.
 static int call_user_func_check(ufunc_T *fp, int argcount, typval_T *argvars, typval_T *rettv,
                                 funcexe_T *funcexe, dict_T *selfdict)
@@ -1302,12 +1332,11 @@ static int call_user_func_check(ufunc_T *fp, int argcount, typval_T *argvars, ty
   if ((fp->uf_flags & FC_RANGE) && funcexe->fe_doesrange != NULL) {
     *funcexe->fe_doesrange = true;
   }
-  int error;
-  if (argcount < fp->uf_args.ga_len - fp->uf_def_args.ga_len) {
-    error = FCERR_TOOFEW;
-  } else if (!fp->uf_varargs && argcount > fp->uf_args.ga_len) {
-    error = FCERR_TOOMANY;
-  } else if ((fp->uf_flags & FC_DICT) && selfdict == NULL) {
+  int error = check_user_func_argcount(fp, argcount);
+  if (error != FCERR_UNKNOWN) {
+    return error;
+  }
+  if ((fp->uf_flags & FC_DICT) && selfdict == NULL) {
     error = FCERR_DICT;
   } else {
     // Call the user function.
@@ -1495,14 +1524,14 @@ varnumber_T callback_call_retnr(Callback *callback, int argcount, typval_T *argv
 /// Give an error message for the result of a function.
 /// Nothing if "error" is FCERR_NONE.
 static void user_func_error(int error, const char *name, funcexe_T *funcexe)
-  FUNC_ATTR_NONNULL_ALL
+  FUNC_ATTR_NONNULL_ARG(2)
 {
   switch (error) {
   case FCERR_UNKNOWN:
     if (funcexe->fe_found_var) {
       semsg(_(e_not_callable_type_str), name);
     } else {
-      emsg_funcname(e_unknownfunc, name);
+      emsg_funcname(e_unknown_function_str, name);
     }
     break;
   case FCERR_NOTMETHOD:
@@ -1515,7 +1544,7 @@ static void user_func_error(int error, const char *name, funcexe_T *funcexe)
     emsg_funcname(_(e_toomanyarg), name);
     break;
   case FCERR_TOOFEW:
-    emsg_funcname(N_("E119: Not enough arguments for function: %s"), name);
+    emsg_funcname(_(e_toofewarg), name);
     break;
   case FCERR_SCRIPT:
     emsg_funcname(N_("E120: Using <SID> not in a script context: %s"), name);
@@ -3144,6 +3173,29 @@ static int ex_defer_inner(char *name, char **arg, const partial_T *const partial
   }
   int r = get_func_arguments(arg, evalarg, false, argvars + partial_argc, &argcount);
   argcount += partial_argc;
+
+  if (r == OK) {
+    if (builtin_function(name, -1)) {
+      const EvalFuncDef *const fdef = find_internal_func(name);
+      if (fdef == NULL) {
+        emsg_funcname(e_unknown_function_str, name);
+        r = FAIL;
+      } else if (check_internal_func(fdef, argcount) == -1) {
+        r = FAIL;
+      }
+    } else {
+      ufunc_T *ufunc = find_func(name);
+      // we tolerate an unknown function here, it might be defined later
+      if (ufunc != NULL) {
+        int error = check_user_func_argcount(ufunc, argcount);
+        if (error != FCERR_UNKNOWN) {
+          user_func_error(error, name, NULL);
+          r = FAIL;
+        }
+      }
+    }
+  }
+
   if (r == FAIL) {
     while (--argcount >= 0) {
       tv_clear(&argvars[argcount]);

@@ -140,8 +140,8 @@ set(MSGPACK_URL https://github.com/msgpack/msgpack-c/releases/download/c-6.0.0/m
 set(MSGPACK_SHA256 3654f5e2c652dc52e0a993e270bb57d5702b262703f03771c152bba51602aeba)
 
 # https://github.com/LuaJIT/LuaJIT/tree/v2.1
-set(LUAJIT_URL https://github.com/LuaJIT/LuaJIT/archive/505e2c03de35e2718eef0d2d3660712e06dadf1f.tar.gz)
-set(LUAJIT_SHA256 67c88399b901a22e9a236f4b77e6fe39af00f6b7144ce9dd6f51141d921f1076)
+set(LUAJIT_URL https://github.com/LuaJIT/LuaJIT/archive/1c279127050e86e99970100e9c42e0f09cd54ab7.tar.gz)
+set(LUAJIT_SHA256 c62f6e6d5bff89e4718709841cd6be71ad419ac9fa780c91abf1635cda923f8f)
 
 set(LUA_URL https://www.lua.org/ftp/lua-5.1.5.tar.gz)
 set(LUA_SHA256 2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333)
@@ -196,8 +196,8 @@ set(TREESITTER_VIMDOC_URL https://github.com/neovim/tree-sitter-vimdoc/archive/v
 set(TREESITTER_VIMDOC_SHA256 1ff8f4afd3a9599dd4c3ce87c155660b078c1229704d1a254433e33794b8f274)
 set(TREESITTER_QUERY_URL https://github.com/nvim-treesitter/tree-sitter-query/archive/v0.1.0.tar.gz)
 set(TREESITTER_QUERY_SHA256 e2b806f80e8bf1c4f4e5a96248393fe6622fc1fc6189d6896d269658f67f914c)
-set(TREESITTER_URL https://github.com/tree-sitter/tree-sitter/archive/v0.20.8.tar.gz)
-set(TREESITTER_SHA256 6181ede0b7470bfca37e293e7d5dc1d16469b9485d13f13a605baec4a8b1f791)
+set(TREESITTER_URL https://github.com/tree-sitter/tree-sitter/archive/af92bfc0220eb0f5e18b896b11d8cd979c63f673.tar.gz)
+set(TREESITTER_SHA256 8a083372ed7bfe993e8af0a8c799c60796c922241b44266022c9a6f1fc2f11c1)
 
 if(USE_EXISTING_SRC_DIR)
   get_cmake_property(VARS VARIABLES)
