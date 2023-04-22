@@ -197,7 +197,8 @@ endif()
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
   if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
     target_link_libraries(nvim PRIVATE -Wl,--no-undefined -lsocket)
-  else()
+  # workaround for clang-11 on macOS, supported on later versions:
+  elseif(NOT APPLE)
     target_link_libraries(nvim PRIVATE -Wl,--no-undefined)
   endif()
 
@@ -407,11 +408,14 @@ foreach(gen_cdef DO_NOT_DEFINE_EMPTY_ATTRIBUTES ${prop})
   endif()
 endforeach()
 
-get_target_property(prop main_lib INTERFACE_INCLUDE_DIRECTORIES)
-foreach(gen_include ${prop})
-  list(APPEND gen_cflags "-I${gen_include}")
+get_directory_property(targets BUILDSYSTEM_TARGETS)
+foreach(target ${targets})
+  get_target_property(prop ${target} INTERFACE_INCLUDE_DIRECTORIES)
+  foreach(gen_include ${prop})
+    list(APPEND gen_cflags "-I${gen_include}")
+  endforeach()
 endforeach()
-list(APPEND gen_cflags "-I${DEPS_PREFIX}/include")
+
 if(APPLE AND CMAKE_OSX_SYSROOT)
   list(APPEND gen_cflags "-isysroot")
   list(APPEND gen_cflags "${CMAKE_OSX_SYSROOT}")
@@ -758,7 +762,6 @@ if(WIN32)
     "file(MAKE_DIRECTORY \"${PROJECT_BINARY_DIR}/windows_runtime_deps/platforms\")")
   foreach(DEP_FILE IN ITEMS
       cat.exe
-      diff.exe
       tee.exe
       win32yank.exe
       xxd.exe
