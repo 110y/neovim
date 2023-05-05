@@ -40,6 +40,10 @@
 # include "eval/typval.c.generated.h"
 #endif
 
+static const char e_variable_nested_too_deep_for_unlock[]
+  = N_("E743: Variable nested too deep for (un)lock");
+static const char e_using_invalid_value_as_string[]
+  = N_("E908: Using an invalid value as a String");
 static const char e_string_required_for_argument_nr[]
   = N_("E1174: String required for argument %d");
 static const char e_non_empty_string_required_for_argument_nr[]
@@ -52,6 +56,10 @@ static const char e_list_required_for_argument_nr[]
   = N_("E1211: List required for argument %d");
 static const char e_bool_required_for_argument_nr[]
   = N_("E1212: Bool required for argument %d");
+static const char e_float_or_number_required_for_argument_nr[]
+  = N_("E1219: Float or Number required for argument %d");
+static const char e_string_or_number_required_for_argument_nr[]
+  = N_("E1220: String or Number required for argument %d");
 static const char e_string_or_list_required_for_argument_nr[]
   = N_("E1222: String or List required for argument %d");
 static const char e_list_or_blob_required_for_argument_nr[]
@@ -791,7 +799,7 @@ int tv_list_slice_or_index(list_T *list, bool range, varnumber_T n1_arg, varnumb
     // A list index out of range is an error.
     if (!range) {
       if (verbose) {
-        semsg(_(e_listidx), (int64_t)n1);
+        semsg(_(e_list_index_out_of_range_nr), (int64_t)n1);
       }
       return FAIL;
     }
@@ -985,7 +993,7 @@ void tv_list_remove(typval_T *argvars, typval_T *rettv, const char *arg_errmsg)
   if (error) {
     // Type error: do nothing, errmsg already given.
   } else if ((item = tv_list_find(l, (int)idx)) == NULL) {
-    semsg(_(e_listidx), idx);
+    semsg(_(e_list_index_out_of_range_nr), idx);
   } else {
     if (argvars[2].v_type == VAR_UNKNOWN) {
       // Remove one item, return its value.
@@ -999,7 +1007,7 @@ void tv_list_remove(typval_T *argvars, typval_T *rettv, const char *arg_errmsg)
       if (error) {
         // Type error: do nothing.
       } else if ((item2 = tv_list_find(l, (int)end)) == NULL) {
-        semsg(_(e_listidx), end);
+        semsg(_(e_list_index_out_of_range_nr), end);
       } else {
         int cnt = 0;
 
@@ -1573,7 +1581,7 @@ const char *tv_list_find_str(list_T *const l, const int n)
 {
   const listitem_T *const li = tv_list_find(l, n);
   if (li == NULL) {
-    semsg(_(e_listidx), (int64_t)n);
+    semsg(_(e_list_index_out_of_range_nr), (int64_t)n);
     return NULL;
   }
   return tv_get_string(TV_LIST_ITEM_TV(li));
@@ -3581,7 +3589,7 @@ void tv_item_lock(typval_T *const tv, const int deep, const bool lock, const boo
   static int recurse = 0;
 
   if (recurse >= DICT_MAXNEST) {
-    emsg(_("E743: variable nested too deep for (un)lock"));
+    emsg(_(e_variable_nested_too_deep_for_unlock));
     return;
   }
   if (deep == 0) {
@@ -3931,16 +3939,16 @@ bool tv_check_num(const typval_T *const tv)
   return false;
 }
 
-#define FUNC_ERROR "E729: using Funcref as a String"
+#define FUNC_ERROR "E729: Using a Funcref as a String"
 
 static const char *const str_errors[] = {
   [VAR_PARTIAL]= N_(FUNC_ERROR),
   [VAR_FUNC]= N_(FUNC_ERROR),
-  [VAR_LIST]= N_("E730: using List as a String"),
-  [VAR_DICT]= N_("E731: using Dictionary as a String"),
-  [VAR_FLOAT]= e_float_as_string,
-  [VAR_BLOB]= N_("E976: using Blob as a String"),
-  [VAR_UNKNOWN]= e_inval_string,
+  [VAR_LIST]= N_("E730: Using a List as a String"),
+  [VAR_DICT]= N_("E731: Using a Dictionary as a String"),
+  [VAR_FLOAT]= e_using_float_as_string,
+  [VAR_BLOB]= N_("E976: Using a Blob as a String"),
+  [VAR_UNKNOWN]= e_using_invalid_value_as_string,
 };
 
 #undef FUNC_ERROR
@@ -4160,6 +4168,17 @@ int tv_check_for_opt_number_arg(const typval_T *const args, const int idx)
           || tv_check_for_number_arg(args, idx) != FAIL) ? OK : FAIL;
 }
 
+/// Give an error and return FAIL unless "args[idx]" is a float or a number.
+int tv_check_for_float_or_nr_arg(const typval_T *const args, const int idx)
+  FUNC_ATTR_NONNULL_ALL FUNC_ATTR_WARN_UNUSED_RESULT FUNC_ATTR_PURE
+{
+  if (args[idx].v_type != VAR_FLOAT && args[idx].v_type != VAR_NUMBER) {
+    semsg(_(e_float_or_number_required_for_argument_nr), idx + 1);
+    return FAIL;
+  }
+  return OK;
+}
+
 /// Give an error and return FAIL unless "args[idx]" is a bool.
 int tv_check_for_bool_arg(const typval_T *const args, const int idx)
   FUNC_ATTR_NONNULL_ALL FUNC_ATTR_WARN_UNUSED_RESULT FUNC_ATTR_PURE
@@ -4240,6 +4259,18 @@ int tv_check_for_opt_dict_arg(const typval_T *const args, const int idx)
           || tv_check_for_dict_arg(args, idx) != FAIL) ? OK : FAIL;
 }
 
+/// Give an error and return FAIL unless "args[idx]" is a string or
+/// a number.
+int tv_check_for_string_or_number_arg(const typval_T *const args, const int idx)
+  FUNC_ATTR_NONNULL_ALL FUNC_ATTR_WARN_UNUSED_RESULT FUNC_ATTR_PURE
+{
+  if (args[idx].v_type != VAR_STRING && args[idx].v_type != VAR_NUMBER) {
+    semsg(_(e_string_or_number_required_for_argument_nr), idx + 1);
+    return FAIL;
+  }
+  return OK;
+}
+
 /// Give an error and return FAIL unless "args[idx]" is a string or a list.
 int tv_check_for_string_or_list_arg(const typval_T *const args, const int idx)
   FUNC_ATTR_NONNULL_ALL FUNC_ATTR_WARN_UNUSED_RESULT FUNC_ATTR_PURE
@@ -4249,6 +4280,14 @@ int tv_check_for_string_or_list_arg(const typval_T *const args, const int idx)
     return FAIL;
   }
   return OK;
+}
+
+/// Check for an optional string or list argument at 'idx'
+int tv_check_for_opt_string_or_list_arg(const typval_T *const args, const int idx)
+  FUNC_ATTR_NONNULL_ALL FUNC_ATTR_WARN_UNUSED_RESULT FUNC_ATTR_PURE
+{
+  return (args[idx].v_type == VAR_UNKNOWN
+          || tv_check_for_string_or_list_arg(args, idx) != FAIL) ? OK : FAIL;
 }
 
 /// Give an error and return FAIL unless "args[idx]" is a string
