@@ -514,17 +514,43 @@ wingotofile:
       tabpage_T *oldtab = curtab;
       win_T *oldwin = curwin;
       setpcmark();
-      if (win_split(0, 0) == OK) {
+
+      // If 'switchbuf' is set to 'useopen' or 'usetab' and the
+      // file is already opened in a window, then jump to it.
+      win_T *wp = NULL;
+      if ((swb_flags & (SWB_USEOPEN | SWB_USETAB))
+          && cmdmod.cmod_tab == 0) {
+        buf_T *existing_buf = buflist_findname_exp(ptr);
+
+        if (existing_buf != NULL) {
+          if (swb_flags & SWB_USEOPEN) {
+            wp = buf_jump_open_win(existing_buf);
+          }
+
+          // If 'switchbuf' contains "usetab": jump to first
+          // window in any tab page containing "existing_buf"
+          // if one exists.
+          if (wp == NULL && (swb_flags & SWB_USETAB)) {
+            wp = buf_jump_open_tab(existing_buf);
+          }
+        }
+      }
+
+      if (wp == NULL && win_split(0, 0) == OK) {
         RESET_BINDING(curwin);
         if (do_ecmd(0, ptr, NULL, NULL, ECMD_LASTL, ECMD_HIDE, NULL) == FAIL) {
           // Failed to open the file, close the window opened for it.
           win_close(curwin, false, false);
           goto_tabpage_win(oldtab, oldwin);
-        } else if (nchar == 'F' && lnum >= 0) {
-          curwin->w_cursor.lnum = lnum;
-          check_cursor_lnum();
-          beginline(BL_SOL | BL_FIX);
+        } else {
+          wp = curwin;
         }
+      }
+
+      if (wp != NULL && nchar == 'F' && lnum >= 0) {
+        curwin->w_cursor.lnum = lnum;
+        check_cursor_lnum();
+        beginline(BL_SOL | BL_FIX);
       }
       xfree(ptr);
     }
@@ -2278,6 +2304,9 @@ static void win_equal_rec(win_T *next_curwin, bool current, frame_T *topfr, int 
         }
         if (hnc) {                  // add next_curwin size
           next_curwin_size -= (int)p_wiw - (m - n);
+          if (next_curwin_size < 0) {
+            next_curwin_size = 0;
+          }
           new_size += next_curwin_size;
           room -= new_size - next_curwin_size;
         } else {
@@ -6660,7 +6689,8 @@ static int win_border_width(win_T *wp)
 /// Set the width of a window.
 void win_new_width(win_T *wp, int width)
 {
-  wp->w_width = width;
+  // Should we give an error if width < 0?
+  wp->w_width = width < 0 ? 0 : width;
   wp->w_pos_changed = true;
   win_set_inner_size(wp, true);
 }
