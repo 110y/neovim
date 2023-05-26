@@ -1028,7 +1028,7 @@ static void win_line_continue(winlinevars_T *wlv)
 /// @param lnum         line to display
 /// @param startrow     first row relative to window grid
 /// @param endrow       last grid row to be redrawn
-/// @param nochange     not updating for changed text
+/// @param mod_top      top line updated for changed text
 /// @param number_only  only update the number column
 /// @param foldinfo     fold info for this line
 /// @param[in, out] providers  decoration providers active this line
@@ -1036,7 +1036,7 @@ static void win_line_continue(winlinevars_T *wlv)
 ///                            or explicitly return `false`.
 ///
 /// @return             the number of last row the line occupies.
-int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, bool number_only,
+int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, int mod_top, bool number_only,
              foldinfo_T foldinfo, DecorProviders *providers, char **provider_err)
 {
   winlinevars_T wlv;                  // variables passed between functions
@@ -1073,7 +1073,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
   int saved_search_attr = 0;            // search_attr to be used when n_extra
                                         // goes to zero
   int vcol_save_attr = 0;               // saved attr for 'cursorcolumn'
-  int syntax_attr = 0;                  // attributes desired by syntax
+  int decor_attr = 0;                   // attributes desired by syntax and extmarks
   bool has_syntax = false;              // this buffer has syntax highl.
   int folded_attr = 0;                  // attributes for folded line
   int save_did_emsg;
@@ -1227,12 +1227,16 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
 
       // When there was a sentence end in the previous line may require a
       // word starting with capital in this line.  In line 1 always check
-      // the first word.
-      if (lnum != capcol_lnum) {
-        cap_col = -1;
-      }
-      if (lnum == 1) {
+      // the first word.  Also check for sentence end in the line above
+      // when updating the first row in a window, the top line with
+      // changed text in a window, or if the previous line is folded.
+      if (lnum == 1
+          || ((startrow == 0 || mod_top == lnum
+               || hasFoldingWin(wp, lnum - 1, NULL, NULL, true, NULL))
+              && check_need_cap(wp, lnum, 0))) {
         cap_col = 0;
+      } else if (lnum != capcol_lnum) {
+        cap_col = -1;
       }
       capcol_lnum = 0;
     }
@@ -1725,7 +1729,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
         wlv.draw_state = WL_LINE;
         if (has_decor && wlv.row == startrow + wlv.filler_lines) {
           // hide virt_text on text hidden by 'nowrap'
-          decor_redraw_col(wp, wlv.vcol, wlv.off, true, &decor_state);
+          decor_redraw_col(wp, (colnr_T)(ptr - line), wlv.off, true, &decor_state);
         }
         win_line_continue(&wlv);  // use wlv.saved_ values
       }
@@ -1905,11 +1909,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
         wlv.char_attr = wlv.line_attr;
       } else {
         attr_pri = false;
-        if (has_syntax) {
-          wlv.char_attr = syntax_attr;
-        } else {
-          wlv.char_attr = 0;
-        }
+        wlv.char_attr = decor_attr;
       }
 
       if (folded_attr != 0) {
@@ -2112,11 +2112,12 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
       }
       ptr++;
 
+      decor_attr = 0;
       if (extra_check) {
         bool no_plain_buffer = (wp->w_s->b_p_spo_flags & SPO_NPBUFFER) != 0;
         bool can_spell = !no_plain_buffer;
 
-        // Get syntax attribute, unless still at the start of the line
+        // Get extmark and syntax attributes, unless still at the start of the line
         // (double-wide char that doesn't fit).
         v = (ptr - line);
         if (has_syntax && v > 0) {
@@ -2125,8 +2126,8 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
           save_did_emsg = did_emsg;
           did_emsg = false;
 
-          syntax_attr = get_syntax_attr((colnr_T)v - 1,
-                                        has_spell ? &can_spell : NULL, false);
+          decor_attr = get_syntax_attr((colnr_T)v - 1,
+                                       has_spell ? &can_spell : NULL, false);
 
           if (did_emsg) {  // -V547
             wp->w_s->b_syn_error = true;
@@ -2144,17 +2145,6 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
           line = ml_get_buf(wp->w_buffer, lnum, false);
           ptr = line + v;
 
-          if (!attr_pri) {
-            if (wlv.cul_attr) {
-              wlv.char_attr = 0 != wlv.line_attr_lowprio
-                ? hl_combine_attr(wlv.cul_attr, syntax_attr)
-                : hl_combine_attr(syntax_attr, wlv.cul_attr);
-            } else {
-              wlv.char_attr = syntax_attr;
-            }
-          } else {
-            wlv.char_attr = hl_combine_attr(syntax_attr, wlv.char_attr);
-          }
           // no concealing past the end of the line, it interferes
           // with line highlighting.
           if (c == NUL) {
@@ -2162,25 +2152,33 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
           } else {
             syntax_flags = get_syntax_info(&syntax_seqnr);
           }
-        } else if (!attr_pri) {
-          wlv.char_attr = 0;
         }
 
         if (has_decor && v > 0) {
-          if (extmark_attr != 0) {
-            if (!attr_pri) {
-              wlv.char_attr = hl_combine_attr(wlv.char_attr, extmark_attr);
-            } else {
-              wlv.char_attr = hl_combine_attr(extmark_attr, wlv.char_attr);
-            }
-          }
+          // extmarks take preceedence over syntax.c
+          decor_attr = hl_combine_attr(decor_attr, extmark_attr);
 
           decor_conceal = decor_state.conceal;
           if (decor_conceal && decor_state.conceal_char) {
             decor_conceal = 2;  // really??
           }
-
           can_spell = TRISTATE_TO_BOOL(decor_state.spell, can_spell);
+        }
+
+        if (decor_attr) {
+          if (!attr_pri) {
+            if (wlv.cul_attr) {
+              wlv.char_attr = 0 != wlv.line_attr_lowprio
+                ? hl_combine_attr(wlv.cul_attr, decor_attr)
+                : hl_combine_attr(decor_attr, wlv.cul_attr);
+            } else {
+              wlv.char_attr = decor_attr;
+            }
+          } else {
+            wlv.char_attr = hl_combine_attr(decor_attr, wlv.char_attr);
+          }
+        } else if (!attr_pri) {
+          wlv.char_attr = 0;
         }
 
         // Check spelling (unless at the end of the line).
@@ -2193,8 +2191,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
           char *prev_ptr = ptr - mb_l;
           // do not calculate cap_col at the end of the line or when
           // only white space is following
-          if (c != 0 && (*skipwhite(prev_ptr) != NUL)
-              && ((!has_syntax && !no_plain_buffer) || can_spell)) {
+          if (c != 0 && (*skipwhite(prev_ptr) != NUL) && can_spell) {
             char *p;
             hlf_T spell_hlf = HLF_COUNT;
             v -= mb_l - 1;
@@ -2207,7 +2204,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool nochange, 
               p = prev_ptr;
             }
             cap_col -= (int)(prev_ptr - line);
-            size_t tmplen = spell_check(wp, p, &spell_hlf, &cap_col, nochange);
+            size_t tmplen = spell_check(wp, p, &spell_hlf, &cap_col, mod_top == 0);
             assert(tmplen <= INT_MAX);
             int len = (int)tmplen;
             word_end = (int)v + len;
