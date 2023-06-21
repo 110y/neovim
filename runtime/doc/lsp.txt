@@ -238,6 +238,11 @@ For |lsp-response|, each |lsp-handler| has this signature: >
                                     The parameters used in the original
                                     request which resulted in this handler
                                     call.
+                        {version}   (number) Document version at time of
+                                    request. Handlers can compare this to the
+                                    current document version to check if the
+                                    response is "stale".
+                                    See also |b:changedtick|.
         {config}    (table)
                         Configuration for the handler.
 
@@ -677,6 +682,10 @@ buf_attach_client({bufnr}, {client_id})          *vim.lsp.buf_attach_client()*
     Parameters: ~
       • {bufnr}      (integer) Buffer handle, or 0 for current
       • {client_id}  (integer) Client id
+
+    Return: ~
+        (boolean) success `true` if client was attached successfully; `false`
+        otherwise
 
 buf_detach_client({bufnr}, {client_id})          *vim.lsp.buf_detach_client()*
     Detaches client from the specified buffer. Note: While the server is

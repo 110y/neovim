@@ -1345,7 +1345,6 @@ function lsp.start_client(config)
       messages = 'messages',
       verbose = 'verbose',
     }
-    local version = vim.version()
 
     local workspace_folders --- @type table[]?
     local root_uri --- @type string?
@@ -1379,7 +1378,7 @@ function lsp.start_client(config)
       -- since 3.15.0
       clientInfo = {
         name = 'Neovim',
-        version = string.format('%s.%s.%s', version.major, version.minor, version.patch),
+        version = tostring(vim.version()),
       },
       -- The rootPath of the workspace. Is null if no folder is open.
       --
@@ -1799,6 +1798,7 @@ end
 ---
 ---@param bufnr (integer) Buffer handle, or 0 for current
 ---@param client_id (integer) Client id
+---@return boolean success `true` if client was attached successfully; `false` otherwise
 function lsp.buf_attach_client(bufnr, client_id)
   validate({
     bufnr = { bufnr, 'n', true },
@@ -1887,7 +1887,7 @@ function lsp.buf_attach_client(bufnr, client_id)
   end
 
   if buffer_client_ids[client_id] then
-    return
+    return true
   end
   -- This is our first time attaching this client to this buffer.
   buffer_client_ids[client_id] = true
