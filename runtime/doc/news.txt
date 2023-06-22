@@ -134,6 +134,8 @@ The following changes to existing APIs or features add new behavior.
 • |:checkhealth| buffer now implements |folding|. The initial folding status is
   defined by the 'foldenable' option.
 
+• |:Man| now respects 'wrapmargin'
+
 ==============================================================================
 REMOVED FEATURES                                                 *news-removed*
 
@@ -165,6 +167,7 @@ release.
 
 • vim.lsp functions:
   - |vim.lsp.util.get_progress_messages()|	Use |vim.lsp.status()| instead.
+  - |vim.lsp.for_each_buffer_client()|	  	Use |vim.lsp.get_active_clients()| instead.
 
 • `vim.loop` has been renamed to `vim.uv`.
 
