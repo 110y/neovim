@@ -1857,6 +1857,7 @@ foldtextresult({lnum})                                        *foldtextresult()*
 		line, "'m" mark m, etc.
 		Useful when exporting folded text, e.g., to HTML.
 
+
 fullcommand({name})                                              *fullcommand()*
 		Get the full command name from a short abbreviated command
 		name; see |20.2| for details on command abbreviations.
@@ -3411,6 +3412,7 @@ id({expr})                                                                *id()*
 		reuse identifiers of the garbage-collected ones.
 
 indent({lnum})                                                        *indent()*
+		The result is a Number, which is indent of line {lnum} in the
 		current buffer.  The indent is counted in spaces, the value
 		of 'tabstop' is relevant.  {lnum} is used just like in
 		|getline()|.
@@ -3888,6 +3890,7 @@ keytrans({string})                                                  *keytrans()*
 <			<C-Home>
 
 len({expr})                                                         *len()* *E701*
+		The result is a Number, which is the length of the argument.
 		When {expr} is a String or a Number the length in bytes is
 		used, as with |strlen()|.
 		When {expr} is a |List| the number of items in the |List| is
@@ -7990,6 +7993,13 @@ termopen({cmd} [, {opts}])                                          *termopen()*
 		Terminal environment is initialized as in |jobstart-env|,
 		except $TERM is set to "xterm-256color". Full behavior is
 		described in |terminal|.
+
+test_garbagecollect_now()                            *test_garbagecollect_now()*
+		Like |garbagecollect()|, but executed right away.  This must
+		only be called directly to avoid any structure to exist
+		internally, and |v:testing| must have been set before calling
+		any function.
+
 
 timer_info([{id}])                                                *timer_info()*
 		Return a list with information about timers.

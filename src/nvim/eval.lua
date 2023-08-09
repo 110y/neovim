@@ -2898,6 +2898,9 @@ M.funcs = {
     signature = 'foldtextresult({lnum})',
   },
   foreground = {
+    args = 0,
+    params = {},
+    signature = '',
     lua = false,
   },
   fullcommand = {
@@ -5057,6 +5060,7 @@ M.funcs = {
     args = 1,
     base = 1,
     desc = [=[
+      The result is a Number, which is indent of line {lnum} in the
       current buffer.  The indent is counted in spaces, the value
       of 'tabstop' is relevant.  {lnum} is used just like in
       |getline()|.
@@ -5775,6 +5779,7 @@ M.funcs = {
     args = 1,
     base = 1,
     desc = [=[
+      The result is a Number, which is the length of the argument.
       When {expr} is a String or a Number the length in bytes is
       used, as with |strlen()|.
       When {expr} is a |List| the number of items in the |List| is
@@ -11324,10 +11329,21 @@ M.funcs = {
     signature = 'termopen({cmd} [, {opts}])',
   },
   test_garbagecollect_now = {
+    args = 0,
+    desc = [=[
+      Like |garbagecollect()|, but executed right away.  This must
+      only be called directly to avoid any structure to exist
+      internally, and |v:testing| must have been set before calling
+      any function.
+    ]=],
+    params = {},
+    signature = 'test_garbagecollect_now()',
     lua = false,
   },
   test_write_list_log = {
     args = 1,
+    params = { { 'fname' } },
+    signature = '',
     lua = false,
   },
   timer_info = {
