@@ -147,6 +147,8 @@ PRAGMA_DIAG_POP
 
 static const char *e_listblobarg = N_("E899: Argument of %s must be a List or Blob");
 static const char *e_invalwindow = N_("E957: Invalid window number");
+static const char e_argument_of_str_must_be_list_string_or_dictionary[]
+  = N_("E706: Argument of %s must be a List, String or Dictionary");
 static const char e_invalid_submatch_number_nr[]
   = N_("E935: Invalid submatch number: %d");
 static const char *e_reduceempty = N_("E998: Reduce of an empty %s with no initial value");
@@ -997,8 +999,8 @@ static void f_count(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
         n = count_dict(argvars[0].vval.v_dict, &argvars[1], ic);
       }
     }
-  } else {
-    semsg(_(e_listdictarg), "count()");
+  } else if (!error) {
+    semsg(_(e_argument_of_str_must_be_list_string_or_dictionary), "count()");
   }
   rettv->vval.v_number = n;
 }
@@ -2951,7 +2953,7 @@ static void f_wait(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   const int called_emsg_before = called_emsg;
 
   LOOP_PROCESS_EVENTS_UNTIL(&main_loop, main_loop.events, timeout,
-                            eval_expr_typval(&expr, &argv, 0, &exprval) != OK
+                            eval_expr_typval(&expr, false, &argv, 0, &exprval) != OK
                             || tv_get_number_chk(&exprval, &error)
                             || called_emsg > called_emsg_before || error || got_int);
 
@@ -3513,7 +3515,7 @@ static varnumber_T indexof_eval_expr(typval_T *expr)
   typval_T newtv;
   newtv.v_type = VAR_UNKNOWN;
 
-  if (eval_expr_typval(expr, argv, 2, &newtv) == FAIL) {
+  if (eval_expr_typval(expr, false, argv, 2, &newtv) == FAIL) {
     return false;
   }
 
@@ -5535,7 +5537,7 @@ static varnumber_T readdir_checkitem(void *context, const char *name)
   argv[0].vval.v_string = (char *)name;
 
   typval_T rettv;
-  if (eval_expr_typval(expr, argv, 1, &rettv) == FAIL) {
+  if (eval_expr_typval(expr, false, argv, 1, &rettv) == FAIL) {
     goto theend;
   }
 
@@ -6257,7 +6259,7 @@ static void reduce_list(typval_T *argvars, typval_T *expr, typval_T *rettv)
     argv[1] = *TV_LIST_ITEM_TV(li);
     rettv->v_type = VAR_UNKNOWN;
 
-    const int r = eval_expr_typval(expr, argv, 2, rettv);
+    const int r = eval_expr_typval(expr, true, argv, 2, rettv);
 
     tv_clear(&argv[0]);
     if (r == FAIL || called_emsg != called_emsg_start) {
@@ -6304,7 +6306,7 @@ static void reduce_string(typval_T *argvars, typval_T *expr, typval_T *rettv)
       .vval.v_string = xstrnsave(p, (size_t)len),
     };
 
-    const int r = eval_expr_typval(expr, argv, 2, rettv);
+    const int r = eval_expr_typval(expr, true, argv, 2, rettv);
 
     tv_clear(&argv[0]);
     tv_clear(&argv[1]);
@@ -6352,7 +6354,7 @@ static void reduce_blob(typval_T *argvars, typval_T *expr, typval_T *rettv)
       .vval.v_number = tv_blob_get(b, i),
     };
 
-    const int r = eval_expr_typval(expr, argv, 2, rettv);
+    const int r = eval_expr_typval(expr, true, argv, 2, rettv);
 
     if (r == FAIL || called_emsg != called_emsg_start) {
       return;
@@ -8746,13 +8748,31 @@ static void f_type(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   rettv->vval.v_number = n;
 }
 
-/// "virtcol(string, bool)" function
+/// "virtcol({expr}, [, {list} [, {winid}]])" function
 static void f_virtcol(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 {
   colnr_T vcol_start = 0;
   colnr_T vcol_end = 0;
-  int fnum = curbuf->b_fnum;
+  switchwin_T switchwin;
+  bool winchanged = false;
 
+  if (argvars[1].v_type != VAR_UNKNOWN && argvars[2].v_type != VAR_UNKNOWN) {
+    // use the window specified in the third argument
+    tabpage_T *tp;
+    win_T *wp = win_id2wp_tp((int)tv_get_number(&argvars[2]), &tp);
+    if (wp == NULL || tp == NULL) {
+      goto theend;
+    }
+
+    if (switch_win_noblock(&switchwin, wp, tp, true) != OK) {
+      goto theend;
+    }
+
+    check_cursor();
+    winchanged = true;
+  }
+
+  int fnum = curbuf->b_fnum;
   pos_T *fp = var2fpos(&argvars[0], false, &fnum, false);
   if (fp != NULL && fp->lnum <= curbuf->b_ml.ml_line_count
       && fnum == curbuf->b_fnum) {
@@ -8770,12 +8790,17 @@ static void f_virtcol(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
     vcol_end++;
   }
 
+theend:
   if (argvars[1].v_type != VAR_UNKNOWN && tv_get_bool(&argvars[1])) {
     tv_list_alloc_ret(rettv, 2);
     tv_list_append_number(rettv->vval.v_list, vcol_start);
     tv_list_append_number(rettv->vval.v_list, vcol_end);
   } else {
     rettv->vval.v_number = vcol_end;
+  }
+
+  if (winchanged) {
+    restore_win_noblock(&switchwin, true);
   }
 }
 
