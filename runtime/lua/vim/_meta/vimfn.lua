@@ -2871,7 +2871,9 @@ function vim.fn.getcmdwintype() end
 --- color    color schemes
 --- command    Ex command
 --- compiler  compilers
---- diff_buffer     |:diffget| and |:diffput| completion
+--- custom,{func}  custom completion, defined via {func}
+--- customlist,{func} custom completion, defined via {func}
+--- diff_buffer  |:diffget| and |:diffput| completion
 --- dir    directory names
 --- environment  environment variable names
 --- event    autocommand events
@@ -3228,7 +3230,7 @@ function vim.fn.getmarklist(buf) end
 --- @return any
 function vim.fn.getmatches(win) end
 
---- Returns a Dictionary with the last known position of the
+--- Returns a |Dictionary| with the last known position of the
 --- mouse.  This can be used in a mapping for a mouse click.  The
 --- items are:
 ---   screenrow  screen row
@@ -5711,6 +5713,7 @@ function vim.fn.mkdir(name, flags, prot) end
 --- If [expr] is supplied and it evaluates to a non-zero Number or
 --- a non-empty String (|non-zero-arg|), then the full mode is
 --- returned, otherwise only the first letter is returned.
+--- Also see |state()|.
 ---
 ---    n      Normal
 ---    no      Operator-pending
@@ -6875,7 +6878,7 @@ function vim.fn.screenattr(row, col) end
 --- @return any
 function vim.fn.screenchar(row, col) end
 
---- The result is a List of Numbers.  The first number is the same
+--- The result is a |List| of Numbers.  The first number is the same
 --- as what |screenchar()| returns.  Further numbers are
 --- composing characters on top of the base character.
 --- This is mainly to be used for testing.
@@ -7066,7 +7069,7 @@ function vim.fn.search(pattern, flags, stopline, timeout, skip) end
 --- without the "S" flag in 'shortmess'.  This works even if
 --- 'shortmess' does contain the "S" flag.
 ---
---- This returns a Dictionary. The dictionary is empty if the
+--- This returns a |Dictionary|. The dictionary is empty if the
 --- previous pattern was not set and "pattern" was not specified.
 ---
 ---   key    type    meaning ~
@@ -7148,7 +7151,7 @@ function vim.fn.search(pattern, flags, stopline, timeout, skip) end
 ---   " search again
 ---   call searchcount()
 --- <
---- {options} must be a Dictionary. It can contain:
+--- {options} must be a |Dictionary|. It can contain:
 ---   key    type    meaning ~
 ---   recompute  |Boolean|  if |TRUE|, recompute the count
 ---         like |n| or |N| was executed.
@@ -8741,6 +8744,39 @@ function vim.fn.sqrt(expr) end
 --- @param expr? any
 --- @return any
 function vim.fn.srand(expr) end
+
+--- Return a string which contains characters indicating the
+--- current state.  Mostly useful in callbacks that want to do
+--- work that may not always be safe.  Roughly this works like:
+--- - callback uses state() to check if work is safe to do.
+---   Yes: then do it right away.
+---   No:  add to work queue and add a |SafeState| autocommand.
+--- - When SafeState is triggered and executes your autocommand,
+---   check with `state()` if the work can be done now, and if yes
+---   remove it from the queue and execute.
+---   Remove the autocommand if the queue is now empty.
+--- Also see |mode()|.
+---
+--- When {what} is given only characters in this string will be
+--- added.  E.g, this checks if the screen has scrolled: >vim
+---   if state('s') == ''
+---      " screen has not scrolled
+---
+--- These characters indicate the state, generally indicating that
+--- something is busy:
+---     m  halfway a mapping, :normal command, feedkeys() or
+---   stuffed command
+---     o  operator pending, e.g. after |d|
+---     a  Insert mode autocomplete active
+---     x  executing an autocommand
+---     S  not triggering SafeState, e.g. after |f| or a count
+---     c  callback invoked, including timer (repeats for
+---   recursiveness up to "ccc")
+---     s  screen has scrolled for messages
+---
+--- @param what? string
+--- @return any
+function vim.fn.state(what) end
 
 --- With |--headless| this opens stdin and stdout as a |channel|.
 --- May be called only once. See |channel-stdio|. stderr is not

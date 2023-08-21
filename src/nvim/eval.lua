@@ -3582,7 +3582,9 @@ M.funcs = {
       color		color schemes
       command		Ex command
       compiler	compilers
-      diff_buffer     |:diffget| and |:diffput| completion
+      custom,{func}	custom completion, defined via {func}
+      customlist,{func} custom completion, defined via {func}
+      diff_buffer	|:diffget| and |:diffput| completion
       dir		directory names
       environment	environment variable names
       event		autocommand events
@@ -4010,7 +4012,7 @@ M.funcs = {
   },
   getmousepos = {
     desc = [=[
-      Returns a Dictionary with the last known position of the
+      Returns a |Dictionary| with the last known position of the
       mouse.  This can be used in a mapping for a mouse click.  The
       items are:
       	screenrow	screen row
@@ -6915,6 +6917,7 @@ M.funcs = {
       If [expr] is supplied and it evaluates to a non-zero Number or
       a non-empty String (|non-zero-arg|), then the full mode is
       returned, otherwise only the first letter is returned.
+      Also see |state()|.
 
          n	    Normal
          no	    Operator-pending
@@ -8293,7 +8296,7 @@ M.funcs = {
     args = 2,
     base = 1,
     desc = [=[
-      The result is a List of Numbers.  The first number is the same
+      The result is a |List| of Numbers.  The first number is the same
       as what |screenchar()| returns.  Further numbers are
       composing characters on top of the base character.
       This is mainly to be used for testing.
@@ -8508,7 +8511,7 @@ M.funcs = {
       without the "S" flag in 'shortmess'.  This works even if
       'shortmess' does contain the "S" flag.
 
-      This returns a Dictionary. The dictionary is empty if the
+      This returns a |Dictionary|. The dictionary is empty if the
       previous pattern was not set and "pattern" was not specified.
 
         key		type		meaning ~
@@ -8590,7 +8593,7 @@ M.funcs = {
       	" search again
       	call searchcount()
       <
-      {options} must be a Dictionary. It can contain:
+      {options} must be a |Dictionary|. It can contain:
         key		type		meaning ~
         recompute	|Boolean|	if |TRUE|, recompute the count
       				like |n| or |N| was executed.
@@ -10448,6 +10451,44 @@ M.funcs = {
     name = 'stdpath',
     params = { { 'what', 'any' } },
     signature = 'stdpath({what})',
+  },
+  state = {
+    args = {0, 1},
+    base = 1,
+    desc = [=[
+      Return a string which contains characters indicating the
+      current state.  Mostly useful in callbacks that want to do
+      work that may not always be safe.  Roughly this works like:
+      - callback uses state() to check if work is safe to do.
+        Yes: then do it right away.
+        No:  add to work queue and add a |SafeState| autocommand.
+      - When SafeState is triggered and executes your autocommand,
+        check with `state()` if the work can be done now, and if yes
+        remove it from the queue and execute.
+        Remove the autocommand if the queue is now empty.
+      Also see |mode()|.
+
+      When {what} is given only characters in this string will be
+      added.  E.g, this checks if the screen has scrolled: >vim
+      	if state('s') == ''
+      	   " screen has not scrolled
+
+      These characters indicate the state, generally indicating that
+      something is busy:
+          m	halfway a mapping, :normal command, feedkeys() or
+      	stuffed command
+          o	operator pending, e.g. after |d|
+          a	Insert mode autocomplete active
+          x	executing an autocommand
+          S	not triggering SafeState, e.g. after |f| or a count
+          c	callback invoked, including timer (repeats for
+      	recursiveness up to "ccc")
+          s	screen has scrolled for messages
+    ]=],
+    fast = true,
+    name = 'state',
+    params = { { 'what', 'string' } },
+    signature = 'state([{what}])',
   },
   str2float = {
     args = 1,
