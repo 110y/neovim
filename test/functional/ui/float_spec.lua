@@ -939,6 +939,71 @@ describe('float window', function()
       end
     end)
 
+    it('window position fixed', function()
+      command('rightbelow 20vsplit')
+      local buf = meths.create_buf(false,false)
+      local win = meths.open_win(buf, false, {
+        relative='win', width=15, height=2, row=2, col=10, anchor='NW', fixed=true})
+
+      if multigrid then
+        screen:expect{grid=[[
+        ## grid 1
+          [2:-------------------]{5:│}[4:--------------------]|
+          [2:-------------------]{5:│}[4:--------------------]|
+          [2:-------------------]{5:│}[4:--------------------]|
+          [2:-------------------]{5:│}[4:--------------------]|
+          [2:-------------------]{5:│}[4:--------------------]|
+          {5:[No Name]           }{4:[No Name]           }|
+          [3:----------------------------------------]|
+        ## grid 2
+                             |
+          {0:~                  }|
+          {0:~                  }|
+          {0:~                  }|
+          {0:~                  }|
+        ## grid 3
+                                                  |
+        ## grid 4
+          ^                    |
+          {0:~                   }|
+          {0:~                   }|
+          {0:~                   }|
+          {0:~                   }|
+        ## grid 5
+          {1:               }|
+          {2:~              }|
+        ]], float_pos={
+          [5] = {{id = 1002}, "NW", 4, 2, 10, true, 50};
+        }}
+      else
+        screen:expect([[
+                             {5:│}^                    |
+          {0:~                  }{5:│}{0:~                   }|
+          {0:~                  }{5:│}{0:~         }{1:          }|
+          {0:~                  }{5:│}{0:~         }{2:~         }|
+          {0:~                  }{5:│}{0:~                   }|
+          {5:[No Name]           }{4:[No Name]           }|
+                                                  |
+        ]])
+      end
+
+      meths.win_set_config(win, {fixed=false})
+
+      if multigrid then
+        screen:expect_unchanged()
+      else
+        screen:expect([[
+                             {5:│}^                    |
+          {0:~                  }{5:│}{0:~                   }|
+          {0:~                  }{5:│}{0:~    }{1:               }|
+          {0:~                  }{5:│}{0:~    }{2:~              }|
+          {0:~                  }{5:│}{0:~                   }|
+          {5:[No Name]           }{4:[No Name]           }|
+                                                  |
+        ]])
+      end
+    end)
+
     it('draws correctly with redrawdebug=compositor', function()
       -- NB: we do not test that it produces the "correct" debug info
       -- (as it is intermediate only, and is allowed to change by internal
