@@ -637,18 +637,7 @@ int fillchar_status(int *attr, win_T *wp)
     *attr = win_hl_attr(wp, HLF_SNC);
     fill = wp->w_p_fcs_chars.stlnc;
   }
-  // Use fill when there is highlighting, and highlighting of current
-  // window differs, or the fillchars differ, or this is not the
-  // current window
-  if (*attr != 0 && ((win_hl_attr(wp, HLF_S) != win_hl_attr(wp, HLF_SNC)
-                      || !is_curwin || ONE_WINDOW)
-                     || (wp->w_p_fcs_chars.stl != wp->w_p_fcs_chars.stlnc))) {
-    return fill;
-  }
-  if (is_curwin) {
-    return '^';
-  }
-  return '=';
+  return fill;
 }
 
 /// Redraw the status line according to 'statusline' and take care of any
@@ -1583,7 +1572,7 @@ int build_stl_str_hl(win_T *wp, char *out, size_t outlen, char *fmt, char *opt_n
 
       // Note: The call will only return true if it actually
       //       appended data to the `buf_tmp` buffer.
-      if (append_arg_number(wp, buf_tmp, (int)sizeof(buf_tmp), false)) {
+      if (append_arg_number(wp, buf_tmp, (int)sizeof(buf_tmp))) {
         str = buf_tmp;
       }
       break;
