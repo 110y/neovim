@@ -5187,7 +5187,7 @@ static buf_T *vgr_load_dummy_buf(char *fname, char *dirname_start, char *dirname
   // indent scripts, a great speed improvement.
   char *save_ei = au_event_disable(",Filetype");
 
-  long save_mls = p_mls;
+  OptInt save_mls = p_mls;
   p_mls = 0;
 
   // Load file into a buffer, so that 'fileencoding' is detected,
@@ -5458,7 +5458,7 @@ static int vgr_process_files(win_T *wp, qf_info_T *qi, vgr_args_T *cmd_args, boo
 
     if (buf == NULL) {
       if (!got_int) {
-        smsg(_("Cannot open file \"%s\""), fname);
+        smsg(0, _("Cannot open file \"%s\""), fname);
       }
     } else {
       // Try for a match in all lines of the buffer.

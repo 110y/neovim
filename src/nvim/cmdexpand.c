@@ -608,7 +608,7 @@ static void redraw_wildmenu(expand_T *xp, int num_matches, char **matches, int m
 
     grid_line_fill(clen, Columns, fillchar, attr);
 
-    grid_line_flush(false);
+    grid_line_flush();
   }
 
   win_redraw_last_status(topframe);
@@ -976,7 +976,7 @@ static void showmatches_oneline(expand_T *xp, char **matches, int numMatches, in
       msg_advance(maxlen + 1);
       msg_puts(p);
       msg_advance(maxlen + 3);
-      msg_outtrans_long_attr(p + 2, HL_ATTR(HLF_D));
+      msg_outtrans_long(p + 2, HL_ATTR(HLF_D));
       break;
     }
     for (int i = maxlen - lastlen; --i >= 0;) {
