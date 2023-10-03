@@ -1226,7 +1226,7 @@ fail:
 ///
 /// @return [allocated] NULL when calling function fails, allocated string
 ///                     otherwise.
-char *call_func_retstr(const char *const func, int argc, typval_T *argv)
+void *call_func_retstr(const char *const func, int argc, typval_T *argv)
   FUNC_ATTR_NONNULL_ALL FUNC_ATTR_WARN_UNUSED_RESULT FUNC_ATTR_MALLOC
 {
   typval_T rettv;
@@ -8094,13 +8094,6 @@ void ex_execute(exarg_T *eap)
   }
 
   if (ret != FAIL && ga.ga_data != NULL) {
-    if (eap->cmdidx == CMD_echomsg || eap->cmdidx == CMD_echoerr) {
-      // Mark the already saved text as finishing the line, so that what
-      // follows is displayed on a new line when scrolling back at the
-      // more prompt.
-      msg_sb_eol();
-    }
-
     if (eap->cmdidx == CMD_echomsg) {
       msg_ext_set_kind("echomsg");
       msg(ga.ga_data, echo_attr);
