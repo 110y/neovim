@@ -475,7 +475,14 @@ void trunc_string(const char *s, char *buf, int room_in, int buflen)
   }
 }
 
-// Note: Caller of smsg() must check the resulting string is shorter than IOSIZE!!!
+/// Shows a printf-style message with attributes.
+///
+/// Note: Caller must check the resulting string is shorter than IOSIZE!!!
+///
+/// @see semsg
+/// @see swmsg
+///
+/// @param s printf-style format message
 int smsg(int attr, const char *s, ...)
   FUNC_ATTR_PRINTF(2, 3)
 {
@@ -757,6 +764,8 @@ void emsg_invreg(int name)
 }
 
 /// Print an error message with unknown number of arguments
+///
+/// @return whether the message was displayed
 bool semsg(const char *const fmt, ...)
   FUNC_ATTR_PRINTF(1, 2)
 {
@@ -1346,7 +1355,7 @@ bool messaging(void)
   return !(p_lz && char_avail() && !KeyTyped) && (p_ch > 0 || ui_has(kUIMessages));
 }
 
-void msgmore(long n)
+void msgmore(int n)
 {
   long pn;
 
@@ -1480,11 +1489,11 @@ void msg_putchar_attr(int c, int attr)
   msg_puts_attr(buf, attr);
 }
 
-void msg_outnum(long n)
+void msg_outnum(int n)
 {
   char buf[20];
 
-  snprintf(buf, sizeof(buf), "%ld", n);
+  snprintf(buf, sizeof(buf), "%d", n);
   msg_puts(buf);
 }
 
@@ -3337,9 +3346,22 @@ void give_warning(const char *message, bool hl)
   no_wait_return--;
 }
 
-void give_warning2(const char *const message, const char *const a1, bool hl)
+/// Shows a warning, with optional highlighting.
+///
+/// @param hl enable highlighting
+/// @param fmt printf-style format message
+///
+/// @see smsg
+/// @see semsg
+void swmsg(bool hl, const char *const fmt, ...)
+  FUNC_ATTR_PRINTF(2, 3)
 {
-  vim_snprintf(IObuff, IOSIZE, message, a1);
+  va_list args;
+
+  va_start(args, fmt);
+  vim_vsnprintf(IObuff, IOSIZE, fmt, args);
+  va_end(args);
+
   give_warning(IObuff, hl);
 }
 
