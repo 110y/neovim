@@ -3089,6 +3089,7 @@ vim.go.iconstring = vim.o.iconstring
 
 --- Ignore case in search patterns, `cmdline-completion`, when
 --- searching in the tags file, and `expr-==`.
+--- Also see 'smartcase' and 'tagcase'.
 --- Can be overruled by using "\c" or "\C" in the pattern, see
 --- `/ignorecase`.
 ---
@@ -4034,6 +4035,7 @@ vim.go.mat = vim.go.matchtime
 --- Increasing this limit above 200 also changes the maximum for Ex
 --- command recursion, see `E169`.
 --- See also `:function`.
+--- Also used for maximum depth of callback functions.
 ---
 --- @type integer
 vim.o.maxfuncdepth = 100
