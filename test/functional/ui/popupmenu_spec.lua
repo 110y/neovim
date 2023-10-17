@@ -3096,7 +3096,7 @@ describe('builtin popupmenu', function()
           :sign define culhl= culhl=^      |
         ]])
 
-        feed('<C-U>e Xdi<Tab><Tab>')
+        feed('<C-U>e Xnamedi<Tab><Tab>')
         screen:expect([[
                                           |
           {1:~                               }|
@@ -3105,9 +3105,9 @@ describe('builtin popupmenu', function()
           {1:~                               }|
           {1:~                               }|
           {1:~                               }|
-          {1:~      }{s: XdirA/         }{1:         }|
-          {1:~      }{n: XfileA         }{1:         }|
-          :e Xdir/XdirA/^                  |
+          {1:~          }{s: XdirA/         }{1:     }|
+          {1:~          }{n: XfileA         }{1:     }|
+          :e Xnamedir/XdirA/^              |
         ]])
 
         -- Pressing <Down> on a directory name should go into that directory
@@ -3120,9 +3120,9 @@ describe('builtin popupmenu', function()
           {1:~                               }|
           {1:~                               }|
           {1:~                               }|
-          {1:~            }{s: XdirB/         }{1:   }|
-          {1:~            }{n: XfileB         }{1:   }|
-          :e Xdir/XdirA/XdirB/^            |
+          {1:~                }{s: XdirB/       }{1: }|
+          {1:~                }{n: XfileB       }{1: }|
+          :e Xnamedir/XdirA/XdirB/^        |
         ]])
 
         -- Pressing <Up> on a directory name should go to the parent directory
@@ -3135,9 +3135,9 @@ describe('builtin popupmenu', function()
           {1:~                               }|
           {1:~                               }|
           {1:~                               }|
-          {1:~      }{s: XdirA/         }{1:         }|
-          {1:~      }{n: XfileA         }{1:         }|
-          :e Xdir/XdirA/^                  |
+          {1:~          }{s: XdirA/         }{1:     }|
+          {1:~          }{n: XfileA         }{1:     }|
+          :e Xnamedir/XdirA/^              |
         ]])
 
         -- Pressing <C-A> when the popup menu is displayed should list all the
@@ -3511,6 +3511,49 @@ describe('builtin popupmenu', function()
           :sign define^                    |
         ]])
 
+        -- pressing <C-E> to end completion should work in middle of the line too
+        feed('<Esc>:set wildchazz<Left><Left><Tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~   }{s: wildchar       }{1:            }|
+          {1:~   }{n: wildcharm      }{1:            }|
+          :set wildchar^zz                 |
+        ]])
+        feed('<C-E>')
+        screen:expect([[
+                                          |
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          :set wildcha^zz                  |
+        ]])
+
+        -- pressing <C-Y> should select the current match and end completion
+        feed('<Esc>:set wildchazz<Left><Left><Tab><C-Y>')
+        screen:expect([[
+                                          |
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          {1:~                               }|
+          :set wildchar^zz                 |
+        ]])
+
         feed('<Esc>')
 
         -- check positioning with multibyte char in pattern
@@ -3725,14 +3768,17 @@ describe('builtin popupmenu', function()
         ]])
       end)
 
-      -- oldtest: Test_wildmenu_pum_clear_entries()
-      it('wildoptions=pum when using Ctrl-E as wildchar vim-patch:9.0.1030', function()
+      -- oldtest: Test_wildmenu_pum_odd_wildchar()
+      it('wildoptions=pum with odd wildchar', function()
         screen:try_resize(30, 10)
+        -- Test odd wildchar interactions with pum. Make sure they behave properly
+        -- and don't lead to memory corruption due to improperly cleaned up memory.
         exec([[
           set wildoptions=pum
           set wildchar=<C-E>
         ]])
-        feed(':sign <C-E><C-E>')
+
+        feed(':sign <C-E>')
         screen:expect([[
                                         |
           {1:~                             }|
@@ -3745,7 +3791,97 @@ describe('builtin popupmenu', function()
           {1:~    }{n: unplace        }{1:         }|
           :sign define^                  |
         ]])
-        assert_alive()
+
+        -- <C-E> being a wildchar takes priority over its original functionality
+        feed('<C-E>')
+        screen:expect([[
+                                        |
+          {1:~                             }|
+          {1:~                             }|
+          {1:~    }{n: define         }{1:         }|
+          {1:~    }{s: jump           }{1:         }|
+          {1:~    }{n: list           }{1:         }|
+          {1:~    }{n: place          }{1:         }|
+          {1:~    }{n: undefine       }{1:         }|
+          {1:~    }{n: unplace        }{1:         }|
+          :sign jump^                    |
+        ]])
+
+        feed('<Esc>')
+        screen:expect([[
+          ^                              |
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+                                        |
+        ]])
+
+        -- Escape key can be wildchar too. Double-<Esc> is hard-coded to escape
+        -- command-line, and we need to make sure to clean up properly.
+        command('set wildchar=<Esc>')
+        feed(':sign <Esc>')
+        screen:expect([[
+                                        |
+          {1:~                             }|
+          {1:~                             }|
+          {1:~    }{s: define         }{1:         }|
+          {1:~    }{n: jump           }{1:         }|
+          {1:~    }{n: list           }{1:         }|
+          {1:~    }{n: place          }{1:         }|
+          {1:~    }{n: undefine       }{1:         }|
+          {1:~    }{n: unplace        }{1:         }|
+          :sign define^                  |
+        ]])
+
+        feed('<Esc>')
+        screen:expect([[
+          ^                              |
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+                                        |
+        ]])
+
+        -- <C-\> can also be wildchar. <C-\><C-N> however will still escape cmdline
+        -- and we again need to make sure we clean up properly.
+        command([[set wildchar=<C-\>]])
+        feed([[:sign <C-\><C-\>]])
+        screen:expect([[
+                                        |
+          {1:~                             }|
+          {1:~                             }|
+          {1:~    }{s: define         }{1:         }|
+          {1:~    }{n: jump           }{1:         }|
+          {1:~    }{n: list           }{1:         }|
+          {1:~    }{n: place          }{1:         }|
+          {1:~    }{n: undefine       }{1:         }|
+          {1:~    }{n: unplace        }{1:         }|
+          :sign define^                  |
+        ]])
+
+        feed('<C-N>')
+        screen:expect([[
+          ^                              |
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+          {1:~                             }|
+                                        |
+        ]])
       end)
     end
 
