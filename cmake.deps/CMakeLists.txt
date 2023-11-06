@@ -11,6 +11,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DI
 
 include(ExternalProject)
 include(CheckCCompilerFlag)
+include(FindPackageHandleStandardArgs)
 
 include(Deps)
 include(Find)
@@ -56,11 +57,6 @@ else()
 endif()
 
 option(USE_EXISTING_SRC_DIR "Skip download of deps sources in case of existing source directory." OFF)
-
-find_package(Git)
-if(NOT Git_FOUND)
-  message(FATAL_ERROR "Git is required to apply patches.")
-endif()
 
 # If the macOS deployment target is not set manually (via $MACOSX_DEPLOYMENT_TARGET),
 # fall back to local system version. Needs to be done here and in top-level CMakeLists.txt.

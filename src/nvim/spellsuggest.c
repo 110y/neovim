@@ -234,7 +234,7 @@ enum {
   PFD_NOTSPECIAL = 0xfd,  // highest value that's not special
 };
 
-static long spell_suggest_timeout = 5000;
+static int spell_suggest_timeout = 5000;
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "spellsuggest.c.generated.h"
@@ -566,7 +566,7 @@ void spell_suggest(int count)
       }
       vim_snprintf(IObuff, IOSIZE, "%2d", i + 1);
       if (cmdmsg_rl) {
-        rl_mirror_ascii(IObuff);
+        rl_mirror_ascii(IObuff, NULL);
       }
       msg_puts(IObuff);
 
@@ -592,7 +592,7 @@ void spell_suggest(int count)
         }
         if (cmdmsg_rl) {
           // Mirror the numbers, but keep the leading space.
-          rl_mirror_ascii(IObuff + 1);
+          rl_mirror_ascii(IObuff + 1, NULL);
         }
         msg_advance(30);
         msg_puts(IObuff);
@@ -806,7 +806,7 @@ static void spell_find_suggest(char *badptr, int badlen, suginfo_T *su, int maxc
       spell_suggest_file(su, buf + 5);
     } else if (strncmp(buf, "timeout:", 8) == 0) {
       // Limit the time searching for suggestions.
-      spell_suggest_timeout = atol(buf + 8);
+      spell_suggest_timeout = atoi(buf + 8);
     } else if (!did_intern) {
       // Use internal method once.
       spell_suggest_intern(su, interactive);
