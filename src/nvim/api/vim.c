@@ -923,7 +923,7 @@ Buffer nvim_create_buf(Boolean listed, Boolean scratch, Error *err)
   FUNC_API_SINCE(6)
 {
   try_start();
-  buf_T *buf = buflist_new(NULL, NULL, (linenr_T)0,
+  buf_T *buf = buflist_new(NULL, NULL, 0,
                            BLN_NOOPT | BLN_NEW | (listed ? BLN_LISTED : 0));
   try_end(err);
   if (buf == NULL) {
@@ -1402,7 +1402,7 @@ Dictionary nvim_get_context(Dict(context) *opts, Error *err)
 /// Sets the current editor state from the given |context| map.
 ///
 /// @param  dict  |Context| map.
-Object nvim_load_context(Dictionary dict)
+Object nvim_load_context(Dictionary dict, Error *err)
   FUNC_API_SINCE(6)
 {
   Context ctx = CONTEXT_INIT;
@@ -1410,8 +1410,8 @@ Object nvim_load_context(Dictionary dict)
   int save_did_emsg = did_emsg;
   did_emsg = false;
 
-  ctx_from_dict(dict, &ctx);
-  if (!did_emsg) {
+  ctx_from_dict(dict, &ctx, err);
+  if (!ERROR_SET(err)) {
     ctx_restore(&ctx, kCtxAll);
   }
 
