@@ -139,7 +139,7 @@ static int msg_grid_pos_at_flush = 0;
 
 static void ui_ext_msg_set_pos(int row, bool scrolled)
 {
-  char buf[MAX_MCO + 1];
+  char buf[MB_MAXCHAR + 1];
   size_t size = (size_t)utf_char2bytes(curwin->w_p_fcs_chars.msgsep, buf);
   buf[size] = '\0';
   ui_call_msg_set_pos(msg_grid.handle, row, scrolled,
@@ -468,7 +468,7 @@ void trunc_string(const char *s, char *buf, int room_in, int buflen)
     buf[e + 3 + len - 1] = NUL;
   } else {
     // can't fit in the "...", just truncate it
-    buf[e - 1] = NUL;
+    buf[buflen - 1] = NUL;
   }
 }
 
@@ -1471,7 +1471,7 @@ void msg_putchar(int c)
 
 void msg_putchar_attr(int c, int attr)
 {
-  char buf[MB_MAXBYTES + 1];
+  char buf[MB_MAXCHAR + 1];
 
   if (IS_SPECIAL(c)) {
     buf[0] = (char)K_SPECIAL;
@@ -1558,12 +1558,6 @@ int msg_outtrans_len(const char *msgstr, int len, int attr)
   if (msg_row >= cmdline_row && msg_col == 0) {
     clear_cmdline = false;
     mode_displayed = false;
-  }
-
-  // If the string starts with a composing character first draw a space on
-  // which the composing char can be drawn.
-  if (utf_iscomposing(utf_ptr2char(msgstr))) {
-    msg_puts_attr(" ", attr);
   }
 
   // Go over the string.  Special characters are translated and printed.
@@ -2680,7 +2674,6 @@ static int do_more_prompt(int typed_char)
   bool to_redraw = false;
   msgchunk_T *mp_last = NULL;
   msgchunk_T *mp;
-  int i;
 
   // If headless mode is enabled and no input is required, this variable
   // will be true. However If server mode is enabled, the message "--more--"
@@ -2698,7 +2691,7 @@ static int do_more_prompt(int typed_char)
   if (typed_char == 'G') {
     // "g<": Find first line on the last page.
     mp_last = msg_sb_start(last_msgchunk);
-    for (i = 0; i < Rows - 2 && mp_last != NULL
+    for (int i = 0; i < Rows - 2 && mp_last != NULL
          && mp_last->sb_prev != NULL; i++) {
       mp_last = msg_sb_start(mp_last->sb_prev);
     }
@@ -2816,13 +2809,13 @@ static int do_more_prompt(int typed_char)
         }
 
         // go to start of line at top of the screen
-        for (i = 0; i < Rows - 2 && mp != NULL && mp->sb_prev != NULL; i++) {
+        for (int i = 0; i < Rows - 2 && mp != NULL && mp->sb_prev != NULL; i++) {
           mp = msg_sb_start(mp->sb_prev);
         }
 
         if (mp != NULL && (mp->sb_prev != NULL || to_redraw)) {
           // Find line to be displayed at top
-          for (i = 0; i > toscroll; i--) {
+          for (int i = 0; i > toscroll; i--) {
             if (mp == NULL || mp->sb_prev == NULL) {
               break;
             }
@@ -2846,7 +2839,7 @@ static int do_more_prompt(int typed_char)
             // event fragmentization, not unnecessary scroll events).
             grid_fill(&msg_grid_adj, 0, Rows, 0, Columns, ' ', ' ',
                       HL_ATTR(HLF_MSG));
-            for (i = 0; mp != NULL && i < Rows - 1; i++) {
+            for (int i = 0; mp != NULL && i < Rows - 1; i++) {
               mp = disp_sb_line(i, mp);
               msg_scrolled++;
             }

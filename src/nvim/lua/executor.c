@@ -371,6 +371,12 @@ static int nlua_schedule(lua_State *const lstate)
     return lua_error(lstate);
   }
 
+  // If main_loop is closing don't schedule tasks to run in the future,
+  // otherwise any refs allocated here will not be cleaned up.
+  if (main_loop.closing) {
+    return 0;
+  }
+
   LuaRef cb = nlua_ref_global(lstate, 1);
 
   multiqueue_put(main_loop.events, nlua_schedule_event,

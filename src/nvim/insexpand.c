@@ -21,7 +21,6 @@
 #include "nvim/eval.h"
 #include "nvim/eval/typval.h"
 #include "nvim/eval/userfunc.h"
-#include "nvim/ex_docmd.h"
 #include "nvim/ex_eval.h"
 #include "nvim/ex_getln.h"
 #include "nvim/fileio.h"
@@ -910,7 +909,6 @@ static bool ins_compl_equal(compl_T *match, char *str, size_t len)
 static void ins_compl_longest_match(compl_T *match)
 {
   char *p, *s;
-  int c1, c2;
   int had_match;
 
   if (compl_leader == NULL) {
@@ -936,8 +934,8 @@ static void ins_compl_longest_match(compl_T *match)
   p = compl_leader;
   s = match->cp_str;
   while (*p != NUL) {
-    c1 = utf_ptr2char(p);
-    c2 = utf_ptr2char(s);
+    int c1 = utf_ptr2char(p);
+    int c2 = utf_ptr2char(s);
 
     if ((match->cp_flags & CP_ICASE)
         ? (mb_tolower(c1) != mb_tolower(c2))
@@ -1442,11 +1440,10 @@ static void ins_compl_files(int count, char **files, int thesaurus, int flags, r
 {
   char *ptr;
   int i;
-  FILE *fp;
   int add_r;
 
   for (i = 0; i < count && !got_int && !compl_interrupted; i++) {
-    fp = os_fopen(files[i], "r");  // open dictionary file
+    FILE *fp = os_fopen(files[i], "r");  // open dictionary file
     if (flags != DICT_EXACT && !shortmess(SHM_COMPLETIONSCAN)) {
       msg_hist_off = true;  // reset in msg_trunc()
       vim_snprintf(IObuff, IOSIZE,
@@ -1746,7 +1743,7 @@ void ins_compl_addleader(int c)
     return;
   }
   if ((cc = utf_char2len(c)) > 1) {
-    char buf[MB_MAXBYTES + 1];
+    char buf[MB_MAXCHAR + 1];
 
     utf_char2bytes(c, buf);
     buf[cc] = NUL;
@@ -2181,7 +2178,6 @@ bool ins_compl_prep(int c)
 static void ins_compl_fixRedoBufForLeader(char *ptr_arg)
 {
   int len;
-  char *p;
   char *ptr = ptr_arg;
 
   if (ptr == NULL) {
@@ -2192,7 +2188,7 @@ static void ins_compl_fixRedoBufForLeader(char *ptr_arg)
     }
   }
   if (compl_orig_text != NULL) {
-    p = compl_orig_text;
+    char *p = compl_orig_text;
     for (len = 0; p[len] != NUL && p[len] == ptr[len]; len++) {}
     if (len > 0) {
       len -= utf_head_off(p, p + len);
@@ -3329,24 +3325,10 @@ static void get_next_bufname_token(void)
 {
   FOR_ALL_BUFFERS(b) {
     if (b->b_p_bl && b->b_sfname != NULL) {
-      char *start = get_past_head(b->b_sfname);
-      char *current = start;
-      char *p = (char *)path_next_component(start);
-      while (true) {
-        int len = (int)(p - current) - (*p == NUL ? 0 : 1);
-        // treat . as a separator, unless it is the first char in a filename
-        char *dot = strchr(current, '.');
-        if (dot && *p == NUL && *current != '.') {
-          len = (int)(dot - current);
-          p = dot + 1;
-        }
-        ins_compl_add(current, len, NULL, NULL, false, NULL, 0,
+      char *tail = path_tail(b->b_sfname);
+      if (strncmp(tail, compl_orig_text, strlen(compl_orig_text)) == 0) {
+        ins_compl_add(tail, (int)strlen(tail), NULL, NULL, false, NULL, 0,
                       p_ic ? CP_ICASE : 0, false);
-        if (*p == NUL) {
-          break;
-        }
-        current = p;
-        p = (char *)path_next_component(p);
       }
     }
   }
@@ -3439,7 +3421,7 @@ static int ins_compl_get_exp(pos_T *ini)
       compl_started = true;
     } else {
       // Mark a buffer scanned when it has been scanned completely
-      if (type == 0 || type == CTRL_X_PATH_PATTERNS) {
+      if (buf_valid(st.ins_buf) && (type == 0 || type == CTRL_X_PATH_PATTERNS)) {
         assert(st.ins_buf);
         st.ins_buf->b_scanned = true;
       }
@@ -3853,15 +3835,13 @@ static bool ins_compl_pum_key(int c)
 /// Returns 1 for most keys, height of the popup menu for page-up/down keys.
 static int ins_compl_key2count(int c)
 {
-  int h;
-
   if (c == K_EVENT || c == K_COMMAND || c == K_LUA) {
     int offset = pum_want.item - pum_selected_item;
     return abs(offset);
   }
 
   if (ins_compl_pum_key(c) && c != K_UP && c != K_DOWN) {
-    h = pum_get_height();
+    int h = pum_get_height();
     if (h > 3) {
       h -= 2;       // keep some context
     }
