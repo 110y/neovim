@@ -1,6 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check
-// it. PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
 // ops.c: implementation of various operators: op_shift, op_delete, op_tilde,
 //        op_change, op_yank, do_put, do_join
 
@@ -1572,7 +1569,7 @@ int op_delete(oparg_T *oap)
         curwin->w_cursor.coladd = 0;
       }
 
-      // n == number of chars deleted
+      // "n" == number of chars deleted
       // If we delete a TAB, it may be replaced by several characters.
       // Thus the number of characters may increase!
       n = bd.textlen - bd.startspaces - bd.endspaces;
@@ -3837,7 +3834,7 @@ void ex_display(exarg_T *eap)
             n -= 2;
           }
           for (p = yb->y_array[j];
-               *p != NUL && (n -= ptr2cells(p)) >= 0; p++) {  // -V1019
+               *p != NUL && (n -= ptr2cells(p)) >= 0; p++) {
             clen = utfc_ptr2len(p);
             msg_outtrans_len(p, clen, 0);
             p += clen - 1;
@@ -4028,8 +4025,9 @@ int do_join(size_t count, int insert_space, int save_undo, int use_formatoptions
     comments = xcalloc(count, sizeof(*comments));
   }
 
-  // Don't move anything, just compute the final line length
+  // Don't move anything yet, just compute the final line length
   // and setup the array of space strings lengths
+  // This loops forward over joined lines.
   for (t = 0; t < (linenr_T)count; t++) {
     curr_start = ml_get(curwin->w_cursor.lnum + t);
     curr = curr_start;
@@ -4110,6 +4108,7 @@ int do_join(size_t count, int insert_space, int save_undo, int use_formatoptions
   *cend = 0;
 
   // Move affected lines to the new long one.
+  // This loops backwards over the joined lines, including the original line.
   //
   // Move marks from each deleted line to the joined line, adjusting the
   // column.  This is not Vi compatible, but Vi deletes the marks, thus that
@@ -6733,7 +6732,7 @@ static void set_clipboard(int name, yankreg_T *reg)
 
   list_T *args = tv_list_alloc(3);
   tv_list_append_list(args, lines);
-  tv_list_append_string(args, &regtype, 1);  // -V614
+  tv_list_append_string(args, &regtype, 1);
   tv_list_append_string(args, ((char[]) { (char)name }), 1);
 
   (void)eval_call_provider("clipboard", "set", args, true);
