@@ -1,9 +1,9 @@
 #include <inttypes.h>
+#include <lauxlib.h>
 #include <stdbool.h>
 #include <stddef.h>
 
 #include "klib/kvec.h"
-#include "lauxlib.h"
 #include "nvim/api/buffer.h"
 #include "nvim/api/private/defs.h"
 #include "nvim/api/private/helpers.h"
@@ -12,13 +12,14 @@
 #include "nvim/buffer_defs.h"
 #include "nvim/buffer_updates.h"
 #include "nvim/extmark.h"
+#include "nvim/func_attr.h"
 #include "nvim/globals.h"
 #include "nvim/log.h"
 #include "nvim/lua/executor.h"
 #include "nvim/memline.h"
 #include "nvim/memory.h"
 #include "nvim/msgpack_rpc/channel.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 #include "nvim/types.h"
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS

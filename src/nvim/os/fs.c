@@ -17,6 +17,8 @@
 #endif
 
 #include "auto/config.h"
+#include "nvim/func_attr.h"
+#include "nvim/os/fs.h"
 
 #if defined(HAVE_ACL)
 # ifdef HAVE_SYS_ACL_H
@@ -39,7 +41,6 @@
 #include "nvim/memory.h"
 #include "nvim/message.h"
 #include "nvim/option_vars.h"
-#include "nvim/os/fs_defs.h"
 #include "nvim/os/os.h"
 #include "nvim/path.h"
 #include "nvim/types.h"
@@ -66,8 +67,6 @@ static const char e_xattr_e2big[]
 static const char e_xattr_other[]
   = N_("E1509: Error occurred when reading or writing extended attribute");
 #endif
-
-struct iovec;
 
 #define RUN_UV_FS_FUNC(ret, func, ...) \
   do { \

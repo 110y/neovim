@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef struct file_buffer buf_T;  // Forward declaration
+typedef struct file_buffer buf_T;
 
 /// Reference to a buffer that stores the value of buf_free_count.
 /// bufref_valid() only needs to check "buf" when the count differs.
@@ -28,7 +28,7 @@ typedef struct {
 #include "nvim/mark_defs.h"
 #include "nvim/marktree.h"
 #include "nvim/option_vars.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 #include "nvim/statusline_defs.h"
 #include "nvim/undo_defs.h"
 

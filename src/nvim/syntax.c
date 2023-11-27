@@ -20,6 +20,7 @@
 #include "nvim/ex_cmds_defs.h"
 #include "nvim/ex_docmd.h"
 #include "nvim/fold.h"
+#include "nvim/func_attr.h"
 #include "nvim/garray.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
@@ -36,7 +37,7 @@
 #include "nvim/optionstr.h"
 #include "nvim/os/input.h"
 #include "nvim/path.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 #include "nvim/profile.h"
 #include "nvim/regexp.h"
 #include "nvim/runtime.h"
@@ -3881,7 +3882,7 @@ static char *get_syn_options(char *arg, syn_opt_arg_T *opt, int *conceal_char, i
       // cchar=?
       *conceal_char = utf_ptr2char(arg + 6);
       arg += utfc_ptr2len(arg + 6) - 1;
-      if (!vim_isprintc_strict(*conceal_char)) {
+      if (!vim_isprintc(*conceal_char)) {
         emsg(_(e_invalid_cchar_value));
         return NULL;
       }

@@ -25,7 +25,6 @@
 #include "nvim/change.h"
 #include "nvim/channel.h"
 #include "nvim/charset.h"
-#include "nvim/cmdexpand_defs.h"
 #include "nvim/cmdhist.h"
 #include "nvim/cursor.h"
 #include "nvim/decoration.h"
@@ -44,6 +43,7 @@
 #include "nvim/extmark.h"
 #include "nvim/fileio.h"
 #include "nvim/fold.h"
+#include "nvim/func_attr.h"
 #include "nvim/getchar.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
@@ -66,14 +66,14 @@
 #include "nvim/option.h"
 #include "nvim/option_vars.h"
 #include "nvim/optionstr.h"
-#include "nvim/os/fs_defs.h"
+#include "nvim/os/fs.h"
 #include "nvim/os/input.h"
 #include "nvim/os/os.h"
 #include "nvim/os/shell.h"
 #include "nvim/os/time.h"
 #include "nvim/path.h"
 #include "nvim/plines.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 #include "nvim/profile.h"
 #include "nvim/quickfix.h"
 #include "nvim/regexp.h"
@@ -155,7 +155,7 @@ void do_ascii(exarg_T *eap)
                       ? NL  // NL is stored as CR.
                       : c);
     char buf1[20];
-    if (vim_isprintc_strict(c) && (c < ' ' || c > '~')) {
+    if (vim_isprintc(c) && (c < ' ' || c > '~')) {
       char buf3[7];
       transchar_nonprint(curbuf, buf3, c);
       vim_snprintf(buf1, sizeof(buf1), "  <%s>", buf3);

@@ -5,6 +5,7 @@
 
 #include "nvim/api/keysets.h"
 #include "nvim/api/private/defs.h"
+#include "nvim/api/private/dispatch.h"
 #include "nvim/api/private/helpers.h"
 #include "nvim/api/private/validate.h"
 #include "nvim/api/window.h"
@@ -14,6 +15,7 @@
 #include "nvim/drawscreen.h"
 #include "nvim/eval/window.h"
 #include "nvim/ex_docmd.h"
+#include "nvim/func_attr.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
 #include "nvim/lua/executor.h"
@@ -21,7 +23,7 @@
 #include "nvim/message.h"
 #include "nvim/move.h"
 #include "nvim/plines.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 #include "nvim/types.h"
 #include "nvim/window.h"
 

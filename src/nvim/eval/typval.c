@@ -1,11 +1,12 @@
 #include <assert.h>
+#include <lauxlib.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
-#include "lauxlib.h"
 #include "nvim/ascii.h"
 #include "nvim/assert.h"
 #include "nvim/charset.h"
@@ -30,7 +31,7 @@
 #include "nvim/memory.h"
 #include "nvim/message.h"
 #include "nvim/os/input.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 #include "nvim/strings.h"
 #include "nvim/types.h"
 #include "nvim/vim.h"

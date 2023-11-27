@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "nvim/buffer_defs.h"
+#include "nvim/buffer_defs.h"  // IWYU pragma: export
 #include "nvim/eval/typval.h"
 #include "nvim/eval/typval_defs.h"
 #include "nvim/ex_cmds_defs.h"
@@ -13,7 +13,7 @@
 #include "nvim/macros.h"
 #include "nvim/memline.h"
 #include "nvim/memline_defs.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 
 // Values for buflist_getfile()
 enum getf_values {

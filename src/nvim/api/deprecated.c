@@ -14,13 +14,14 @@
 #include "nvim/buffer_defs.h"
 #include "nvim/decoration.h"
 #include "nvim/extmark.h"
+#include "nvim/func_attr.h"
 #include "nvim/globals.h"
 #include "nvim/highlight.h"
 #include "nvim/highlight_group.h"
 #include "nvim/lua/executor.h"
 #include "nvim/memory.h"
 #include "nvim/option.h"
-#include "nvim/pos.h"
+#include "nvim/pos_defs.h"
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "api/deprecated.c.generated.h"
