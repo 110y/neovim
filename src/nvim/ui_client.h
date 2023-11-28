@@ -5,9 +5,9 @@
 #include <stdint.h>
 
 #include "nvim/api/private/defs.h"
-#include "nvim/grid_defs.h"
+#include "nvim/grid_defs.h"  // IWYU pragma: keep
 #include "nvim/macros.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 
 typedef struct {
   const char *name;

@@ -9,7 +9,7 @@
 #include "nvim/ex_cmds_defs.h"  // IWYU pragma: keep
 #include "nvim/option_defs.h"  // IWYU pragma: export
 #include "nvim/search.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"  // IWYU pragma: keep
 
 /// The options that are local to a window or buffer have "indir" set to one of
 /// these values.  Special values:
@@ -48,6 +48,7 @@ typedef struct vimoption {
                      ///< local option: indirect option index
                      ///< callback function to invoke after an option is modified to validate and
                      ///< apply the new value.
+  bool immutable;    ///< option value cannot be changed from the default value.
 
   /// callback function to invoke after an option is modified to validate and
   /// apply the new value.

@@ -25,7 +25,6 @@
 #include "nvim/ex_getln.h"
 #include "nvim/func_attr.h"
 #include "nvim/garray.h"
-#include "nvim/garray_defs.h"
 #include "nvim/getchar.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
@@ -45,7 +44,7 @@
 #include "nvim/runtime.h"
 #include "nvim/search.h"
 #include "nvim/strings.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/ui.h"
 #include "nvim/vim.h"
 

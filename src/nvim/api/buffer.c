@@ -10,7 +10,7 @@
 #include "klib/kvec.h"
 #include "lua.h"
 #include "nvim/api/buffer.h"
-#include "nvim/api/keysets.h"
+#include "nvim/api/keysets_defs.h"
 #include "nvim/api/private/defs.h"
 #include "nvim/api/private/helpers.h"
 #include "nvim/api/private/validate.h"
@@ -34,7 +34,7 @@
 #include "nvim/move.h"
 #include "nvim/ops.h"
 #include "nvim/pos_defs.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/undo.h"
 #include "nvim/vim.h"
 

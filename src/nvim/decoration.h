@@ -11,7 +11,7 @@
 #include "nvim/macros.h"
 #include "nvim/marktree.h"
 #include "nvim/pos_defs.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 
 // actual Decor* data is in decoration_defs.h
 
@@ -67,7 +67,7 @@ typedef struct {
   int eol_col;
 
   int conceal;
-  int conceal_char;
+  schar_T conceal_char;
   int conceal_attr;
 
   TriState spell;

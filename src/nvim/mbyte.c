@@ -49,7 +49,6 @@
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
 #include "nvim/grid.h"
-#include "nvim/grid_defs.h"
 #include "nvim/iconv.h"
 #include "nvim/keycodes.h"
 #include "nvim/macros.h"
@@ -64,7 +63,7 @@
 #include "nvim/os/os.h"
 #include "nvim/pos_defs.h"
 #include "nvim/strings.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/vim.h"
 
 typedef struct {

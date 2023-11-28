@@ -4,13 +4,12 @@
 #include <lauxlib.h>
 #include <limits.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "nvim/api/keysets.h"
+#include "nvim/api/keysets_defs.h"
 #include "nvim/api/private/converter.h"
 #include "nvim/api/private/defs.h"
 #include "nvim/api/private/dispatch.h"
@@ -46,7 +45,7 @@
 #include "nvim/runtime.h"
 #include "nvim/search.h"
 #include "nvim/strings.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/ui.h"
 #include "nvim/vim.h"
 

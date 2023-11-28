@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include "klib/kvec.h"
-#include "nvim/api/keysets.h"
+#include "nvim/api/keysets_defs.h"
 #include "nvim/api/private/defs.h"
 #include "nvim/api/private/dispatch.h"
 #include "nvim/api/private/helpers.h"
@@ -40,7 +40,7 @@
 #include "nvim/os/time.h"
 #include "nvim/runtime.h"
 #include "nvim/strings.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/ui.h"
 #include "nvim/vim.h"
 

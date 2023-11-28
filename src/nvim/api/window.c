@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "nvim/api/keysets.h"
+#include "nvim/api/keysets_defs.h"
 #include "nvim/api/private/defs.h"
 #include "nvim/api/private/dispatch.h"
 #include "nvim/api/private/helpers.h"
@@ -24,7 +24,7 @@
 #include "nvim/move.h"
 #include "nvim/plines.h"
 #include "nvim/pos_defs.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/window.h"
 
 /// Gets the current buffer in a window

@@ -6,7 +6,7 @@
 
 #include "klib/kvec.h"
 #include "nvim/api/command.h"
-#include "nvim/api/keysets.h"
+#include "nvim/api/keysets_defs.h"
 #include "nvim/api/private/defs.h"
 #include "nvim/api/private/dispatch.h"
 #include "nvim/api/private/helpers.h"
@@ -29,7 +29,7 @@
 #include "nvim/pos_defs.h"
 #include "nvim/regexp.h"
 #include "nvim/strings.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/usercmd.h"
 #include "nvim/vim.h"
 #include "nvim/window.h"

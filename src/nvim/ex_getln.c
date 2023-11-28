@@ -68,7 +68,7 @@
 #include "nvim/search.h"
 #include "nvim/state.h"
 #include "nvim/strings.h"
-#include "nvim/types.h"
+#include "nvim/types_defs.h"
 #include "nvim/ui.h"
 #include "nvim/undo.h"
 #include "nvim/usercmd.h"
@@ -1835,8 +1835,10 @@ static int command_line_handle_key(CommandLineState *s)
   case K_INS:
   case K_KINS:
     ccline.overstrike = !ccline.overstrike;
-
     ui_cursor_shape();                // may show different cursor shape
+    may_trigger_modechanged();
+    status_redraw_curbuf();
+    redraw_statuslines();
     return command_line_not_changed(s);
 
   case Ctrl_HAT:
