@@ -6,12 +6,12 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "nvim/ascii.h"
+#include "nvim/ascii_defs.h"
 #include "nvim/event/multiqueue.h"
 #include "nvim/getchar.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
-#include "nvim/highlight_defs.h"
+#include "nvim/highlight.h"
 #include "nvim/input.h"
 #include "nvim/keycodes.h"
 #include "nvim/mbyte.h"
@@ -19,8 +19,8 @@
 #include "nvim/message.h"
 #include "nvim/mouse.h"
 #include "nvim/os/input.h"
+#include "nvim/state_defs.h"
 #include "nvim/ui.h"
-#include "nvim/vim.h"
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "input.c.generated.h"  // IWYU pragma: export

@@ -537,6 +537,10 @@ void decor_range_add_virt(DecorState *state, int start_row, int start_col, int e
 void decor_range_add_sh(DecorState *state, int start_row, int start_col, int end_row, int end_col,
                         DecorSignHighlight *sh, bool owned, uint32_t ns, uint32_t mark_id)
 {
+  if (sh->flags & kSHIsSign) {
+    return;
+  }
+
   DecorRange range = {
     .start_row = start_row, .start_col = start_col, .end_row = end_row, .end_col = end_col,
     .kind = kDecorKindHighlight,
@@ -547,7 +551,7 @@ void decor_range_add_sh(DecorState *state, int start_row, int start_col, int end
     .draw_col = -10,
   };
 
-  if (sh->hl_id || (sh->flags & (kSHIsSign | kSHConceal | kSHSpellOn | kSHSpellOff))) {
+  if (sh->hl_id || (sh->flags & (kSHConceal | kSHSpellOn | kSHSpellOff))) {
     if (sh->hl_id) {
       range.attr_id = syn_id2attr(sh->hl_id);
     }
@@ -725,10 +729,8 @@ void decor_redraw_signs(win_T *wp, buf_T *buf, int row, SignTextAttrs sattrs[], 
   while (marktree_itr_step_overlap(buf->b_marktree, itr, &pair)) {
     if (!mt_invalid(pair.start) && mt_decor_sign(pair.start)) {
       DecorSignHighlight *sh = decor_find_sign(mt_decor(pair.start));
-      if (sh) {
-        num_text += (sh->text.ptr != NULL);
-        kv_push(signs, ((SignItem){ sh, pair.start.id }));
-      }
+      num_text += (sh->text.ptr != NULL);
+      kv_push(signs, ((SignItem){ sh, pair.start.id }));
     }
   }
 
@@ -739,10 +741,8 @@ void decor_redraw_signs(win_T *wp, buf_T *buf, int row, SignTextAttrs sattrs[], 
     }
     if (!mt_end(mark) && !mt_invalid(mark) && mt_decor_sign(mark)) {
       DecorSignHighlight *sh = decor_find_sign(mt_decor(mark));
-      if (sh) {
-        num_text += (sh->text.ptr != NULL);
-        kv_push(signs, ((SignItem){ sh, mark.id }));
-      }
+      num_text += (sh->text.ptr != NULL);
+      kv_push(signs, ((SignItem){ sh, mark.id }));
     }
 
     marktree_itr_next(buf->b_marktree, itr);
@@ -791,22 +791,15 @@ DecorSignHighlight *decor_find_sign(DecorInline decor)
   }
 }
 
-// Get the maximum required amount of sign columns needed between row and
-// end_row.
-int decor_signcols(buf_T *buf, int row, int end_row, int max)
+// Increase the signcolumn size and update the sentinel line if necessary for
+// the invalidated range.
+void decor_validate_signcols(buf_T *buf, int max)
 {
-  if (max <= 1 && buf->b_signs_with_text >= (size_t)max) {
-    return max;
-  }
-
-  if (buf->b_signs_with_text == 0) {
-    return 0;
-  }
-
   int signcols = 0;  // highest value of count
+  int currow = buf->b_signcols.invalid_top - 1;
   // TODO(bfredl): only need to use marktree_itr_get_overlap once.
   // then we can process both start and end events and update state for each row
-  for (int currow = row; currow <= end_row; currow++) {
+  for (; currow < buf->b_signcols.invalid_bot; currow++) {
     MarkTreeIter itr[1];
     if (!marktree_itr_get_overlap(buf->b_marktree, currow, 0, itr)) {
       continue;
@@ -826,26 +819,22 @@ int decor_signcols(buf_T *buf, int row, int end_row, int max)
         break;
       }
       if (!mt_invalid(mark) && !mt_end(mark) && (mark.flags & MT_FLAG_DECOR_SIGNTEXT)) {
-        DecorSignHighlight *sh = decor_find_sign(mt_decor(mark));
-        if (sh && sh->text.ptr) {
-          count++;
-        }
+        count++;
       }
       marktree_itr_next(buf->b_marktree, itr);
     }
 
     if (count > signcols) {
-      if (count > buf->b_signcols.size) {
+      if (count >= buf->b_signcols.size) {
+        buf->b_signcols.size = count;
         buf->b_signcols.sentinel = currow + 1;
       }
       if (count >= max) {
-        return max;
+        return;
       }
       signcols = count;
     }
   }
-
-  return signcols;
 }
 
 void decor_redraw_end(DecorState *state)

@@ -10,7 +10,7 @@
 
 #include "nvim/api/extmark.h"
 #include "nvim/arglist.h"
-#include "nvim/ascii.h"
+#include "nvim/ascii_defs.h"
 #include "nvim/buffer_updates.h"
 #include "nvim/context.h"
 #include "nvim/decoration_provider.h"
@@ -30,9 +30,10 @@
 #include "nvim/message.h"
 #include "nvim/option_vars.h"
 #include "nvim/sign.h"
+#include "nvim/state_defs.h"
 #include "nvim/ui.h"
 #include "nvim/usercmd.h"
-#include "nvim/vim.h"
+#include "nvim/vim_defs.h"
 
 #ifdef UNIT_TESTING
 # define malloc(size) mem_malloc(size)
@@ -211,6 +212,18 @@ void *xmemdupz(const void *data, size_t len)
 {
   return memcpy(xmallocz(len), data, len);
 }
+
+#ifndef HAVE_STRNLEN
+size_t xstrnlen(const char *s, size_t n)
+  FUNC_ATTR_NONNULL_ALL FUNC_ATTR_PURE
+{
+  const char *end = memchr(s, '\0', n);
+  if (end == NULL) {
+    return n;
+  }
+  return (size_t)(end - s);
+}
+#endif
 
 /// A version of strchr() that returns a pointer to the terminating NUL if it
 /// doesn't find `c`.
@@ -493,13 +506,6 @@ bool strequal(const char *a, const char *b)
   FUNC_ATTR_PURE FUNC_ATTR_WARN_UNUSED_RESULT
 {
   return (a == NULL && b == NULL) || (a && b && strcmp(a, b) == 0);
-}
-
-/// Case-insensitive `strequal`.
-bool striequal(const char *a, const char *b)
-  FUNC_ATTR_PURE FUNC_ATTR_WARN_UNUSED_RESULT
-{
-  return (a == NULL && b == NULL) || (a && b && STRICMP(a, b) == 0);
 }
 
 // Avoid repeating the error message many times (they take 1 second each).

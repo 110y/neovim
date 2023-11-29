@@ -26,6 +26,7 @@
 // code for redrawing the line with the deleted decoration.
 
 #include <assert.h>
+#include <stddef.h>
 
 #include "nvim/api/private/defs.h"
 #include "nvim/buffer_defs.h"
@@ -34,7 +35,7 @@
 #include "nvim/extmark.h"
 #include "nvim/extmark_defs.h"
 #include "nvim/globals.h"
-#include "nvim/map.h"
+#include "nvim/map_defs.h"
 #include "nvim/marktree.h"
 #include "nvim/memline.h"
 #include "nvim/pos_defs.h"

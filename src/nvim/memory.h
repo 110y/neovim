@@ -1,11 +1,11 @@
 #pragma once
 
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <time.h>
+#include <stdint.h>  // IWYU pragma: keep
+#include <time.h>  // IWYU pragma: keep
 
-#include "nvim/macros.h"
+#include "auto/config.h"
+#include "nvim/macros_defs.h"
 #include "nvim/memory_defs.h"  // IWYU pragma: export
 
 /// `malloc()` function signature
@@ -58,3 +58,17 @@ EXTERN size_t arena_alloc_count INIT( = 0);
     *ptr_ = NULL; \
     (void)(*ptr_); \
   } while (0)
+
+#define CLEAR_FIELD(field)  memset(&(field), 0, sizeof(field))
+#define CLEAR_POINTER(ptr)  memset((ptr), 0, sizeof(*(ptr)))
+
+#ifndef HAVE_STRNLEN
+# define strnlen xstrnlen  // Older versions of SunOS may not have strnlen
+#endif
+
+#define STRCPY(d, s)        strcpy((char *)(d), (char *)(s))  // NOLINT(runtime/printf)
+
+// Like strcpy() but allows overlapped source and destination.
+#define STRMOVE(d, s)       memmove((d), (s), strlen(s) + 1)
+
+#define STRCAT(d, s)        strcat((char *)(d), (char *)(s))  // NOLINT(runtime/printf)

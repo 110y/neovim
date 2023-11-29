@@ -16,7 +16,7 @@
 #include <uv.h>
 
 #include "auto/config.h"
-#include "nvim/ascii.h"
+#include "nvim/ascii_defs.h"
 #include "nvim/autocmd.h"
 #include "nvim/buffer.h"
 #include "nvim/buffer_defs.h"
@@ -37,10 +37,10 @@
 #include "nvim/getchar.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
-#include "nvim/highlight_defs.h"
-#include "nvim/iconv.h"
+#include "nvim/highlight.h"
+#include "nvim/iconv_defs.h"
 #include "nvim/log.h"
-#include "nvim/macros.h"
+#include "nvim/macros_defs.h"
 #include "nvim/mbyte.h"
 #include "nvim/memfile.h"
 #include "nvim/memline.h"
@@ -60,11 +60,12 @@
 #include "nvim/regexp.h"
 #include "nvim/sha256.h"
 #include "nvim/shada.h"
+#include "nvim/state_defs.h"
 #include "nvim/strings.h"
 #include "nvim/types_defs.h"
 #include "nvim/ui.h"
 #include "nvim/undo.h"
-#include "nvim/vim.h"
+#include "nvim/vim_defs.h"
 
 #ifdef BACKSLASH_IN_FILENAME
 # include "nvim/charset.h"
