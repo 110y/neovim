@@ -25,7 +25,6 @@
 #include "nvim/ex_cmds.h"
 #include "nvim/ex_docmd.h"
 #include "nvim/fileio.h"
-#include "nvim/func_attr.h"
 #include "nvim/garray.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
@@ -1118,7 +1117,7 @@ static void shada_read(ShaDaReadDef *const sd_reader, const int flags)
   }
   HistoryMergerState hms[HIST_COUNT];
   if (srni_flags & kSDReadHistory) {
-    for (HistoryType i = 0; i < HIST_COUNT; i++) {
+    for (int i = 0; i < HIST_COUNT; i++) {
       hms_init(&hms[i], (uint8_t)i, (size_t)p_hi, true, true);
     }
   }
@@ -1382,7 +1381,7 @@ shada_read_main_cycle_end:
   //          memory for the history string itself and separator character which
   //          may be assigned right away.
   if (srni_flags & kSDReadHistory) {
-    for (HistoryType i = 0; i < HIST_COUNT; i++) {
+    for (int i = 0; i < HIST_COUNT; i++) {
       hms_insert_whole_neovim_history(&hms[i]);
       clr_history(i);
       int *new_hisidx;
@@ -2500,7 +2499,7 @@ static ShaDaWriteResult shada_write(ShaDaWriteDef *const sd_writer, ShaDaReadDef
   bool dump_history = false;
 
   // Initialize history merger
-  for (HistoryType i = 0; i < HIST_COUNT; i++) {
+  for (int i = 0; i < HIST_COUNT; i++) {
     int num_saved = get_shada_parameter(hist_type2char(i));
     if (num_saved == -1) {
       num_saved = (int)p_hi;
@@ -2894,7 +2893,7 @@ static ShaDaWriteResult shada_write(ShaDaWriteDef *const sd_writer, ShaDaReadDef
 #undef PACK_WMS_ARRAY
 
   if (dump_history) {
-    for (size_t i = 0; i < HIST_COUNT; i++) {
+    for (int i = 0; i < HIST_COUNT; i++) {
       if (dump_one_history[i]) {
         hms_insert_whole_neovim_history(&wms->hms[i]);
         HMS_ITER(&wms->hms[i], cur_entry, {
@@ -2914,7 +2913,7 @@ static ShaDaWriteResult shada_write(ShaDaWriteDef *const sd_writer, ShaDaReadDef
   }
 
 shada_write_exit:
-  for (size_t i = 0; i < HIST_COUNT; i++) {
+  for (int i = 0; i < HIST_COUNT; i++) {
     if (dump_one_history[i]) {
       hms_dealloc(&wms->hms[i]);
     }

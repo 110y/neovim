@@ -50,9 +50,11 @@
     SET_FMARK(&(xfmarkp__->fmark), mark_, fnum_, view_); \
   } while (0)
 
+static inline int mark_global_index(char name)
+  REAL_FATTR_CONST;
+
 /// Convert mark name to the offset
 static inline int mark_global_index(const char name)
-  FUNC_ATTR_CONST
 {
   return (ASCII_ISUPPER(name)
           ? (name - 'A')
@@ -61,9 +63,11 @@ static inline int mark_global_index(const char name)
              : -1));
 }
 
+static inline int mark_local_index(char name)
+  REAL_FATTR_CONST;
+
 /// Convert local mark name to the offset
 static inline int mark_local_index(const char name)
-  FUNC_ATTR_CONST
 {
   return (ASCII_ISLOWER(name)
           ? (name - 'a')
@@ -116,6 +120,9 @@ static inline void clearpos(pos_T *a)
   a->col = 0;
   a->coladd = 0;
 }
+
+/// Global marks (marks with file number or name)
+EXTERN xfmark_T namedfm[NGLOBALMARKS] INIT( = { 0 });
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "mark.h.generated.h"

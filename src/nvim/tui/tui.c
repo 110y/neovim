@@ -18,7 +18,6 @@
 #include "nvim/event/loop.h"
 #include "nvim/event/signal.h"
 #include "nvim/event/stream.h"
-#include "nvim/func_attr.h"
 #include "nvim/globals.h"
 #include "nvim/grid.h"
 #include "nvim/highlight_defs.h"
@@ -35,8 +34,8 @@
 #include "nvim/tui/tui.h"
 #include "nvim/types_defs.h"
 #include "nvim/ugrid.h"
-#include "nvim/ui.h"
 #include "nvim/ui_client.h"
+#include "nvim/ui_defs.h"
 
 #ifdef MSWIN
 # include "nvim/os/os_win_console.h"

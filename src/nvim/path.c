@@ -15,9 +15,7 @@
 #include "nvim/ex_docmd.h"
 #include "nvim/file_search.h"
 #include "nvim/fileio.h"
-#include "nvim/func_attr.h"
 #include "nvim/garray.h"
-#include "nvim/garray_defs.h"
 #include "nvim/gettext.h"
 #include "nvim/globals.h"
 #include "nvim/macros_defs.h"
@@ -153,7 +151,7 @@ char *path_tail_with_sep(char *fname)
 ///
 /// @return The position of the last path separator + 1.
 const char *invocation_path_tail(const char *invocation, size_t *len)
-    FUNC_ATTR_NONNULL_RET FUNC_ATTR_NONNULL_ARG(1)
+  FUNC_ATTR_NONNULL_RET FUNC_ATTR_NONNULL_ARG(1)
 {
   const char *tail = get_past_head(invocation);
   const char *p = tail;
