@@ -13,6 +13,7 @@
 #include "nvim/memory.h"
 #include "nvim/option_vars.h"
 #include "nvim/os/os.h"
+#include "nvim/rbuffer.h"
 #include "nvim/strings.h"
 #include "nvim/tui/input.h"
 #include "nvim/tui/input_defs.h"
@@ -741,7 +742,7 @@ static void tinput_read_cb(Stream *stream, RBuffer *buf, size_t count_, void *da
   TermInput *input = data;
 
   if (eof) {
-    loop_schedule_fast(&main_loop, event_create(tinput_done_event, 0));
+    loop_schedule_fast(&main_loop, event_create(tinput_done_event, NULL));
     return;
   }
 
