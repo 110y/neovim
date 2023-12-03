@@ -95,6 +95,9 @@ The following changes may require adaptations in user config or plugins.
   • Legacy and extmark signs are displayed and listed with the same priority:
       line number -> priority -> sign id -> recently placed
 
+• Default color scheme has been updated to be "Neovim branded" and accessible.
+  Use `:colorscheme vim` to revert to the old legacy color scheme.
+
 ==============================================================================
 BREAKING CHANGES IN HEAD                                    *news-breaking-dev*
 
@@ -266,6 +269,7 @@ The following changes to existing APIs or features add new behavior.
       vim.g.query_lint_on = {}
 <
   • Enabled treesitter highlighting for treesitter query files.
+  • Enabled treesitter highlighting for help files.
 
 • The `workspace/didChangeWatchedFiles` LSP client capability is now enabled
   by default.
