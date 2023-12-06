@@ -30,7 +30,8 @@ module.nvim_prog = (
 module.nvim_set = (
   'set shortmess+=IS background=light noswapfile noautoindent startofline'
   ..' laststatus=1 undodir=. directory=. viewdir=. backupdir=.'
-  ..' belloff= wildoptions-=pum joinspaces noshowcmd noruler nomore redrawdebug=invalid')
+  ..' belloff= wildoptions-=pum joinspaces noshowcmd noruler nomore redrawdebug=invalid'
+  ..' notermguicolors')
 module.nvim_argv = {
   module.nvim_prog, '-u', 'NONE', '-i', 'NONE',
   -- XXX: find treesitter parsers.
@@ -438,7 +439,7 @@ function module.connect(file_or_address)
   return Session.new(stream)
 end
 
--- Starts a new global Nvim session.
+-- Starts (and returns) a new global Nvim session.
 --
 -- Parameters are interpreted as startup args, OR a map with these keys:
 --    args:       List: Args appended to the default `nvim_argv` set.
@@ -452,6 +453,7 @@ end
 --    clear{args={'-e'}, args_rm={'-i'}, env={TERM=term}}
 function module.clear(...)
   module.set_session(module.spawn_argv(false, ...))
+  return module.get_session()
 end
 
 -- same params as clear, but does returns the session instead
@@ -943,7 +945,7 @@ function module.add_builddir_to_rtp()
   module.command(string.format([[set rtp+=%s/runtime]], module.test_build_dir))
 end
 
--- Kill process with given pid
+-- Kill (reap) a process by PID.
 function module.os_kill(pid)
   return os.execute((is_os('win')
     and 'taskkill /f /t /pid '..pid..' > nul'
