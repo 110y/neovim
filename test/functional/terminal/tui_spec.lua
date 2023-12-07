@@ -43,7 +43,7 @@ describe('TUI', function()
       '--listen', child_server,
       '-u', 'NONE',
       '-i', 'NONE',
-      '--cmd', string.format('%s laststatus=2 background=dark', nvim_set),
+      '--cmd', nvim_set .. ' notermguicolors laststatus=2 background=dark',
       '--cmd', 'colorscheme vim'
     })
     screen:expect([[
@@ -1887,8 +1887,8 @@ describe('TUI', function()
     finally(function()
       os.remove('testF')
     end)
-    local screen = thelpers.screen_setup(0, '"'..nvim_prog
-      ..' -u NONE -i NONE --cmd \'set noswapfile noshowcmd noruler\' --cmd \'normal iabc\' > /dev/null 2>&1 && cat testF && rm testF"')
+    local screen = thelpers.screen_setup(0, nvim_prog
+      ..' -u NONE -i NONE --cmd \'set noswapfile noshowcmd noruler\' --cmd \'normal iabc\' > /dev/null 2>&1 && cat testF && rm testF')
     feed_data(':w testF\n:q\n')
     screen:expect([[
       :w testF                                          |
@@ -2217,7 +2217,7 @@ describe("TUI 't_Co' (terminal colors)", function()
       '-u', 'NONE',
       '-i', 'NONE',
       '--cmd', 'colorscheme vim',
-      '--cmd', nvim_set,
+      '--cmd', nvim_set .. ' notermguicolors',
     }, {
       env = {
         LANG = 'C',
@@ -2495,7 +2495,7 @@ describe("TUI 'term' option", function()
     screen = thelpers.setup_child_nvim({
       '-u', 'NONE',
       '-i', 'NONE',
-      '--cmd', nvim_set,
+      '--cmd', nvim_set .. ' notermguicolors',
     }, {
       env = {
         LANG = 'C',
@@ -2555,7 +2555,7 @@ describe("TUI", function()
       '-u', 'NONE',
       '-i', 'NONE',
       '--cmd', 'colorscheme vim',
-      '--cmd', nvim_set,
+      '--cmd', nvim_set .. ' notermguicolors',
       extra_args,
     }, {
       env = {
@@ -2753,7 +2753,7 @@ describe("TUI as a client", function()
       '-u', 'NONE',
       '-i', 'NONE',
       '--cmd', 'colorscheme vim',
-      '--cmd', string.format('%s laststatus=2 background=dark', nvim_set),
+      '--cmd', nvim_set .. ' notermguicolors laststatus=2 background=dark',
     })
 
     feed_data("iHello, World")
@@ -2819,6 +2819,7 @@ describe("TUI as a client", function()
     set_session(server)
     local server_pipe = meths.get_vvar('servername')
     server:request('nvim_input', 'iHalloj!<Esc>')
+    server:request('nvim_command', 'set notermguicolors')
 
     set_session(client_super)
     local screen_client = thelpers.setup_child_nvim({
@@ -2887,7 +2888,7 @@ describe("TUI as a client", function()
       '-u', 'NONE',
       '-i', 'NONE',
       '--cmd', 'colorscheme vim',
-      '--cmd', string.format('%s laststatus=2 background=dark', nvim_set),
+      '--cmd', nvim_set .. ' notermguicolors laststatus=2 background=dark',
     })
     screen_server:expect{grid=[[
       {1: }                                                 |
