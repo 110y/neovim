@@ -147,7 +147,6 @@ iwyu: build/.ran-cmake
 	|src/nvim/buffer.h\
 	|src/nvim/buffer_defs.h\
 	|src/nvim/channel.h\
-	|src/nvim/channel_defs.h\
 	|src/nvim/charset.h\
 	|src/nvim/drawline.h\
 	|src/nvim/eval.h\
@@ -155,7 +154,6 @@ iwyu: build/.ran-cmake
 	|src/nvim/eval/typval.h\
 	|src/nvim/eval/typval_defs.h\
 	|src/nvim/eval/userfunc.h\
-	|src/nvim/eval/window.h\
 	|src/nvim/event/libuv_process.h\
 	|src/nvim/event/loop.h\
 	|src/nvim/event/process.h\

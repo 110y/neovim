@@ -905,7 +905,6 @@ def CheckIncludes(filename, lines, error):
             "src/nvim/buffer.h",
             "src/nvim/buffer_defs.h",
             "src/nvim/channel.h",
-            "src/nvim/channel_defs.h",
             "src/nvim/charset.h",
             "src/nvim/drawline.h",
             "src/nvim/eval.h",
@@ -913,7 +912,6 @@ def CheckIncludes(filename, lines, error):
             "src/nvim/eval/typval.h",
             "src/nvim/eval/typval_defs.h",
             "src/nvim/eval/userfunc.h",
-            "src/nvim/eval/window.h",
             "src/nvim/event/libuv_process.h",
             "src/nvim/event/loop.h",
             "src/nvim/event/process.h",
@@ -950,8 +948,6 @@ def CheckIncludes(filename, lines, error):
             "klib/klist.h",
             "klib/kvec.h",
             "nvim/func_attr.h",
-            "nvim/gettext.h",
-            "nvim/globals.h"
             ]
 
     for i in check_includes_ignore:
