@@ -39,7 +39,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
 #include <time.h>
 #include <uv.h>
 
@@ -48,7 +47,6 @@
 #include "nvim/ascii_defs.h"
 #include "nvim/autocmd.h"
 #include "nvim/buffer.h"
-#include "nvim/buffer_defs.h"
 #include "nvim/change.h"
 #include "nvim/cursor.h"
 #include "nvim/drawscreen.h"

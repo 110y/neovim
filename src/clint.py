@@ -897,8 +897,6 @@ def CheckIncludes(filename, lines, error):
     }):
         return
 
-    # These should be synced with the ignored headers in the `iwyu` target in
-    # the Makefile.
     check_includes_ignore = [
             "src/nvim/api/private/validate.h",
             "src/nvim/assert_defs.h",
@@ -906,7 +904,6 @@ def CheckIncludes(filename, lines, error):
             "src/nvim/buffer_defs.h",
             "src/nvim/channel.h",
             "src/nvim/charset.h",
-            "src/nvim/drawline.h",
             "src/nvim/eval.h",
             "src/nvim/eval/encode.h",
             "src/nvim/eval/typval.h",
@@ -914,6 +911,7 @@ def CheckIncludes(filename, lines, error):
             "src/nvim/eval/userfunc.h",
             "src/nvim/event/libuv_process.h",
             "src/nvim/event/loop.h",
+            "src/nvim/event/multiqueue.h",
             "src/nvim/event/process.h",
             "src/nvim/event/rstream.h",
             "src/nvim/event/signal.h",
@@ -929,6 +927,7 @@ def CheckIncludes(filename, lines, error):
             "src/nvim/keycodes.h",
             "src/nvim/lua/executor.h",
             "src/nvim/main.h",
+            "src/nvim/mark.h",
             "src/nvim/msgpack_rpc/channel_defs.h",
             "src/nvim/msgpack_rpc/helpers.h",
             "src/nvim/msgpack_rpc/unpacker.h",
