@@ -2082,7 +2082,74 @@ describe('extmark decorations', function()
     ]]}
   end)
 
-  it('works with double width char and rightleft', function()
+  it('virtual text overwrites double-width char properly', function()
+    screen:try_resize(50, 3)
+    insert('abcdefghij口klmnopqrstu口vwx口yz')
+    feed('0')
+    meths.buf_set_extmark(0, ns, 0, 0, { virt_text = {{'!!!!!', 'Underlined'}}, virt_text_win_col = 11 })
+    screen:expect{grid=[[
+      ^abcdefghij {28:!!!!!}opqrstu口vwx口yz                  |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+    feed('8x')
+    screen:expect{grid=[[
+      ^ij口klmnopq{28:!!!!!} vwx口yz                          |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+    feed('3l5x')
+    screen:expect{grid=[[
+      ij口^pqrstu {28:!!!!!} yz                               |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+    feed('5x')
+    screen:expect{grid=[[
+      ij口^u口vwx {28:!!!!!}                                  |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+  end)
+
+  it('virtual text blending space does not overwrite double-width char', function()
+    screen:try_resize(50, 3)
+    insert('abcdefghij口klmnopqrstu口vwx口yz')
+    feed('0')
+    command('hi Blendy guibg=Red blend=30')
+    meths.buf_set_extmark(0, ns, 0, 0, { virt_text = {{' !  ! ', 'Blendy'}}, virt_text_win_col = 8, hl_mode = 'blend' })
+    screen:expect{grid=[[
+      ^abcdefgh{10:i}{7:!}{10:口}{7:!}{10:l}mnopqrstu口vwx口yz                  |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+    feed('x')
+    screen:expect{grid=[[
+      ^bcdefghi{10:j}{7:!}{10: k}{7:!}{10:m}nopqrstu口vwx口yz                   |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+    feed('x')
+    screen:expect{grid=[[
+      ^cdefghij{10: }{7:!}{10:kl}{7:!}{10:n}opqrstu口vwx口yz                    |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+    feed('x')
+    screen:expect{grid=[[
+      ^defghij口{7:!}{10:lm}{7:!}{10:o}pqrstu口vwx口yz                     |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+    feed('7x')
+    screen:expect{grid=[[
+      ^口klmnop{10:q}{7:!}{10:st}{7:!}{10:口}vwx口yz                            |
+      {1:~                                                 }|
+                                                        |
+    ]]}
+  end)
+
+  it('virtual text works with double-width char and rightleft', function()
     screen:try_resize(50, 3)
     insert('abcdefghij口klmnopqrstu口vwx口yz')
     feed('0')

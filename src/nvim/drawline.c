@@ -206,6 +206,9 @@ static void margin_columns_win(win_T *wp, int *left_col, int *right_col)
 /// Handles composing chars
 static int line_putchar(buf_T *buf, const char **pp, schar_T *dest, int maxcells, int vcol)
 {
+  // Caller should handle overwriting the right half of a double-width char.
+  assert(dest[0] != 0);
+
   const char *p = *pp;
   int cells = utf_ptr2cells(p);
   int c_len = utfc_ptr2len(p);
@@ -219,6 +222,7 @@ static int line_putchar(buf_T *buf, const char **pp, schar_T *dest, int maxcells
     cells = MIN(tabstop_padding(vcol, buf->b_p_ts, buf->b_p_vts_array), maxcells);
   }
 
+  // When overwriting the left half of a double-width char, clear the right half.
   if (cells < maxcells && dest[cells] == 0) {
     dest[cells] = schar_from_ascii(' ');
   }
@@ -330,8 +334,15 @@ static int draw_virt_text_item(buf_T *buf, int col, VirtText vt, HlMode hl_mode,
     } else {
       attr = virt_attr;
     }
-    schar_T dummy[2];
+    schar_T dummy[2] = { schar_from_ascii(' '), schar_from_ascii(' ') };
     int maxcells = max_col - col;
+    // When overwriting the right half of a double-width char, clear the left half.
+    if (!through && linebuf_char[col] == 0) {
+      assert(col > 0);
+      linebuf_char[col - 1] = schar_from_ascii(' ');
+      // Clear the right half as well for the assertion in line_putchar().
+      linebuf_char[col] = schar_from_ascii(' ');
+    }
     int cells = line_putchar(buf, &p, through ? dummy : &linebuf_char[col],
                              maxcells, vcol);
     for (int c = 0; c < cells; c++) {
@@ -862,12 +873,16 @@ static colnr_T get_leadcol(win_T *wp, const char *ptr, const char *line)
 }
 
 /// Start a screen line at column zero.
-static void win_line_start(win_T *wp, winlinevars_T *wlv, bool save_extra)
+static void win_line_start(win_T *wp, winlinevars_T *wlv)
 {
   wlv->col = 0;
   wlv->off = 0;
   wlv->need_lbr = false;
-  memset(linebuf_vcol, -1, (size_t)wp->w_grid.cols * sizeof(*linebuf_vcol));
+  for (int i = 0; i < wp->w_grid.cols; i++) {
+    linebuf_char[i] = schar_from_ascii(' ');
+    linebuf_attr[i] = -1;
+    linebuf_vcol[i] = -1;
+  }
 }
 
 static void fix_for_boguscols(winlinevars_T *wlv)
@@ -1441,7 +1456,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool number_onl
     ptr = line + v;  // "line" may have been updated
   }
 
-  win_line_start(wp, &wlv, false);
+  win_line_start(wp, &wlv);
   bool draw_cols = true;
   int leftcols_width = 0;
 
@@ -2833,7 +2848,7 @@ int win_line(win_T *wp, linenr_T lnum, int startrow, int endrow, bool number_onl
         break;
       }
 
-      win_line_start(wp, &wlv, true);
+      win_line_start(wp, &wlv);
       draw_cols = true;
 
       lcs_prec_todo = wp->w_p_lcs_chars.prec;
