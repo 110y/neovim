@@ -1712,6 +1712,10 @@ describe('API/extmarks', function()
           aaa bbb ccc                         |*2
                                               |
     ]])
+    -- decor is not removed twice
+    command('d3')
+    api.nvim_buf_del_extmark(0, ns, 1)
+    command('silent undo')
     -- mark is deleted with undo_restore == false
     set_extmark(ns, 1, 0, 0, { invalidate = true, undo_restore = false, sign_text = 'S1' })
     set_extmark(ns, 2, 1, 0, { invalidate = true, undo_restore = false, sign_text = 'S2' })
@@ -1895,7 +1899,7 @@ describe('API/win_extmark', function()
       extmarks = {
         [2] = {
           -- positioned at the end of the 2nd line
-          { { id = 1000 }, ns, marks[1], 1, 16 },
+          { 1000, ns, marks[1], 1, 16 },
         },
       },
     })
@@ -1921,27 +1925,27 @@ describe('API/win_extmark', function()
       extmarks = {
         [2] = {
           -- notification from 1st call
-          { { id = 1000 }, ns, marks[1], 1, 0 },
+          { 1000, ns, marks[1], 1, 0 },
           -- notifications from 2nd call
-          { { id = 1000 }, ns, marks[1], 1, 0 },
-          { { id = 1000 }, ns, marks[2], 1, 2 },
+          { 1000, ns, marks[1], 1, 0 },
+          { 1000, ns, marks[2], 1, 2 },
           -- notifications from 3rd call
-          { { id = 1000 }, ns, marks[1], 1, 0 },
-          { { id = 1000 }, ns, marks[2], 1, 2 },
-          { { id = 1000 }, ns, marks[3], 1, 4 },
+          { 1000, ns, marks[1], 1, 0 },
+          { 1000, ns, marks[2], 1, 2 },
+          { 1000, ns, marks[3], 1, 4 },
           -- notifications from 4th call
-          { { id = 1000 }, ns, marks[1], 1, 0 },
-          { { id = 1000 }, ns, marks[2], 1, 2 },
-          { { id = 1000 }, ns, marks[3], 1, 4 },
-          { { id = 1000 }, ns, marks[4], 1, 6 },
+          { 1000, ns, marks[1], 1, 0 },
+          { 1000, ns, marks[2], 1, 2 },
+          { 1000, ns, marks[3], 1, 4 },
+          { 1000, ns, marks[4], 1, 6 },
           -- final
           --   overlay
-          { { id = 1000 }, ns, marks[1], 1, 0 },
-          { { id = 1000 }, ns, marks[2], 1, 2 },
-          { { id = 1000 }, ns, marks[3], 1, 4 },
-          { { id = 1000 }, ns, marks[4], 1, 6 },
+          { 1000, ns, marks[1], 1, 0 },
+          { 1000, ns, marks[2], 1, 2 },
+          { 1000, ns, marks[3], 1, 4 },
+          { 1000, ns, marks[4], 1, 6 },
           --   eol
-          { { id = 1000 }, ns, marks[5], 2, 11 },
+          { 1000, ns, marks[5], 2, 11 },
         },
       },
     })
@@ -1966,9 +1970,9 @@ describe('API/win_extmark', function()
       extmarks = {
         [2] = {
           -- positioned at the end of the 2nd line
-          { { id = 1000 }, ns, marks[1], 1, 16 },
+          { 1000, ns, marks[1], 1, 16 },
           -- updated and wrapped to 3rd line
-          { { id = 1000 }, ns, marks[1], 2, 2 },
+          { 1000, ns, marks[1], 2, 2 },
         },
       },
     })
@@ -1983,9 +1987,9 @@ describe('API/win_extmark', function()
       extmarks = {
         [2] = {
           -- positioned at the end of the 2nd line
-          { { id = 1000 }, ns, marks[1], 1, 16 },
+          { 1000, ns, marks[1], 1, 16 },
           -- updated and wrapped to 3rd line
-          { { id = 1000 }, ns, marks[1], 2, 2 },
+          { 1000, ns, marks[1], 2, 2 },
           -- scrolled up one line, should be handled by grid scroll
         },
       },
@@ -2021,13 +2025,13 @@ describe('API/win_extmark', function()
       extmarks = {
         [2] = {
           -- positioned at the end of the 2nd line
-          { { id = 1000 }, ns, marks[1], 1, 16 },
+          { 1000, ns, marks[1], 1, 16 },
           -- updated after split
-          { { id = 1000 }, ns, marks[1], 1, 16 },
+          { 1000, ns, marks[1], 1, 16 },
         },
         [4] = {
           -- only after split
-          { { id = 1001 }, ns, marks[1], 1, 16 },
+          { 1001, ns, marks[1], 1, 16 },
         },
       },
     })
@@ -2054,14 +2058,14 @@ describe('API/win_extmark', function()
       extmarks = {
         [2] = {
           -- positioned at the end of the 2nd line
-          { { id = 1000 }, ns, marks[1], 1, 16 },
+          { 1000, ns, marks[1], 1, 16 },
           -- updated after split
-          { { id = 1000 }, ns, marks[1], 1, 16 },
+          { 1000, ns, marks[1], 1, 16 },
         },
         [4] = {
-          { { id = 1001 }, ns, marks[1], 1, 16 },
+          { 1001, ns, marks[1], 1, 16 },
           -- updated
-          { { id = 1001 }, ns, marks[1], 2, 2 },
+          { 1001, ns, marks[1], 2, 2 },
         },
       },
     })

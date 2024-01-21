@@ -178,15 +178,13 @@ static const char *highlight_init_both[] = {
   "default link PmenuKindSel   PmenuSel",
   "default link PmenuSbar      Pmenu",
   "default link Substitute     Search",
-  "default link TabLine        StatusLine",
+  "default link TabLine        StatusLineNC",
   "default link TabLineFill    TabLine",
   "default link TermCursorNC   NONE",
   "default link VertSplit      WinSeparator",
   "default link VisualNOS      Visual",
   "default link Whitespace     NonText",
   "default link WildMenu       PmenuSel",
-  "default link WinBar         StatusLine",
-  "default link WinBarNC       StatusLineNC",
   "default link WinSeparator   Normal",
 
   // Syntax
@@ -232,60 +230,98 @@ static const char *highlight_init_both[] = {
   "default link DiagnosticSignOk           DiagnosticOk",
   "default link DiagnosticUnnecessary      Comment",
 
-  // Text
-  "default link @text.literal   Comment",
-  "default link @text.reference Identifier",
-  "default link @text.title     Title",
-  "default link @text.uri       Underlined",
-  "default link @text.underline Underlined",
-  "default link @text.todo      Todo",
+  // Treesitter standard groups
+  "default link @variable            NONE",  // don't highlight to reduce visual overload
+  "default link @variable.builtin    Special",
+  "default link @variable.parameter  Identifier",
+  "default link @variable.member     Identifier",
 
-  // Miscs
-  "default link @comment     Comment",
-  "default link @punctuation Delimiter",
-
-  // Constants
   "default link @constant          Constant",
   "default link @constant.builtin  Special",
   "default link @constant.macro    Define",
-  "default link @define            Define",
-  "default link @macro             Macro",
-  "default link @string            String",
-  "default link @string.escape     SpecialChar",
-  "default link @string.special    SpecialChar",
-  "default link @character         Character",
-  "default link @character.special SpecialChar",
-  "default link @number            Number",
-  "default link @boolean           Boolean",
-  "default link @float             Float",
 
-  // Functions
-  "default link @function         Function",
-  "default link @function.builtin Special",
-  "default link @function.macro   Macro",
-  "default link @parameter        Identifier",
-  "default link @method           Function",
-  "default link @field            Identifier",
-  "default link @property         Identifier",
-  "default link @constructor      Special",
+  "default link @module  Structure",
+  "default link @label   Label",
 
-  // Keywords
-  "default link @conditional Conditional",
-  "default link @repeat      Repeat",
-  "default link @label       Label",
-  "default link @operator    Operator",
-  "default link @keyword     Keyword",
-  "default link @exception   Exception",
+  "default link @string                 String",
+  "default link @string.regexp          SpecialChar",
+  "default link @string.escape          SpecialChar",
+  "default link @string.special         SpecialChar",
+  "default link @string.special.symbol  Constant",
+  "default link @string.special.url     Underlined",
 
-  "default link @variable        NONE",  // don't highlight to reduce visual overload
-  "default link @type            Type",
-  "default link @type.definition Typedef",
-  "default link @storageclass    StorageClass",
-  "default link @namespace       Identifier",
-  "default link @include         Include",
-  "default link @preproc         PreProc",
-  "default link @debug           Debug",
-  "default link @tag             Tag",
+  "default link @character          Character",
+  "default link @character.special  SpecialChar",
+
+  "default link @boolean       Boolean",
+  "default link @number        Number",
+  "default link @number.float  Float",
+
+  "default link @type             Type",
+  "default link @type.builtin     Special",
+  "default link @type.definition  Typedef",
+  "default link @type.qualifier   StorageClass",
+
+  "default link @attribute  Macro",
+  "default link @property   Identifier",
+
+  "default link @function          Function",
+  "default link @function.builtin  Special",
+  "default link @function.macro    Macro",
+
+  "default link @constructor   Special",
+  "default link @operator      Operator",
+
+  "default link @keyword            Keyword",
+  "default link @keyword.function   Statement",
+  "default link @keyword.operator   Operator",
+  "default link @keyword.import     Include",
+  "default link @keyword.storage    StorageClass",
+  "default link @keyword.repeat     Repeat",
+  "default link @keyword.debug      Debug",
+  "default link @keyword.exception  Exception",
+
+  "default link @keyword.conditional    Conditional",
+
+  "default link @keyword.directive         Preproc",
+  "default link @keyword.directive.define  Define",
+
+  "default link @punctuation.delimiter  Delimiter",
+  "default link @punctuation.bracket    Delimiter",
+  "default link @punctuation.special    Special",
+
+  "default link @comment   Comment",
+
+  "default link @comment.error    DiagnosticError",
+  "default link @comment.warning  DiagnosticWarn",
+  "default link @comment.note     DiagnosticInfo",
+  "default link @comment.todo     Todo",
+
+  "@markup.strong         gui=bold           cterm=bold",
+  "@markup.italic         gui=italic         cterm=italic",
+  "@markup.strikethrough  gui=strikethrough, cterm=strikethrough",
+  "@markup.underline      gui=underline,     cterm=underline",
+
+  "default link @markup.heading  Title",
+
+  "default link @markup.raw          Comment",
+  "default link @markup.quote        Comment",
+  "default link @markup.math         Comment",
+  "default link @markup.environment  Comment",
+
+  "default link @markup.link        Underlined",
+  "default link @markup.link.label  Identifier",
+
+  "default link @markup.list            Special",
+  "default link @markup.list.checked    DiagnosticOk",
+  "default link @markup.list.unchecked  DiagnosticWarn",
+
+  "default link @diff.plus   Added",
+  "default link @diff.minus  Removed",
+  "default link @diff.delta  Changed",
+
+  "default link @tag            Tag",
+  "default link @tag.delimiter  Delimiter",
 
   // LSP semantic tokens
   "default link @lsp.type.class         Structure",
@@ -351,10 +387,12 @@ static const char *highlight_init_light[] = {
   "SpellCap             guisp=NvimDarkYellow gui=undercurl                   cterm=undercurl",
   "SpellLocal           guisp=NvimDarkGreen  gui=undercurl                   cterm=undercurl",
   "SpellRare            guisp=NvimDarkCyan   gui=undercurl                   cterm=undercurl",
-  "StatusLine           guifg=NvimDarkGrey3  guibg=NvimLightGrey1            cterm=reverse",
-  "StatusLineNC         guifg=NvimDarkGrey4  guibg=NvimLightGrey1            cterm=bold",
+  "StatusLine           guifg=NvimLightGrey3 guibg=NvimDarkGrey3             cterm=reverse",
+  "StatusLineNC         guifg=NvimDarkGrey3  guibg=NvimLightGrey3            cterm=bold",
   "Visual                                    guibg=NvimLightGrey4            ctermfg=15 ctermbg=0",
   "WarningMsg           guifg=NvimDarkYellow                                 ctermfg=3",
+  "WinBar               guifg=NvimDarkGrey4  guibg=NvimLightGrey1  gui=bold  cterm=bold",
+  "WinBarNC             guifg=NvimDarkGrey4  guibg=NvimLightGrey1            cterm=bold",
 
   // Syntax
   "Comment    guifg=NvimDarkGrey4",
@@ -423,10 +461,12 @@ static const char *highlight_init_dark[] = {
   "SpellCap             guisp=NvimLightYellow gui=undercurl                 cterm=undercurl",
   "SpellLocal           guisp=NvimLightGreen  gui=undercurl                 cterm=undercurl",
   "SpellRare            guisp=NvimLightCyan   gui=undercurl                 cterm=undercurl",
-  "StatusLine           guifg=NvimLightGrey3  guibg=NvimDarkGrey1           cterm=reverse",
-  "StatusLineNC         guifg=NvimLightGrey4  guibg=NvimDarkGrey1           cterm=bold",
+  "StatusLine           guifg=NvimDarkGrey3   guibg=NvimLightGrey3          cterm=reverse",
+  "StatusLineNC         guifg=NvimLightGrey3  guibg=NvimDarkGrey3           cterm=bold",
   "Visual                                     guibg=NvimDarkGrey4           ctermfg=0 ctermbg=15",
   "WarningMsg           guifg=NvimLightYellow                               ctermfg=11",
+  "WinBar               guifg=NvimLightGrey4  guibg=NvimDarkGrey1  gui=bold cterm=bold",
+  "WinBarNC             guifg=NvimLightGrey4  guibg=NvimDarkGrey1           cterm=bold",
 
   // Syntax
   "Comment    guifg=NvimLightGrey4",

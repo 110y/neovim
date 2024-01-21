@@ -402,7 +402,7 @@ static int insert_check(VimState *state)
     Insstart_orig = Insstart;
   }
 
-  if (curbuf->terminal) {
+  if (curbuf->terminal && !stop_insert_mode) {
     // Exit Insert mode and go to Terminal mode.
     stop_insert_mode = true;
     restart_edit = 'I';
@@ -4724,6 +4724,10 @@ static char *do_insert_char_pre(int c)
 {
   char buf[MB_MAXBYTES + 1];
   const int save_State = State;
+
+  if (c == Ctrl_RSB) {
+    return NULL;
+  }
 
   // Return quickly when there is nothing to do.
   if (!has_event(EVENT_INSERTCHARPRE)) {
