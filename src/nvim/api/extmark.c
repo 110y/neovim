@@ -26,6 +26,7 @@
 #include "nvim/mbyte.h"
 #include "nvim/memline.h"
 #include "nvim/memory.h"
+#include "nvim/move.h"
 #include "nvim/pos_defs.h"
 #include "nvim/sign.h"
 
@@ -1244,7 +1245,7 @@ Boolean nvim_win_add_ns(Window window, Integer ns_id, Error *err)
 
   set_put(uint32_t, &win->w_ns_set, (uint32_t)ns_id);
 
-  redraw_all_later(UPD_NOT_VALID);  // TODO(altermo): only need to redraw the window
+  changed_window_setting_win(win);
 
   return true;
 }
@@ -1253,18 +1254,18 @@ Boolean nvim_win_add_ns(Window window, Integer ns_id, Error *err)
 ///
 /// @param window Window handle, or 0 for current window
 /// @return a list of namespaces ids
-ArrayOf(Integer) nvim_win_get_ns(Window window, Error *err)
+ArrayOf(Integer) nvim_win_get_ns(Window window, Arena *arena, Error *err)
   FUNC_API_SINCE(12)
 {
-  Array rv = ARRAY_DICT_INIT;
-
   win_T *win = find_window_by_handle(window, err);
   if (!win) {
-    return rv;
+    return (Array)ARRAY_DICT_INIT;
   }
+
+  Array rv = arena_array(arena, set_size(&win->w_ns_set));
   uint32_t i;
   set_foreach(&win->w_ns_set, i, {
-    ADD(rv, INTEGER_OBJ((Integer)(i)));
+    ADD_C(rv, INTEGER_OBJ((Integer)(i)));
   });
 
   return rv;
@@ -1287,9 +1288,9 @@ Boolean nvim_win_remove_ns(Window window, Integer ns_id, Error *err)
     return false;
   }
 
-  set_del_uint32_t(&win->w_ns_set, (uint32_t)ns_id);
+  set_del(uint32_t, &win->w_ns_set, (uint32_t)ns_id);
 
-  redraw_later(win, UPD_NOT_VALID);
+  changed_window_setting_win(win);
 
   return true;
 }
