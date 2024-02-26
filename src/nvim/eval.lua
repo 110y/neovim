@@ -3915,6 +3915,17 @@ M.funcs = {
     returns = "'file'|'dir'|'link'|'bdev'|'cdev'|'socket'|'fifo'|'other'",
     signature = 'getftype({fname})',
   },
+  deletejumplistitem = {
+    args = { 1 },
+    base = 1,
+    desc = [=[
+      Dletes an item specified by {index} from the jumplist.
+    ]=],
+    name = 'deletejumplistitem',
+    params = { { 'integer' } },
+    signature = 'deletejumplistitem([{index}])',
+    returns = 'vim.fn.deletejumplistitem.ret',
+  },
   getjumplist = {
     args = { 0, 2 },
     base = 1,

@@ -3161,6 +3161,10 @@ function vim.fn.getftype(fname) end
 --- @return vim.fn.getjumplist.ret
 function vim.fn.getjumplist(winnr, tabnr) end
 
+--- @param idx? integer
+--- @return vim.fn.getjumplist.ret
+function vim.fn.deletejumplistitem(idx) end
+
 --- Without {end} the result is a String, which is line {lnum}
 --- from the current buffer.  Example: >vim
 ---   getline(1)

@@ -2729,6 +2729,26 @@ static void f_getftype(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   rettv->vval.v_string = type;
 }
 
+static void f_deletejumplistitem(typval_T *argvars, typval_T *rettv)
+{
+    int idx = (int)tv_get_number(&argvars[0]);
+
+    if ((idx < 0) || (idx > curwin->w_jumplistlen - 1)) {
+        return;
+    }
+
+    free_xfmark(curwin->w_jumplist[idx]);
+
+    for (int i = idx; i < curwin->w_jumplistlen - 1; i++) {
+        curwin->w_jumplist[i] = curwin->w_jumplist[i + 1];
+    }
+    curwin->w_jumplistlen--;
+
+    if (curwin->w_jumplistidx >= idx) {
+        curwin->w_jumplistidx--;
+    }
+}
+
 /// "getjumplist()" function
 static void f_getjumplist(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 {
