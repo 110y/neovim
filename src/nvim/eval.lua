@@ -9767,7 +9767,7 @@ M.funcs = {
 
     ]=],
     name = 'setreg',
-    params = { { 'regname', 'string' }, { 'value', 'any' }, { 'options', 'table' } },
+    params = { { 'regname', 'string' }, { 'value', 'any' }, { 'options', 'string' } },
     signature = 'setreg({regname}, {value} [, {options}])',
   },
   settabvar = {
