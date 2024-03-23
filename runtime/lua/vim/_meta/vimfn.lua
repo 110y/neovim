@@ -8804,7 +8804,8 @@ function vim.fn.sinh(expr) end
 --- Similar to using a |slice| "expr[start : end]", but "end" is
 --- used exclusive.  And for a string the indexes are used as
 --- character indexes instead of byte indexes.
---- Also, composing characters are not counted.
+--- Also, composing characters are treated as a part of the
+--- preceding base character.
 --- When {end} is omitted the slice continues to the last item.
 --- When {end} is -1 the last item is omitted.
 --- Returns an empty value if {start} or {end} are invalid.
@@ -9212,8 +9213,8 @@ function vim.fn.strcharlen(string) end
 --- of byte index and length.
 --- When {skipcc} is omitted or zero, composing characters are
 --- counted separately.
---- When {skipcc} set to 1, Composing characters are ignored,
---- similar to  |slice()|.
+--- When {skipcc} set to 1, composing characters are treated as a
+--- part of the preceding base character, similar to |slice()|.
 --- When a character index is used where a character does not
 --- exist it is omitted and counted as one character.  For
 --- example: >vim
@@ -9233,7 +9234,7 @@ function vim.fn.strcharpart(src, start, len, skipcc) end
 --- in String {string}.
 --- When {skipcc} is omitted or zero, composing characters are
 --- counted separately.
---- When {skipcc} set to 1, Composing characters are ignored.
+--- When {skipcc} set to 1, composing characters are ignored.
 --- |strcharlen()| always does this.
 ---
 --- Returns zero on error.
