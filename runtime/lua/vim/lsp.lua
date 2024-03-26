@@ -346,16 +346,6 @@ local function reset_defaults(bufnr)
   end)
 end
 
---- @param client vim.lsp.Client
-local function on_client_init(client)
-  -- If we had been registered before we start, then send didOpen This can
-  -- happen if we attach to buffers before initialize finishes or if
-  -- someone restarts a client.
-  for bufnr in pairs(client.attached_buffers) do
-    client:_on_attach(bufnr)
-  end
-end
-
 --- @param code integer
 --- @param signal integer
 --- @param client_id integer
@@ -418,9 +408,6 @@ function lsp.start_client(config)
   if not client then
     return
   end
-
-  --- @diagnostic disable-next-line: invisible
-  table.insert(client._on_init_cbs, 1, on_client_init)
 
   --- @diagnostic disable-next-line: invisible
   table.insert(client._on_exit_cbs, on_client_exit)
