@@ -4916,6 +4916,7 @@ M.funcs = {
       	endif
       <
     ]=],
+    fast = true,
     name = 'has',
     params = { { 'feature', 'any' } },
     returns = '0|1',

@@ -372,43 +372,46 @@ local function to_severity(severity)
 end
 
 --- @param severity vim.diagnostic.SeverityFilter
+--- @return fun(vim.Diagnostic):boolean
+local function severity_predicate(severity)
+  if type(severity) ~= 'table' then
+    severity = assert(to_severity(severity))
+    ---@param d vim.Diagnostic
+    return function(d)
+      return d.severity == severity
+    end
+  end
+  if severity.min or severity.max then
+    --- @cast severity {min:vim.diagnostic.Severity,max:vim.diagnostic.Severity}
+    local min_severity = to_severity(severity.min) or M.severity.HINT
+    local max_severity = to_severity(severity.max) or M.severity.ERROR
+
+    --- @param d vim.Diagnostic
+    return function(d)
+      return d.severity <= min_severity and d.severity >= max_severity
+    end
+  end
+
+  --- @cast severity vim.diagnostic.Severity[]
+  local severities = {} --- @type table<vim.diagnostic.Severity,true>
+  for _, s in ipairs(severity) do
+    severities[assert(to_severity(s))] = true
+  end
+
+  --- @param d vim.Diagnostic
+  return function(d)
+    return severities[d.severity]
+  end
+end
+
+--- @param severity vim.diagnostic.SeverityFilter
 --- @param diagnostics vim.Diagnostic[]
 --- @return vim.Diagnostic[]
 local function filter_by_severity(severity, diagnostics)
   if not severity then
     return diagnostics
   end
-
-  if type(severity) ~= 'table' then
-    severity = assert(to_severity(severity))
-    --- @param t vim.Diagnostic
-    return vim.tbl_filter(function(t)
-      return t.severity == severity
-    end, diagnostics)
-  end
-
-  if severity.min or severity.max then
-    --- @cast severity {min:vim.diagnostic.Severity,max:vim.diagnostic.Severity}
-    local min_severity = to_severity(severity.min) or M.severity.HINT
-    local max_severity = to_severity(severity.max) or M.severity.ERROR
-
-    --- @param t vim.Diagnostic
-    return vim.tbl_filter(function(t)
-      return t.severity <= min_severity and t.severity >= max_severity
-    end, diagnostics)
-  end
-
-  --- @cast severity vim.diagnostic.Severity[]
-
-  local severities = {} --- @type table<vim.diagnostic.Severity,true>
-  for _, s in ipairs(severity) do
-    severities[assert(to_severity(s))] = true
-  end
-
-  --- @param t vim.Diagnostic
-  return vim.tbl_filter(function(t)
-    return severities[t.severity]
-  end, diagnostics)
+  return vim.tbl_filter(severity_predicate(severity), diagnostics)
 end
 
 --- @param bufnr integer
@@ -714,10 +717,18 @@ local function get_diagnostics(bufnr, opts, clamp)
     end,
   })
 
+  local match_severity = opts.severity and severity_predicate(opts.severity)
+    or function(_)
+      return true
+    end
+
   ---@param b integer
   ---@param d vim.Diagnostic
   local function add(b, d)
-    if not opts.lnum or (opts.lnum >= d.lnum and opts.lnum <= (d.end_lnum or d.lnum)) then
+    if
+      match_severity(d)
+      and (not opts.lnum or (opts.lnum >= d.lnum and opts.lnum <= (d.end_lnum or d.lnum)))
+    then
       if clamp and api.nvim_buf_is_loaded(b) then
         local line_count = buf_line_count[b] - 1
         if
@@ -771,10 +782,6 @@ local function get_diagnostics(bufnr, opts, clamp)
     end
   end
 
-  if opts.severity then
-    diagnostics = filter_by_severity(opts.severity, diagnostics)
-  end
-
   return diagnostics
 end
 
@@ -813,11 +820,35 @@ local function next_diagnostic(position, search_forward, bufnr, opts, namespace)
   position[1] = position[1] - 1
   bufnr = get_bufnr(bufnr)
   local wrap = if_nil(opts.wrap, true)
-  local line_count = api.nvim_buf_line_count(bufnr)
+
   local diagnostics =
     get_diagnostics(bufnr, vim.tbl_extend('keep', opts, { namespace = namespace }), true)
+
+  -- When severity is unset we jump to the diagnostic with the highest severity. First sort the
+  -- diagnostics by severity. The first diagnostic then contains the highest severity, and we can
+  -- discard all diagnostics with a lower severity.
+  if opts.severity == nil then
+    table.sort(diagnostics, function(a, b)
+      return a.severity < b.severity
+    end)
+
+    -- Find the first diagnostic where the severity does not match the highest severity, and remove
+    -- that element and all subsequent elements from the array
+    local worst = (diagnostics[1] or {}).severity
+    local len = #diagnostics
+    for i = 2, len do
+      if diagnostics[i].severity ~= worst then
+        for j = i, len do
+          diagnostics[j] = nil
+        end
+        break
+      end
+    end
+  end
+
   local line_diagnostics = diagnostic_lines(diagnostics)
 
+  local line_count = api.nvim_buf_line_count(bufnr)
   for i = 0, line_count do
     local offset = i * (search_forward and 1 or -1)
     local lnum = position[1] + offset
@@ -1158,8 +1189,8 @@ end
 --- (default: `true`)
 --- @field wrap? boolean
 ---
---- See |diagnostic-severity|.
---- @field severity vim.diagnostic.Severity
+--- See |diagnostic-severity|. If `nil`, go to the diagnostic with the highest severity.
+--- @field severity? vim.diagnostic.Severity
 ---
 --- If `true`, call |vim.diagnostic.open_float()| after moving.
 --- If a table, pass the table as the {opts} parameter to |vim.diagnostic.open_float()|.
