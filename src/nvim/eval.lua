@@ -12456,6 +12456,7 @@ M.funcs = {
     ]=],
     name = 'undotree',
     params = { { 'buf', 'integer|string' } },
+    returns = 'vim.fn.undotree.ret',
     signature = 'undotree([{buf}])',
   },
   uniq = {
