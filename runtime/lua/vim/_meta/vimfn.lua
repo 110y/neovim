@@ -6707,7 +6707,7 @@ function vim.fn.printf(fmt, expr1) end
 --- If the buffer doesn't exist or isn't a prompt buffer, an empty
 --- string is returned.
 ---
---- @param buf any
+--- @param buf integer|string
 --- @return any
 function vim.fn.prompt_getprompt(buf) end
 
@@ -6742,8 +6742,8 @@ function vim.fn.prompt_getprompt(buf) end
 ---    endfunc
 ---    call prompt_setcallback(bufnr(), function('s:TextEntered'))
 ---
---- @param buf any
---- @param expr any
+--- @param buf integer|string
+--- @param expr string|function
 --- @return any
 function vim.fn.prompt_setcallback(buf, expr) end
 
@@ -6755,8 +6755,8 @@ function vim.fn.prompt_setcallback(buf, expr) end
 --- mode.  Without setting a callback Vim will exit Insert mode,
 --- as in any buffer.
 ---
---- @param buf any
---- @param expr any
+--- @param buf integer|string
+--- @param expr string|function
 --- @return any
 function vim.fn.prompt_setinterrupt(buf, expr) end
 
@@ -6767,8 +6767,8 @@ function vim.fn.prompt_setinterrupt(buf, expr) end
 ---   call prompt_setprompt(bufnr(''), 'command: ')
 --- <
 ---
---- @param buf any
---- @param text any
+--- @param buf integer|string
+--- @param text string
 --- @return any
 function vim.fn.prompt_setprompt(buf, text) end
 
