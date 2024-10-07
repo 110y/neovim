@@ -54,7 +54,7 @@ M.funcs = {
 
     ]=],
     name = 'abs',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'abs({expr})',
     returns = 'number',
   },
@@ -77,7 +77,7 @@ M.funcs = {
     ]=],
     float_func = 'acos',
     name = 'acos',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = 'number',
     signature = 'acos({expr})',
   },
@@ -99,6 +99,7 @@ M.funcs = {
     name = 'add',
     params = { { 'object', 'any' }, { 'expr', 'any' } },
     returns = 'any',
+    returns_desc = [=[Resulting |List| or |Blob|, or 1 if {object} is not a |List| or a |Blob|.]=],
     signature = 'add({object}, {expr})',
   },
   ['and'] = {
@@ -113,7 +114,7 @@ M.funcs = {
       <
     ]=],
     name = 'and',
-    params = { { 'expr', 'any' }, { 'expr', 'any' } },
+    params = { { 'expr', 'number' }, { 'expr', 'number' } },
     returns = 'integer',
     signature = 'and({expr}, {expr})',
   },
@@ -151,7 +152,7 @@ M.funcs = {
 
     ]=],
     name = 'append',
-    params = { { 'lnum', 'integer' }, { 'text', 'any' } },
+    params = { { 'lnum', 'integer' }, { 'text', 'string|string[]' } },
     returns = '0|1',
     signature = 'append({lnum}, {text})',
   },
@@ -181,7 +182,7 @@ M.funcs = {
 
     ]=],
     name = 'appendbufline',
-    params = { { 'buf', 'any' }, { 'lnum', 'integer' }, { 'text', 'string' } },
+    params = { { 'buf', 'integer|string' }, { 'lnum', 'integer' }, { 'text', 'string' } },
     returns = '0|1',
     signature = 'appendbufline({buf}, {lnum}, {text})',
   },
@@ -291,7 +292,7 @@ M.funcs = {
 
     ]=],
     name = 'assert_beeps',
-    params = { { 'cmd', 'any' } },
+    params = { { 'cmd', 'string' } },
     returns = '0|1',
     signature = 'assert_beeps({cmd})',
   },
@@ -333,7 +334,7 @@ M.funcs = {
 
     ]=],
     name = 'assert_equalfile',
-    params = {},
+    params = { { 'fname-one', 'string' }, { 'fname-two', 'string' } },
     returns = '0|1',
     signature = 'assert_equalfile({fname-one}, {fname-two})',
   },
@@ -398,7 +399,7 @@ M.funcs = {
     ]=],
     name = 'assert_fails',
     params = {
-      { 'cmd', 'any' },
+      { 'cmd', 'string' },
       { 'error', 'any' },
       { 'msg', 'any' },
       { 'lnum', 'integer' },
@@ -439,7 +440,12 @@ M.funcs = {
       that.
     ]=],
     name = 'assert_inrange',
-    params = { { 'lower', 'any' }, { 'upper', 'any' }, { 'actual', 'any' }, { 'msg', 'any' } },
+    params = {
+      { 'lower', 'number' },
+      { 'upper', 'number' },
+      { 'actual', 'number' },
+      { 'msg', 'string' },
+    },
     returns = '0|1',
     signature = 'assert_inrange({lower}, {upper}, {actual} [, {msg}])',
   },
@@ -468,7 +474,7 @@ M.funcs = {
 
     ]=],
     name = 'assert_match',
-    params = { { 'pattern', 'any' }, { 'actual', 'any' }, { 'msg', 'any' } },
+    params = { { 'pattern', 'string' }, { 'actual', 'string' }, { 'msg', 'string' } },
     returns = '0|1',
     signature = 'assert_match({pattern}, {actual} [, {msg}])',
   },
@@ -482,7 +488,7 @@ M.funcs = {
 
     ]=],
     name = 'assert_nobeep',
-    params = { { 'cmd', 'any' } },
+    params = { { 'cmd', 'string' } },
     returns = '0|1',
     signature = 'assert_nobeep({cmd})',
   },
@@ -510,7 +516,7 @@ M.funcs = {
 
     ]=],
     name = 'assert_notmatch',
-    params = { { 'pattern', 'any' }, { 'actual', 'any' }, { 'msg', 'any' } },
+    params = { { 'pattern', 'string' }, { 'actual', 'string' }, { 'msg', 'string' } },
     returns = '0|1',
     signature = 'assert_notmatch({pattern}, {actual} [, {msg}])',
   },
@@ -523,7 +529,7 @@ M.funcs = {
 
     ]=],
     name = 'assert_report',
-    params = { { 'msg', 'any' } },
+    params = { { 'msg', 'string' } },
     returns = '0|1',
     signature = 'assert_report({msg})',
   },
@@ -541,7 +547,7 @@ M.funcs = {
 
     ]=],
     name = 'assert_true',
-    params = { { 'actual', 'any' }, { 'msg', 'any' } },
+    params = { { 'actual', 'any' }, { 'msg', 'string' } },
     returns = '0|1',
     signature = 'assert_true({actual} [, {msg}])',
   },
@@ -562,7 +568,7 @@ M.funcs = {
     ]=],
     float_func = 'atan',
     name = 'atan',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = 'number',
     signature = 'atan({expr})',
   },
@@ -583,7 +589,7 @@ M.funcs = {
 
     ]=],
     name = 'atan2',
-    params = { { 'expr1', 'any' }, { 'expr2', 'any' } },
+    params = { { 'expr1', 'number' }, { 'expr2', 'number' } },
     returns = 'number',
     signature = 'atan2({expr1}, {expr2})',
   },
@@ -618,7 +624,12 @@ M.funcs = {
       something went wrong, or browsing is not possible.
     ]=],
     name = 'browse',
-    params = { { 'save', 'any' }, { 'title', 'any' }, { 'initdir', 'any' }, { 'default', 'any' } },
+    params = {
+      { 'save', 'any' },
+      { 'title', 'string' },
+      { 'initdir', 'string' },
+      { 'default', 'string' },
+    },
     returns = '0|1',
     signature = 'browse({save}, {title}, {initdir}, {default})',
   },
@@ -637,7 +648,7 @@ M.funcs = {
       browsing is not possible, an empty string is returned.
     ]=],
     name = 'browsedir',
-    params = { { 'title', 'any' }, { 'initdir', 'any' } },
+    params = { { 'title', 'string' }, { 'initdir', 'string' } },
     returns = '0|1',
     signature = 'browsedir({title}, {initdir})',
   },
@@ -1006,7 +1017,7 @@ M.funcs = {
     ]=],
     float_func = 'ceil',
     name = 'ceil',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = 'number',
     signature = 'ceil({expr})',
   },
@@ -1023,7 +1034,7 @@ M.funcs = {
       omitted.
     ]=],
     name = 'chanclose',
-    params = { { 'id', 'any' }, { 'stream', 'any' } },
+    params = { { 'id', 'integer' }, { 'stream', 'string' } },
     returns = '0|1',
     signature = 'chanclose({id} [, {stream}])',
   },
@@ -1063,7 +1074,7 @@ M.funcs = {
       messages, use |rpcnotify()| and |rpcrequest()| instead.
     ]=],
     name = 'chansend',
-    params = { { 'id', 'any' }, { 'data', 'any' } },
+    params = { { 'id', 'number' }, { 'data', 'string|string[]' } },
     returns = '0|1',
     signature = 'chansend({id}, {data})',
   },
@@ -1122,10 +1133,11 @@ M.funcs = {
       With the cursor on '세' in line 5 with text "여보세요": >vim
       	echo charcol('.')	" returns 3
       	echo col('.')		" returns 7
+      <
 
     ]=],
     name = 'charcol',
-    params = { { 'expr', 'any' }, { 'winid', 'integer' } },
+    params = { { 'expr', 'string|integer[]' }, { 'winid', 'integer' } },
     returns = 'integer',
     signature = 'charcol({expr} [, {winid}])',
   },
@@ -1170,8 +1182,8 @@ M.funcs = {
     params = {
       { 'string', 'string' },
       { 'idx', 'integer' },
-      { 'countcc', 'any' },
-      { 'utf16', 'any' },
+      { 'countcc', 'boolean' },
+      { 'utf16', 'boolean' },
     },
     returns = 'integer',
     signature = 'charidx({string}, {idx} [, {countcc} [, {utf16}]])',
@@ -1200,6 +1212,7 @@ M.funcs = {
       	   " ... do some work
       	   call chdir(save_dir)
       	endif
+      <
 
     ]=],
     name = 'chdir',
@@ -1235,7 +1248,7 @@ M.funcs = {
 
     ]=],
     name = 'clearmatches',
-    params = { { 'win', 'any' } },
+    params = { { 'win', 'integer' } },
     returns = false,
     signature = 'clearmatches([{win}])',
   },
@@ -1279,10 +1292,11 @@ M.funcs = {
       line.  Also, when using a <Cmd> mapping the cursor isn't
       moved, this can be used to obtain the column in Insert mode: >vim
       	imap <F2> <Cmd>echo col(".").."\n"<CR>
+      <
 
     ]=],
     name = 'col',
-    params = { { 'expr', 'any' }, { 'winid', 'integer' } },
+    params = { { 'expr', 'string|integer[]' }, { 'winid', 'integer' } },
     returns = 'integer',
     signature = 'col({expr} [, {winid}])',
   },
@@ -1321,7 +1335,7 @@ M.funcs = {
 
     ]=],
     name = 'complete',
-    params = { { 'startcol', 'any' }, { 'matches', 'any' } },
+    params = { { 'startcol', 'integer' }, { 'matches', 'any[]' } },
     returns = false,
     signature = 'complete({startcol}, {matches})',
     tags = { 'E785' },
@@ -1420,10 +1434,11 @@ M.funcs = {
       	call complete_info(['mode'])
       	" Get only 'mode' and 'pum_visible'
       	call complete_info(['mode', 'pum_visible'])
+      <
 
     ]=],
     name = 'complete_info',
-    params = { { 'what', 'any' } },
+    params = { { 'what', 'any[]' } },
     returns = 'table',
     signature = 'complete_info([{what}])',
   },
@@ -1484,7 +1499,12 @@ M.funcs = {
 
     ]=],
     name = 'confirm',
-    params = { { 'msg', 'any' }, { 'choices', 'any' }, { 'default', 'any' }, { 'type', 'any' } },
+    params = {
+      { 'msg', 'string' },
+      { 'choices', 'string' },
+      { 'default', 'integer' },
+      { 'type', 'string' },
+    },
     returns = 'integer',
     signature = 'confirm({msg} [, {choices} [, {default} [, {type}]]])',
   },
@@ -1522,7 +1542,7 @@ M.funcs = {
     ]=],
     float_func = 'cos',
     name = 'cos',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = 'number',
     signature = 'cos({expr})',
   },
@@ -1543,7 +1563,7 @@ M.funcs = {
     ]=],
     float_func = 'cosh',
     name = 'cosh',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = 'number',
     signature = 'cosh({expr})',
   },
@@ -1566,7 +1586,12 @@ M.funcs = {
 
     ]=],
     name = 'count',
-    params = { { 'comp', 'any' }, { 'expr', 'any' }, { 'ic', 'any' }, { 'start', 'any' } },
+    params = {
+      { 'comp', 'string|table|any[]' },
+      { 'expr', 'any' },
+      { 'ic', 'boolean' },
+      { 'start', 'integer' },
+    },
     returns = 'integer',
     signature = 'count({comp}, {expr} [, {ic} [, {start}]])',
   },
@@ -1578,7 +1603,7 @@ M.funcs = {
       If {index} is not given, it is assumed to be 0 (i.e.: top).
     ]=],
     name = 'ctxget',
-    params = { { 'index', 'any' } },
+    params = { { 'index', 'integer' } },
     returns = 'table',
     signature = 'ctxget([{index}])',
   },
@@ -1601,7 +1626,7 @@ M.funcs = {
       Otherwise, all context types are included.
     ]=],
     name = 'ctxpush',
-    params = { { 'types', 'any' } },
+    params = { { 'types', 'string[]' } },
     signature = 'ctxpush([{types}])',
   },
   ctxset = {
@@ -1613,7 +1638,7 @@ M.funcs = {
       If {index} is not given, it is assumed to be 0 (i.e.: top).
     ]=],
     name = 'ctxset',
-    params = { { 'context', 'any' }, { 'index', 'any' } },
+    params = { { 'context', 'table' }, { 'index', 'integer' } },
     signature = 'ctxset({context} [, {index}])',
   },
   ctxsize = {
@@ -1628,7 +1653,7 @@ M.funcs = {
     args = { 1, 3 },
     base = 1,
     name = 'cursor',
-    params = { { 'lnum', 'integer' }, { 'col', 'integer' }, { 'off', 'any' } },
+    params = { { 'lnum', 'integer' }, { 'col', 'integer' }, { 'off', 'integer' } },
     signature = 'cursor({lnum}, {col} [, {off}])',
   },
   cursor__1 = {
@@ -1668,7 +1693,7 @@ M.funcs = {
 
     ]=],
     name = 'cursor',
-    params = { { 'list', 'any' } },
+    params = { { 'list', 'integer[]' } },
     signature = 'cursor({list})',
   },
   debugbreak = {
@@ -1685,7 +1710,7 @@ M.funcs = {
 
     ]=],
     name = 'debugbreak',
-    params = { { 'pid', 'any' } },
+    params = { { 'pid', 'integer' } },
     signature = 'debugbreak({pid})',
   },
   deepcopy = {
@@ -1714,7 +1739,7 @@ M.funcs = {
 
     ]=],
     name = 'deepcopy',
-    params = { { 'expr', 'any' }, { 'noref', 'any' } },
+    params = { { 'expr', 'any' }, { 'noref', 'boolean' } },
     signature = 'deepcopy({expr} [, {noref}])',
   },
   delete = {
@@ -1764,7 +1789,11 @@ M.funcs = {
 
     ]=],
     name = 'deletebufline',
-    params = { { 'buf', 'any' }, { 'first', 'any' }, { 'last', 'any' } },
+    params = {
+      { 'buf', 'integer|string' },
+      { 'first', 'integer|string' },
+      { 'last', 'integer|string' },
+    },
     signature = 'deletebufline({buf}, {first} [, {last}])',
   },
   dictwatcheradd = {
@@ -1810,7 +1839,7 @@ M.funcs = {
       validation and parsing logic.
     ]=],
     name = 'dictwatcheradd',
-    params = { { 'dict', 'any' }, { 'pattern', 'any' }, { 'callback', 'any' } },
+    params = { { 'dict', 'table' }, { 'pattern', 'string' }, { 'callback', 'function' } },
     signature = 'dictwatcheradd({dict}, {pattern}, {callback})',
   },
   dictwatcherdel = {
@@ -1821,7 +1850,7 @@ M.funcs = {
       order for the watcher to be successfully deleted.
     ]=],
     name = 'dictwatcherdel',
-    params = { { 'dict', 'any' }, { 'pattern', 'any' }, { 'callback', 'any' } },
+    params = { { 'dict', 'any' }, { 'pattern', 'string' }, { 'callback', 'function' } },
     signature = 'dictwatcherdel({dict}, {pattern}, {callback})',
   },
   did_filetype = {
@@ -1900,7 +1929,7 @@ M.funcs = {
       <
     ]=],
     name = 'digraph_get',
-    params = { { 'chars', 'any' } },
+    params = { { 'chars', 'string' } },
     signature = 'digraph_get({chars})',
   },
   digraph_getlist = {
@@ -1922,7 +1951,7 @@ M.funcs = {
       <
     ]=],
     name = 'digraph_getlist',
-    params = { { 'listall', 'any' } },
+    params = { { 'listall', 'boolean' } },
     signature = 'digraph_getlist([{listall}])',
   },
   digraph_set = {
@@ -1945,12 +1974,9 @@ M.funcs = {
       Example: >vim
       	call digraph_set('  ', 'あ')
       <
-      Can be used as a |method|: >vim
-      	GetString()->digraph_set('あ')
-      <
     ]=],
     name = 'digraph_set',
-    params = { { 'chars', 'any' }, { 'digraph', 'any' } },
+    params = { { 'chars', 'string' }, { 'digraph', 'string' } },
     signature = 'digraph_set({chars}, {digraph})',
   },
   digraph_setlist = {
@@ -1970,13 +1996,9 @@ M.funcs = {
           endfor
       <Except that the function returns after the first error,
       following digraphs will not be added.
-
-      Can be used as a |method|: >vim
-          GetList()->digraph_setlist()
-      <
     ]=],
     name = 'digraph_setlist',
-    params = { { 'digraphlist', 'any' } },
+    params = { { 'digraphlist', 'table<integer,string[]>' } },
     signature = 'digraph_setlist({digraphlist})',
   },
   empty = {
@@ -2025,7 +2047,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'escape',
-    params = { { 'string', 'string' }, { 'chars', 'any' } },
+    params = { { 'string', 'string' }, { 'chars', 'string' } },
     signature = 'escape({string}, {chars})',
   },
   eval = {
@@ -2089,7 +2111,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'executable',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'string' } },
     returns = '0|1',
     signature = 'executable({expr})',
   },
@@ -2144,7 +2166,7 @@ M.funcs = {
 
     ]=],
     name = 'exepath',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'string' } },
     signature = 'exepath({expr})',
     returns = 'string',
   },
@@ -2242,7 +2264,7 @@ M.funcs = {
 
     ]=],
     name = 'exists',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'string' } },
     returns = '0|1',
     signature = 'exists({expr})',
   },
@@ -2263,7 +2285,7 @@ M.funcs = {
     ]=],
     float_func = 'exp',
     name = 'exp',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'exp({expr})',
   },
   expand = {
@@ -2449,7 +2471,7 @@ M.funcs = {
 
     ]=],
     name = 'extend',
-    params = { { 'expr1', 'any' }, { 'expr2', 'any' }, { 'expr3', 'any' } },
+    params = { { 'expr1', 'table' }, { 'expr2', 'table' }, { 'expr3', 'table' } },
     signature = 'extend({expr1}, {expr2} [, {expr3}])',
   },
   extendnew = {
@@ -2461,7 +2483,7 @@ M.funcs = {
       unchanged.
     ]=],
     name = 'extendnew',
-    params = { { 'expr1', 'any' }, { 'expr2', 'any' }, { 'expr3', 'any' } },
+    params = { { 'expr1', 'table' }, { 'expr2', 'table' }, { 'expr3', 'table' } },
     signature = 'extendnew({expr1}, {expr2} [, {expr3}])',
   },
   feedkeys = {
@@ -2648,7 +2670,7 @@ M.funcs = {
 
     ]=],
     name = 'filter',
-    params = { { 'expr1', 'any' }, { 'expr2', 'any' } },
+    params = { { 'expr1', 'string|table' }, { 'expr2', 'string|function' } },
     signature = 'filter({expr1}, {expr2})',
   },
   finddir = {
@@ -2674,7 +2696,7 @@ M.funcs = {
 
     ]=],
     name = 'finddir',
-    params = { { 'name', 'string' }, { 'path', 'string' }, { 'count', 'any' } },
+    params = { { 'name', 'string' }, { 'path', 'string' }, { 'count', 'integer' } },
     signature = 'finddir({name} [, {path} [, {count}]])',
   },
   findfile = {
@@ -2717,7 +2739,7 @@ M.funcs = {
 
     ]=],
     name = 'flatten',
-    params = { { 'list', 'any' }, { 'maxdepth', 'any' } },
+    params = { { 'list', 'any[]' }, { 'maxdepth', 'integer' } },
     returns = 'any[]|0',
     signature = 'flatten({list} [, {maxdepth}])',
   },
@@ -2728,7 +2750,7 @@ M.funcs = {
       Like |flatten()| but first make a copy of {list}.
     ]=],
     name = 'flattennew',
-    params = { { 'list', 'any' }, { 'maxdepth', 'any' } },
+    params = { { 'list', 'any[]' }, { 'maxdepth', 'integer' } },
     returns = 'any[]|0',
     signature = 'flattennew({list} [, {maxdepth}])',
   },
@@ -2759,7 +2781,7 @@ M.funcs = {
 
     ]=],
     name = 'float2nr',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'float2nr({expr})',
   },
   floor = {
@@ -2781,7 +2803,7 @@ M.funcs = {
     ]=],
     float_func = 'floor',
     name = 'floor',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'floor({expr})',
   },
   fmod = {
@@ -2805,7 +2827,7 @@ M.funcs = {
 
     ]=],
     name = 'fmod',
-    params = { { 'expr1', 'any' }, { 'expr2', 'any' } },
+    params = { { 'expr1', 'number' }, { 'expr2', 'number' } },
     signature = 'fmod({expr1}, {expr2})',
   },
   fnameescape = {
@@ -2994,7 +3016,7 @@ M.funcs = {
       unless it was defined with the "abort" flag.
     ]=],
     name = 'foreach',
-    params = { { 'expr1', 'any' }, { 'expr2', 'any' } },
+    params = { { 'expr1', 'string|table' }, { 'expr2', 'string|function' } },
     signature = 'foreach({expr1}, {expr2})',
   },
   foreground = {
@@ -3157,7 +3179,7 @@ M.funcs = {
       type a character.
     ]=],
     name = 'garbagecollect',
-    params = { { 'atexit', 'any' } },
+    params = { { 'atexit', 'boolean' } },
     signature = 'garbagecollect([{atexit}])',
   },
   get = {
@@ -3344,10 +3366,11 @@ M.funcs = {
 
       Example: >vim
       	let lines = getbufline(bufnr("myfile"), 1, "$")
+      <
 
     ]=],
     name = 'getbufline',
-    params = { { 'buf', 'any' }, { 'lnum', 'integer' }, { 'end', 'integer' } },
+    params = { { 'buf', 'integer|string' }, { 'lnum', 'integer' }, { 'end', 'integer' } },
     signature = 'getbufline({buf}, {lnum} [, {end}])',
   },
   getbufoneline = {
@@ -3388,7 +3411,7 @@ M.funcs = {
 
     ]=],
     name = 'getbufvar',
-    params = { { 'buf', 'any' }, { 'varname', 'string' }, { 'def', 'any' } },
+    params = { { 'buf', 'integer|string' }, { 'varname', 'string' }, { 'def', 'any' } },
     signature = 'getbufvar({buf}, {varname} [, {def}])',
   },
   getcellwidths = {
@@ -3539,7 +3562,7 @@ M.funcs = {
       <
     ]=],
     name = 'getcharpos',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'string' } },
     returns = 'integer[]',
     signature = 'getcharpos({expr})',
   },
@@ -3771,7 +3794,7 @@ M.funcs = {
 
     ]=],
     name = 'getcompletion',
-    params = { { 'pat', 'any' }, { 'type', 'any' }, { 'filtered', 'any' } },
+    params = { { 'pat', 'string' }, { 'type', 'string' }, { 'filtered', 'boolean' } },
     returns = 'string[]',
     signature = 'getcompletion({pat}, {type} [, {filtered}])',
   },
@@ -4093,7 +4116,7 @@ M.funcs = {
       <
     ]=],
     name = 'getloclist',
-    params = { { 'nr', 'integer' }, { 'what', 'any' } },
+    params = { { 'nr', 'integer' }, { 'what', 'table' } },
     signature = 'getloclist({nr} [, {what}])',
   },
   getmarklist = {
@@ -4159,7 +4182,7 @@ M.funcs = {
       <
     ]=],
     name = 'getmatches',
-    params = { { 'win', 'any' } },
+    params = { { 'win', 'integer' } },
     signature = 'getmatches([{win}])',
   },
   getmousepos = {
@@ -4385,7 +4408,7 @@ M.funcs = {
       <
     ]=],
     name = 'getqflist',
-    params = { { 'what', 'any' } },
+    params = { { 'what', 'table' } },
     signature = 'getqflist([{what}])',
   },
   getreg = {
@@ -4752,7 +4775,7 @@ M.funcs = {
       strings.
     ]=],
     name = 'gettext',
-    params = { { 'text', 'any' } },
+    params = { { 'text', 'string' } },
     signature = 'gettext({text})',
   },
   getwininfo = {
@@ -4905,7 +4928,12 @@ M.funcs = {
 
     ]=],
     name = 'glob',
-    params = { { 'expr', 'any' }, { 'nosuf', 'boolean' }, { 'list', 'any' }, { 'alllinks', 'any' } },
+    params = {
+      { 'expr', 'string' },
+      { 'nosuf', 'boolean' },
+      { 'list', 'boolean' },
+      { 'alllinks', 'boolean' },
+    },
     signature = 'glob({expr} [, {nosuf} [, {list} [, {alllinks}]]])',
   },
   glob2regpat = {
@@ -4974,10 +5002,10 @@ M.funcs = {
     name = 'globpath',
     params = {
       { 'path', 'string' },
-      { 'expr', 'any' },
+      { 'expr', 'string' },
       { 'nosuf', 'boolean' },
-      { 'list', 'any' },
-      { 'allinks', 'any' },
+      { 'list', 'boolean' },
+      { 'allinks', 'boolean' },
     },
     signature = 'globpath({path}, {expr} [, {nosuf} [, {list} [, {allinks}]]])',
   },
@@ -5053,7 +5081,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'has',
-    params = { { 'feature', 'any' } },
+    params = { { 'feature', 'string' } },
     returns = '0|1',
     signature = 'has({feature})',
   },
@@ -5067,7 +5095,7 @@ M.funcs = {
 
     ]=],
     name = 'has_key',
-    params = { { 'dict', 'any' }, { 'key', 'any' } },
+    params = { { 'dict', 'table' }, { 'key', 'string' } },
     returns = '0|1',
     signature = 'has_key({dict}, {key})',
   },
@@ -5133,7 +5161,7 @@ M.funcs = {
 
     ]=],
     name = 'hasmapto',
-    params = { { 'what', 'any' }, { 'mode', 'string' }, { 'abbr', 'any' } },
+    params = { { 'what', 'any' }, { 'mode', 'string' }, { 'abbr', 'boolean' } },
     returns = '0|1',
     signature = 'hasmapto({what} [, {mode} [, {abbr}]])',
   },
@@ -5185,7 +5213,7 @@ M.funcs = {
 
     ]=],
     name = 'histadd',
-    params = { { 'history', 'any' }, { 'item', 'any' } },
+    params = { { 'history', 'string' }, { 'item', 'any' } },
     returns = '0|1',
     signature = 'histadd({history}, {item})',
   },
@@ -5226,7 +5254,7 @@ M.funcs = {
       <
     ]=],
     name = 'histdel',
-    params = { { 'history', 'any' }, { 'item', 'any' } },
+    params = { { 'history', 'string' }, { 'item', 'any' } },
     returns = '0|1',
     signature = 'histdel({history} [, {item}])',
   },
@@ -5250,7 +5278,7 @@ M.funcs = {
       <
     ]=],
     name = 'histget',
-    params = { { 'history', 'any' }, { 'index', 'any' } },
+    params = { { 'history', 'string' }, { 'index', 'integer|string' } },
     returns = 'string',
     signature = 'histget({history} [, {index}])',
   },
@@ -5264,10 +5292,11 @@ M.funcs = {
 
       Example: >vim
       	let inp_index = histnr("expr")
+      <
 
     ]=],
     name = 'histnr',
-    params = { { 'history', 'any' } },
+    params = { { 'history', 'string' } },
     returns = 'integer',
     signature = 'histnr({history})',
   },
@@ -5335,7 +5364,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'iconv',
-    params = { { 'string', 'string' }, { 'from', 'any' }, { 'to', 'any' } },
+    params = { { 'string', 'string' }, { 'from', 'string' }, { 'to', 'string' } },
     signature = 'iconv({string}, {from}, {to})',
   },
   id = {
@@ -5406,10 +5435,11 @@ M.funcs = {
       	if index(numbers, 123) >= 0
       	  " ...
       	endif
+      <
 
     ]=],
     name = 'index',
-    params = { { 'object', 'any' }, { 'expr', 'any' }, { 'start', 'any' }, { 'ic', 'any' } },
+    params = { { 'object', 'any' }, { 'expr', 'any' }, { 'start', 'integer' }, { 'ic', 'boolean' } },
     signature = 'index({object}, {expr} [, {start} [, {ic}]])',
   },
   indexof = {
@@ -5452,6 +5482,7 @@ M.funcs = {
       	echo indexof(l, "v:val.n == 20")
       	echo indexof(l, {i, v -> v.n == 30})
       	echo indexof(l, "v:val.n == 20", #{startidx: 1})
+      <
 
     ]=],
     name = 'indexof',
@@ -5463,7 +5494,7 @@ M.funcs = {
     base = 1,
     desc = '',
     name = 'input',
-    params = { { 'prompt', 'any' }, { 'text', 'any' }, { 'completion', 'any' } },
+    params = { { 'prompt', 'string' }, { 'text', 'string' }, { 'completion', 'string' } },
     signature = 'input({prompt} [, {text} [, {completion}]])',
   },
   input__1 = {
@@ -5578,6 +5609,7 @@ M.funcs = {
       	  let g:Foo = input("enter search pattern: ")
       	  call inputrestore()
       	endfunction
+      <
 
     ]=],
     name = 'input',
@@ -5616,7 +5648,7 @@ M.funcs = {
 
     ]=],
     name = 'inputlist',
-    params = { { 'textlist', 'any' } },
+    params = { { 'textlist', 'string[]' } },
     signature = 'inputlist({textlist})',
   },
   inputrestore = {
@@ -5659,7 +5691,7 @@ M.funcs = {
 
     ]=],
     name = 'inputsecret',
-    params = { { 'prompt', 'any' }, { 'text', 'any' } },
+    params = { { 'prompt', 'string' }, { 'text', 'string' } },
     signature = 'inputsecret({prompt} [, {text}])',
   },
   insert = {
@@ -5717,7 +5749,7 @@ M.funcs = {
       <
     ]=],
     name = 'invert',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'invert({expr})',
   },
   isabsolutepath = {
@@ -5740,7 +5772,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'isabsolutepath',
-    params = { { 'path', 'any' } },
+    params = { { 'path', 'string' } },
     returns = '0|1',
     signature = 'isabsolutepath({path})',
   },
@@ -5756,7 +5788,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'isdirectory',
-    params = { { 'directory', 'any' } },
+    params = { { 'directory', 'string' } },
     returns = '0|1',
     signature = 'isdirectory({directory})',
   },
@@ -5773,7 +5805,7 @@ M.funcs = {
 
     ]=],
     name = 'isinf',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = '1|0|-1',
     signature = 'isinf({expr})',
   },
@@ -5811,7 +5843,7 @@ M.funcs = {
 
     ]=],
     name = 'isnan',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = '0|1',
     signature = 'isnan({expr})',
   },
@@ -5852,7 +5884,7 @@ M.funcs = {
       Return the PID (process id) of |job-id| {job}.
     ]=],
     name = 'jobpid',
-    params = { { 'job', 'any' } },
+    params = { { 'job', 'integer' } },
     returns = 'integer',
     signature = 'jobpid({job})',
   },
@@ -5864,7 +5896,7 @@ M.funcs = {
       Fails if the job was not started with `"pty":v:true`.
     ]=],
     name = 'jobresize',
-    params = { { 'job', 'any' }, { 'width', 'integer' }, { 'height', 'integer' } },
+    params = { { 'job', 'integer' }, { 'width', 'integer' }, { 'height', 'integer' } },
     signature = 'jobresize({job}, {width}, {height})',
   },
   jobsend = {
@@ -5966,7 +5998,7 @@ M.funcs = {
       See also |job-control|, |channel|, |msgpack-rpc|.
     ]=],
     name = 'jobstart',
-    params = { { 'cmd', 'any' }, { 'opts', 'table' } },
+    params = { { 'cmd', 'string|string[]' }, { 'opts', 'table' } },
     signature = 'jobstart({cmd} [, {opts}])',
   },
   jobstop = {
@@ -5982,7 +6014,7 @@ M.funcs = {
       exited or stopped.
     ]=],
     name = 'jobstop',
-    params = { { 'id', 'any' } },
+    params = { { 'id', 'integer' } },
     signature = 'jobstop({id})',
   },
   jobwait = {
@@ -6009,7 +6041,7 @@ M.funcs = {
       	-3 if the job-id is invalid
     ]=],
     name = 'jobwait',
-    params = { { 'jobs', 'any' }, { 'timeout', 'integer' } },
+    params = { { 'jobs', 'integer[]' }, { 'timeout', 'integer' } },
     signature = 'jobwait({jobs} [, {timeout}])',
   },
   join = {
@@ -6028,7 +6060,7 @@ M.funcs = {
 
     ]=],
     name = 'join',
-    params = { { 'list', 'any' }, { 'sep', 'any' } },
+    params = { { 'list', 'any[]' }, { 'sep', 'string' } },
     signature = 'join({list} [, {sep}])',
   },
   json_decode = {
@@ -6083,7 +6115,7 @@ M.funcs = {
 
     ]=],
     name = 'keys',
-    params = { { 'dict', 'any' } },
+    params = { { 'dict', 'table' } },
     signature = 'keys({dict})',
   },
   keytrans = {
@@ -6221,7 +6253,7 @@ M.funcs = {
 
     ]=],
     name = 'line',
-    params = { { 'expr', 'any' }, { 'winid', 'integer' } },
+    params = { { 'expr', 'string|integer[]' }, { 'winid', 'integer' } },
     returns = 'integer',
     signature = 'line({expr} [, {winid}])',
   },
@@ -6277,7 +6309,7 @@ M.funcs = {
 
     ]=],
     name = 'list2blob',
-    params = { { 'list', 'any' } },
+    params = { { 'list', 'any[]' } },
     signature = 'list2blob({list})',
   },
   list2str = {
@@ -6301,7 +6333,7 @@ M.funcs = {
 
     ]=],
     name = 'list2str',
-    params = { { 'list', 'any' }, { 'utf8', 'any' } },
+    params = { { 'list', 'any[]' }, { 'utf8', 'boolean' } },
     signature = 'list2str({list} [, {utf8}])',
   },
   localtime = {
@@ -6330,7 +6362,7 @@ M.funcs = {
     ]=],
     float_func = 'log',
     name = 'log',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'log({expr})',
   },
   log10 = {
@@ -6349,7 +6381,7 @@ M.funcs = {
     ]=],
     float_func = 'log10',
     name = 'log10',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'log10({expr})',
   },
   luaeval = {
@@ -6362,7 +6394,7 @@ M.funcs = {
     ]=],
     lua = false,
     name = 'luaeval',
-    params = { { 'expr', 'any' }, { 'expr', 'any' } },
+    params = { { 'expr', 'string' }, { 'expr', 'any[]' } },
     signature = 'luaeval({expr} [, {expr}])',
   },
   map = {
@@ -6424,7 +6456,7 @@ M.funcs = {
 
     ]=],
     name = 'map',
-    params = { { 'expr1', 'any' }, { 'expr2', 'any' } },
+    params = { { 'expr1', 'string|table|any[]' }, { 'expr2', 'string|function' } },
     signature = 'map({expr1}, {expr2})',
   },
   maparg = {
@@ -6502,6 +6534,7 @@ M.funcs = {
       This function can be used to map a key even when it's already
       mapped, and have it do the original mapping too.  Sketch: >vim
       	exe 'nnoremap <Tab> ==' .. maparg('<Tab>', 'n')
+      <
 
     ]=],
     name = 'maparg',
@@ -6564,7 +6597,7 @@ M.funcs = {
 
     ]=],
     name = 'mapcheck',
-    params = { { 'name', 'string' }, { 'mode', 'string' }, { 'abbr', 'any' } },
+    params = { { 'name', 'string' }, { 'mode', 'string' }, { 'abbr', 'boolean' } },
     signature = 'mapcheck({name} [, {mode} [, {abbr}]])',
   },
   maplist = {
@@ -6599,6 +6632,7 @@ M.funcs = {
       	    \ {_, m -> m.lhs == 'xyzzy'})[0].mode_bits
       	ounmap xyzzy
       	echo printf("Operator-pending mode bit: 0x%x", op_bit)
+      <
     ]],
     name = 'maplist',
     params = { { 'abbr', '0|1' } },
@@ -6622,7 +6656,7 @@ M.funcs = {
     args = { 1, 3 },
     base = 1,
     name = 'mapset',
-    params = { { 'mode', 'string' }, { 'abbr', 'any' }, { 'dict', 'any' } },
+    params = { { 'mode', 'string' }, { 'abbr', 'boolean' }, { 'dict', 'boolean' } },
     signature = 'mapset({mode}, {abbr}, {dict})',
   },
   mapset__1 = {
@@ -6663,9 +6697,10 @@ M.funcs = {
       	for d in save_maps
       	    call mapset(d)
       	endfor
+      <
     ]=],
     name = 'mapset',
-    params = { { 'dict', 'any' } },
+    params = { { 'dict', 'boolean' } },
     signature = 'mapset({dict})',
   },
   match = {
@@ -6736,7 +6771,12 @@ M.funcs = {
 
     ]=],
     name = 'match',
-    params = { { 'expr', 'any' }, { 'pat', 'any' }, { 'start', 'any' }, { 'count', 'any' } },
+    params = {
+      { 'expr', 'string|any[]' },
+      { 'pat', 'string' },
+      { 'start', 'integer' },
+      { 'count', 'integer' },
+    },
     signature = 'match({expr}, {pat} [, {start} [, {count}]])',
   },
   matchadd = {
@@ -6803,11 +6843,11 @@ M.funcs = {
     ]=],
     name = 'matchadd',
     params = {
-      { 'group', 'any' },
-      { 'pattern', 'any' },
-      { 'priority', 'any' },
-      { 'id', 'any' },
-      { 'dict', 'any' },
+      { 'group', 'integer|string' },
+      { 'pattern', 'string' },
+      { 'priority', 'integer' },
+      { 'id', 'integer' },
+      { 'dict', 'string' },
     },
     signature = 'matchadd({group}, {pattern} [, {priority} [, {id} [, {dict}]]])',
     tags = { 'E798', 'E799', 'E801', 'E957' },
@@ -6855,11 +6895,11 @@ M.funcs = {
     ]=],
     name = 'matchaddpos',
     params = {
-      { 'group', 'any' },
-      { 'pos', 'any' },
-      { 'priority', 'any' },
-      { 'id', 'any' },
-      { 'dict', 'any' },
+      { 'group', 'integer|string' },
+      { 'pos', 'any[]' },
+      { 'priority', 'integer' },
+      { 'id', 'integer' },
+      { 'dict', 'string' },
     },
     signature = 'matchaddpos({group}, {pos} [, {priority} [, {id} [, {dict}]]])',
   },
@@ -6953,7 +6993,7 @@ M.funcs = {
 
     ]=],
     name = 'matchdelete',
-    params = { { 'id', 'any' }, { 'win', 'any' } },
+    params = { { 'id', 'integer' }, { 'win', 'integer' } },
     signature = 'matchdelete({id} [, {win}])',
     tags = { 'E802', 'E803' },
   },
@@ -6981,7 +7021,12 @@ M.funcs = {
 
     ]=],
     name = 'matchend',
-    params = { { 'expr', 'any' }, { 'pat', 'any' }, { 'start', 'any' }, { 'count', 'any' } },
+    params = {
+      { 'expr', 'any' },
+      { 'pat', 'string' },
+      { 'start', 'integer' },
+      { 'count', 'integer' },
+    },
     signature = 'matchend({expr}, {pat} [, {start} [, {count}]])',
   },
   matchfuzzy = {
@@ -7051,7 +7096,7 @@ M.funcs = {
       <results in `['two one']`.
     ]=],
     name = 'matchfuzzy',
-    params = { { 'list', 'any' }, { 'str', 'any' }, { 'dict', 'any' } },
+    params = { { 'list', 'any[]' }, { 'str', 'string' }, { 'dict', 'string' } },
     signature = 'matchfuzzy({list}, {str} [, {dict}])',
   },
   matchfuzzypos = {
@@ -7080,7 +7125,7 @@ M.funcs = {
       <results in `[[{"id": 10, "text": "hello"}], [[2, 3]], [127]]`
     ]=],
     name = 'matchfuzzypos',
-    params = { { 'list', 'any' }, { 'str', 'any' }, { 'dict', 'any' } },
+    params = { { 'list', 'any[]' }, { 'str', 'string' }, { 'dict', 'string' } },
     signature = 'matchfuzzypos({list}, {str} [, {dict}])',
   },
   matchlist = {
@@ -7100,7 +7145,12 @@ M.funcs = {
 
     ]=],
     name = 'matchlist',
-    params = { { 'expr', 'any' }, { 'pat', 'any' }, { 'start', 'any' }, { 'count', 'any' } },
+    params = {
+      { 'expr', 'any' },
+      { 'pat', 'string' },
+      { 'start', 'integer' },
+      { 'count', 'integer' },
+    },
     signature = 'matchlist({expr}, {pat} [, {start} [, {count}]])',
   },
   matchstr = {
@@ -7121,7 +7171,12 @@ M.funcs = {
 
     ]=],
     name = 'matchstr',
-    params = { { 'expr', 'any' }, { 'pat', 'any' }, { 'start', 'any' }, { 'count', 'any' } },
+    params = {
+      { 'expr', 'any' },
+      { 'pat', 'string' },
+      { 'start', 'integer' },
+      { 'count', 'integer' },
+    },
     signature = 'matchstr({expr}, {pat} [, {start} [, {count}]])',
   },
   matchstrlist = {
@@ -7187,7 +7242,12 @@ M.funcs = {
 
     ]=],
     name = 'matchstrpos',
-    params = { { 'expr', 'any' }, { 'pat', 'any' }, { 'start', 'any' }, { 'count', 'any' } },
+    params = {
+      { 'expr', 'any' },
+      { 'pat', 'string' },
+      { 'start', 'integer' },
+      { 'count', 'integer' },
+    },
     signature = 'matchstrpos({expr}, {pat} [, {start} [, {count}]])',
   },
   max = {
@@ -7257,7 +7317,7 @@ M.funcs = {
       <
     ]=],
     name = 'menu_get',
-    params = { { 'path', 'string' }, { 'modes', 'any' } },
+    params = { { 'path', 'string' }, { 'modes', 'string' } },
     signature = 'menu_get({path} [, {modes}])',
   },
   menu_info = {
@@ -7401,7 +7461,7 @@ M.funcs = {
 
     ]=],
     name = 'mkdir',
-    params = { { 'name', 'string' }, { 'flags', 'string' }, { 'prot', 'any' } },
+    params = { { 'name', 'string' }, { 'flags', 'string' }, { 'prot', 'string' } },
     signature = 'mkdir({name} [, {flags} [, {prot}]])',
     tags = { 'E739' },
   },
@@ -7603,7 +7663,7 @@ M.funcs = {
 
     ]=],
     name = 'nr2char',
-    params = { { 'expr', 'any' }, { 'utf8', 'any' } },
+    params = { { 'expr', 'integer' }, { 'utf8', 'boolean' } },
     signature = 'nr2char({expr} [, {utf8}])',
   },
   nvim_api__ = {
@@ -7642,7 +7702,7 @@ M.funcs = {
       "|" is an operator or a command separator.
     ]=],
     name = 'or',
-    params = { { 'expr', 'any' }, { 'expr', 'any' } },
+    params = { { 'expr', 'number' }, { 'expr', 'number' } },
     signature = 'or({expr}, {expr})',
   },
   pathshorten = {
@@ -7664,7 +7724,7 @@ M.funcs = {
 
     ]=],
     name = 'pathshorten',
-    params = { { 'path', 'string' }, { 'len', 'any' } },
+    params = { { 'path', 'string' }, { 'len', 'integer' } },
     signature = 'pathshorten({path} [, {len}])',
   },
   perleval = {
@@ -7707,7 +7767,7 @@ M.funcs = {
 
     ]=],
     name = 'pow',
-    params = { { 'x', 'any' }, { 'y', 'any' } },
+    params = { { 'x', 'number' }, { 'y', 'number' } },
     signature = 'pow({x}, {y})',
   },
   prevnonblank = {
@@ -8055,7 +8115,7 @@ M.funcs = {
 
     ]=],
     name = 'printf',
-    params = { { 'fmt', 'any' }, { 'expr1', 'any' } },
+    params = { { 'fmt', 'string' }, { 'expr1', 'any' } },
     signature = 'printf({fmt}, {expr1} ...)',
     returns = 'string',
   },
@@ -8247,7 +8307,7 @@ M.funcs = {
       <
     ]=],
     name = 'rand',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'rand([{expr}])',
   },
   range = {
@@ -8273,7 +8333,7 @@ M.funcs = {
       <
     ]=],
     name = 'range',
-    params = { { 'expr', 'any' }, { 'max', 'any' }, { 'stride', 'any' } },
+    params = { { 'expr', 'any' }, { 'max', 'integer' }, { 'stride', 'integer' } },
     signature = 'range({expr} [, {max} [, {stride}]])',
     tags = { 'E726', 'E727' },
   },
@@ -8305,7 +8365,7 @@ M.funcs = {
       Also see |readfile()| and |writefile()|.
     ]=],
     name = 'readblob',
-    params = { { 'fname', 'string' }, { 'offset', 'any' }, { 'size', 'any' } },
+    params = { { 'fname', 'string' }, { 'offset', 'integer' }, { 'size', 'integer' } },
     signature = 'readblob({fname} [, {offset} [, {size}]])',
   },
   readdir = {
@@ -8343,7 +8403,7 @@ M.funcs = {
 
     ]=],
     name = 'readdir',
-    params = { { 'directory', 'any' }, { 'expr', 'any' } },
+    params = { { 'directory', 'string' }, { 'expr', 'integer' } },
     signature = 'readdir({directory} [, {expr}])',
   },
   readfile = {
@@ -8384,7 +8444,7 @@ M.funcs = {
 
     ]=],
     name = 'readfile',
-    params = { { 'fname', 'string' }, { 'type', 'any' }, { 'max', 'any' } },
+    params = { { 'fname', 'string' }, { 'type', 'string' }, { 'max', 'integer' } },
     signature = 'readfile({fname} [, {type} [, {max}]])',
   },
   reduce = {
@@ -8410,7 +8470,7 @@ M.funcs = {
       <
     ]=],
     name = 'reduce',
-    params = { { 'object', 'any' }, { 'func', 'any' }, { 'initial', 'any' } },
+    params = { { 'object', 'any' }, { 'func', 'function' }, { 'initial', 'any' } },
     signature = 'reduce({object}, {func} [, {initial}])',
   },
   reg_executing = {
@@ -8556,7 +8616,7 @@ M.funcs = {
 
     ]=],
     name = 'remove',
-    params = { { 'list', 'any' }, { 'idx', 'integer' }, { 'end', 'any' } },
+    params = { { 'list', 'any[]' }, { 'idx', 'integer' }, { 'end', 'integer' } },
     signature = 'remove({list}, {idx}, {end})',
   },
   remove__2 = {
@@ -8583,7 +8643,7 @@ M.funcs = {
       <
     ]=],
     name = 'remove',
-    params = { { 'blob', 'any' }, { 'idx', 'integer' }, { 'end', 'any' } },
+    params = { { 'blob', 'any' }, { 'idx', 'integer' }, { 'end', 'integer' } },
     signature = 'remove({blob}, {idx}, {end})',
   },
   remove__4 = {
@@ -8597,7 +8657,7 @@ M.funcs = {
       Returns zero on error.
     ]=],
     name = 'remove',
-    params = { { 'dict', 'any' }, { 'key', 'any' } },
+    params = { { 'dict', 'any' }, { 'key', 'string' } },
     signature = 'remove({dict}, {key})',
   },
   rename = {
@@ -8613,7 +8673,7 @@ M.funcs = {
 
     ]=],
     name = 'rename',
-    params = { { 'from', 'any' }, { 'to', 'any' } },
+    params = { { 'from', 'string' }, { 'to', 'string' } },
     signature = 'rename({from}, {to})',
   },
   ['repeat'] = {
@@ -8632,7 +8692,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'repeat',
-    params = { { 'expr', 'any' }, { 'count', 'any' } },
+    params = { { 'expr', 'any' }, { 'count', 'integer' } },
     signature = 'repeat({expr}, {count})',
   },
   resolve = {
@@ -8655,7 +8715,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'resolve',
-    params = { { 'filename', 'any' } },
+    params = { { 'filename', 'string' } },
     signature = 'resolve({filename})',
   },
   reverse = {
@@ -8696,7 +8756,7 @@ M.funcs = {
     ]=],
     float_func = 'round',
     name = 'round',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'round({expr})',
   },
   rpcnotify = {
@@ -8709,7 +8769,7 @@ M.funcs = {
       <
     ]=],
     name = 'rpcnotify',
-    params = { { 'channel', 'any' }, { 'event', 'any' }, { 'args', 'any' } },
+    params = { { 'channel', 'integer' }, { 'event', 'string' }, { 'args', 'any' } },
     signature = 'rpcnotify({channel}, {event} [, {args}...])',
   },
   rpcrequest = {
@@ -8722,10 +8782,11 @@ M.funcs = {
       <
     ]=],
     name = 'rpcrequest',
-    params = { { 'channel', 'any' }, { 'method', 'any' }, { 'args', 'any' } },
+    params = { { 'channel', 'integer' }, { 'method', 'string' }, { 'args', 'any' } },
     signature = 'rpcrequest({channel}, {method} [, {args}...])',
   },
   rpcstart = {
+    deprecated = true,
     args = { 1, 2 },
     desc = [=[
       Deprecated. Replace  >vim
@@ -8735,7 +8796,7 @@ M.funcs = {
       <
     ]=],
     name = 'rpcstart',
-    params = { { 'prog', 'any' }, { 'argv', 'any' } },
+    params = { { 'prog', 'string' }, { 'argv', 'any' } },
     signature = 'rpcstart({prog} [, {argv}])',
   },
   rpcstop = {
@@ -8779,7 +8840,7 @@ M.funcs = {
 
     ]=],
     name = 'screenattr',
-    params = { { 'row', 'any' }, { 'col', 'integer' } },
+    params = { { 'row', 'integer' }, { 'col', 'integer' } },
     signature = 'screenattr({row}, {col})',
   },
   screenchar = {
@@ -8797,7 +8858,7 @@ M.funcs = {
 
     ]=],
     name = 'screenchar',
-    params = { { 'row', 'any' }, { 'col', 'integer' } },
+    params = { { 'row', 'integer' }, { 'col', 'integer' } },
     signature = 'screenchar({row}, {col})',
   },
   screenchars = {
@@ -8812,7 +8873,7 @@ M.funcs = {
 
     ]=],
     name = 'screenchars',
-    params = { { 'row', 'any' }, { 'col', 'integer' } },
+    params = { { 'row', 'integer' }, { 'col', 'integer' } },
     signature = 'screenchars({row}, {col})',
   },
   screencol = {
@@ -8893,7 +8954,7 @@ M.funcs = {
 
     ]=],
     name = 'screenstring',
-    params = { { 'row', 'any' }, { 'col', 'integer' } },
+    params = { { 'row', 'integer' }, { 'col', 'integer' } },
     signature = 'screenstring({row}, {col})',
   },
   search = {
@@ -9007,11 +9068,11 @@ M.funcs = {
     ]=],
     name = 'search',
     params = {
-      { 'pattern', 'any' },
+      { 'pattern', 'string' },
       { 'flags', 'string' },
-      { 'stopline', 'any' },
+      { 'stopline', 'integer' },
       { 'timeout', 'integer' },
-      { 'skip', 'any' },
+      { 'skip', 'string|function' },
     },
     signature = 'search({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])',
   },
@@ -9167,7 +9228,7 @@ M.funcs = {
       <
     ]=],
     name = 'searchdecl',
-    params = { { 'name', 'string' }, { 'global', 'any' }, { 'thisblock', 'any' } },
+    params = { { 'name', 'string' }, { 'global', 'boolean' }, { 'thisblock', 'boolean' } },
     signature = 'searchdecl({name} [, {global} [, {thisblock}]])',
   },
   searchpair = {
@@ -9259,12 +9320,12 @@ M.funcs = {
     ]=],
     name = 'searchpair',
     params = {
-      { 'start', 'any' },
-      { 'middle', 'any' },
-      { 'end', 'any' },
+      { 'start', 'string' },
+      { 'middle', 'string' },
+      { 'end', 'string' },
       { 'flags', 'string' },
-      { 'skip', 'any' },
-      { 'stopline', 'any' },
+      { 'skip', 'string|function' },
+      { 'stopline', 'integer' },
       { 'timeout', 'integer' },
     },
     returns = 'integer',
@@ -9285,12 +9346,12 @@ M.funcs = {
     ]=],
     name = 'searchpairpos',
     params = {
-      { 'start', 'any' },
-      { 'middle', 'any' },
-      { 'end', 'any' },
+      { 'start', 'string' },
+      { 'middle', 'string' },
+      { 'end', 'string' },
       { 'flags', 'string' },
-      { 'skip', 'any' },
-      { 'stopline', 'any' },
+      { 'skip', 'string|function' },
+      { 'stopline', 'integer' },
       { 'timeout', 'integer' },
     },
     returns = '[integer, integer]',
@@ -9317,11 +9378,11 @@ M.funcs = {
     ]=],
     name = 'searchpos',
     params = {
-      { 'pattern', 'any' },
+      { 'pattern', 'string' },
       { 'flags', 'string' },
-      { 'stopline', 'any' },
+      { 'stopline', 'integer' },
       { 'timeout', 'integer' },
-      { 'skip', 'any' },
+      { 'skip', 'string|function' },
     },
     signature = 'searchpos({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])',
   },
@@ -9374,7 +9435,7 @@ M.funcs = {
       <
     ]=],
     name = 'serverstart',
-    params = { { 'address', 'any' } },
+    params = { { 'address', 'string' } },
     signature = 'serverstart([{address}])',
   },
   serverstop = {
@@ -9386,7 +9447,7 @@ M.funcs = {
       address in |serverlist()|.
     ]=],
     name = 'serverstop',
-    params = { { 'address', 'any' } },
+    params = { { 'address', 'string' } },
     signature = 'serverstop({address})',
   },
   setbufline = {
@@ -9419,7 +9480,7 @@ M.funcs = {
 
     ]=],
     name = 'setbufline',
-    params = { { 'buf', 'any' }, { 'lnum', 'integer' }, { 'text', 'any' } },
+    params = { { 'buf', 'integer|string' }, { 'lnum', 'integer' }, { 'text', 'string|string[]' } },
     signature = 'setbufline({buf}, {lnum}, {text})',
   },
   setbufvar = {
@@ -9441,7 +9502,7 @@ M.funcs = {
 
     ]=],
     name = 'setbufvar',
-    params = { { 'buf', 'any' }, { 'varname', 'string' }, { 'val', 'any' } },
+    params = { { 'buf', 'integer|string' }, { 'varname', 'string' }, { 'val', 'any' } },
     signature = 'setbufvar({buf}, {varname}, {val})',
   },
   setcellwidths = {
@@ -9482,7 +9543,7 @@ M.funcs = {
       look right you need to adjust the {list} argument.
     ]=],
     name = 'setcellwidths',
-    params = { { 'list', 'any' } },
+    params = { { 'list', 'any[]' } },
     signature = 'setcellwidths({list})',
   },
   setcharpos = {
@@ -9501,7 +9562,7 @@ M.funcs = {
 
     ]=],
     name = 'setcharpos',
-    params = { { 'expr', 'any' }, { 'list', 'any' } },
+    params = { { 'expr', 'string' }, { 'list', 'integer[]' } },
     signature = 'setcharpos({expr}, {list})',
   },
   setcharsearch = {
@@ -9529,7 +9590,7 @@ M.funcs = {
 
     ]=],
     name = 'setcharsearch',
-    params = { { 'dict', 'any' } },
+    params = { { 'dict', 'string' } },
     signature = 'setcharsearch({dict})',
   },
   setcmdline = {
@@ -9544,7 +9605,7 @@ M.funcs = {
 
     ]=],
     name = 'setcmdline',
-    params = { { 'str', 'any' }, { 'pos', 'any' } },
+    params = { { 'str', 'string' }, { 'pos', 'integer' } },
     signature = 'setcmdline({str} [, {pos}])',
   },
   setcmdpos = {
@@ -9567,14 +9628,14 @@ M.funcs = {
 
     ]=],
     name = 'setcmdpos',
-    params = { { 'pos', 'any' } },
+    params = { { 'pos', 'integer' } },
     signature = 'setcmdpos({pos})',
   },
   setcursorcharpos = {
     args = { 1, 3 },
     base = 1,
     name = 'setcursorcharpos',
-    params = { { 'lnum', 'integer' }, { 'col', 'integer' }, { 'off', 'any' } },
+    params = { { 'lnum', 'integer' }, { 'col', 'integer' }, { 'off', 'integer' } },
     signature = 'setcursorcharpos({lnum}, {col} [, {off}])',
   },
   setcursorcharpos__1 = {
@@ -9593,7 +9654,7 @@ M.funcs = {
 
     ]=],
     name = 'setcursorcharpos',
-    params = { { 'list', 'any' } },
+    params = { { 'list', 'integer[]' } },
     signature = 'setcursorcharpos({list})',
   },
   setenv = {
@@ -9608,7 +9669,7 @@ M.funcs = {
 
     ]=],
     name = 'setenv',
-    params = { { 'name', 'string' }, { 'val', 'any' } },
+    params = { { 'name', 'string' }, { 'val', 'string' } },
     signature = 'setenv({name}, {val})',
   },
   setfperm = {
@@ -9693,7 +9754,7 @@ M.funcs = {
 
     ]=],
     name = 'setloclist',
-    params = { { 'nr', 'integer' }, { 'list', 'any' }, { 'action', 'any' }, { 'what', 'any' } },
+    params = { { 'nr', 'integer' }, { 'list', 'any' }, { 'action', 'string' }, { 'what', 'table' } },
     signature = 'setloclist({nr}, {list} [, {action} [, {what}]])',
   },
   setmatches = {
@@ -9709,7 +9770,7 @@ M.funcs = {
 
     ]=],
     name = 'setmatches',
-    params = { { 'list', 'any' }, { 'win', 'any' } },
+    params = { { 'list', 'any' }, { 'win', 'integer' } },
     signature = 'setmatches({list} [, {win}])',
   },
   setpos = {
@@ -9766,7 +9827,7 @@ M.funcs = {
 
     ]=],
     name = 'setpos',
-    params = { { 'expr', 'any' }, { 'list', 'any' } },
+    params = { { 'expr', 'string' }, { 'list', 'integer[]' } },
     signature = 'setpos({expr}, {list})',
   },
   setqflist = {
@@ -9888,7 +9949,7 @@ M.funcs = {
 
     ]=],
     name = 'setqflist',
-    params = { { 'list', 'any' }, { 'action', 'any' }, { 'what', 'any' } },
+    params = { { 'list', 'any[]' }, { 'action', 'string' }, { 'what', 'table' } },
     signature = 'setqflist({list} [, {action} [, {what}]])',
   },
   setreg = {
@@ -10038,7 +10099,7 @@ M.funcs = {
       <
     ]=],
     name = 'settagstack',
-    params = { { 'nr', 'integer' }, { 'dict', 'any' }, { 'action', 'any' } },
+    params = { { 'nr', 'integer' }, { 'dict', 'any' }, { 'action', 'string' } },
     signature = 'settagstack({nr}, {dict} [, {action}])',
   },
   setwinvar = {
@@ -10104,7 +10165,7 @@ M.funcs = {
 
     ]=],
     name = 'shellescape',
-    params = { { 'string', 'string' }, { 'special', 'any' } },
+    params = { { 'string', 'string' }, { 'special', 'boolean' } },
     signature = 'shellescape({string} [, {special}])',
   },
   shiftwidth = {
@@ -10310,7 +10371,7 @@ M.funcs = {
       <
     ]=],
     name = 'sign_getplaced',
-    params = { { 'buf', 'any' }, { 'dict', 'vim.fn.sign_getplaced.dict' } },
+    params = { { 'buf', 'integer|string' }, { 'dict', 'vim.fn.sign_getplaced.dict' } },
     signature = 'sign_getplaced([{buf} [, {dict}]])',
     returns = 'vim.fn.sign_getplaced.ret.item[]',
   },
@@ -10392,10 +10453,10 @@ M.funcs = {
     ]=],
     name = 'sign_place',
     params = {
-      { 'id', 'any' },
-      { 'group', 'any' },
+      { 'id', 'integer' },
+      { 'group', 'string' },
       { 'name', 'string' },
-      { 'buf', 'any' },
+      { 'buf', 'integer|string' },
       { 'dict', 'vim.fn.sign_place.dict' },
     },
     signature = 'sign_place({id}, {group}, {name}, {buf} [, {dict}])',
@@ -10618,7 +10679,7 @@ M.funcs = {
 
     ]=],
     name = 'simplify',
-    params = { { 'filename', 'any' } },
+    params = { { 'filename', 'string' } },
     signature = 'simplify({filename})',
   },
   sin = {
@@ -10637,7 +10698,7 @@ M.funcs = {
     ]=],
     float_func = 'sin',
     name = 'sin',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'sin({expr})',
   },
   sinh = {
@@ -10657,7 +10718,7 @@ M.funcs = {
     ]=],
     float_func = 'sinh',
     name = 'sinh',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'sinh({expr})',
   },
   slice = {
@@ -10675,7 +10736,7 @@ M.funcs = {
 
     ]=],
     name = 'slice',
-    params = { { 'expr', 'any' }, { 'start', 'any' }, { 'end', 'any' } },
+    params = { { 'expr', 'any' }, { 'start', 'integer' }, { 'end', 'integer' } },
     signature = 'slice({expr}, {start} [, {end}])',
   },
   sockconnect = {
@@ -10706,7 +10767,7 @@ M.funcs = {
         - 0 on invalid arguments or connection failure.
     ]=],
     name = 'sockconnect',
-    params = { { 'mode', 'string' }, { 'address', 'any' }, { 'opts', 'table' } },
+    params = { { 'mode', 'string' }, { 'address', 'string' }, { 'opts', 'table' } },
     signature = 'sockconnect({mode}, {address} [, {opts}])',
   },
   sort = {
@@ -10787,7 +10848,7 @@ M.funcs = {
       <
     ]=],
     name = 'sort',
-    params = { { 'list', 'any' }, { 'how', 'any' }, { 'dict', 'any' } },
+    params = { { 'list', 'any' }, { 'how', 'string|function' }, { 'dict', 'any' } },
     signature = 'sort({list} [, {how} [, {dict}]])',
   },
   soundfold = {
@@ -10803,7 +10864,7 @@ M.funcs = {
 
     ]=],
     name = 'soundfold',
-    params = { { 'word', 'any' } },
+    params = { { 'word', 'string' } },
     signature = 'soundfold({word})',
   },
   spellbadword = {
@@ -10835,7 +10896,7 @@ M.funcs = {
 
     ]=],
     name = 'spellbadword',
-    params = { { 'sentence', 'any' } },
+    params = { { 'sentence', 'string' } },
     signature = 'spellbadword([{sentence}])',
   },
   spellsuggest = {
@@ -10864,7 +10925,7 @@ M.funcs = {
 
     ]=],
     name = 'spellsuggest',
-    params = { { 'word', 'any' }, { 'max', 'any' }, { 'capital', 'any' } },
+    params = { { 'word', 'string' }, { 'max', 'integer' }, { 'capital', 'boolean' } },
     signature = 'spellsuggest({word} [, {max} [, {capital}]])',
   },
   split = {
@@ -10897,7 +10958,7 @@ M.funcs = {
 
     ]=],
     name = 'split',
-    params = { { 'string', 'string' }, { 'pattern', 'any' }, { 'keepempty', 'any' } },
+    params = { { 'string', 'string' }, { 'pattern', 'string' }, { 'keepempty', 'boolean' } },
     signature = 'split({string} [, {pattern} [, {keepempty}]])',
   },
   sqrt = {
@@ -10919,7 +10980,7 @@ M.funcs = {
     ]=],
     float_func = 'sqrt',
     name = 'sqrt',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'sqrt({expr})',
   },
   srand = {
@@ -10941,7 +11002,7 @@ M.funcs = {
       <
     ]=],
     name = 'srand',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     signature = 'srand([{expr}])',
   },
   stdioopen = {
@@ -11064,7 +11125,7 @@ M.funcs = {
 
     ]=],
     name = 'str2float',
-    params = { { 'string', 'string' }, { 'quoted', 'any' } },
+    params = { { 'string', 'string' }, { 'quoted', 'boolean' } },
     signature = 'str2float({string} [, {quoted}])',
   },
   str2list = {
@@ -11084,7 +11145,7 @@ M.funcs = {
 
     ]=],
     name = 'str2list',
-    params = { { 'string', 'string' }, { 'utf8', 'any' } },
+    params = { { 'string', 'string' }, { 'utf8', 'boolean' } },
     signature = 'str2list({string} [, {utf8}])',
   },
   str2nr = {
@@ -11111,7 +11172,7 @@ M.funcs = {
 
     ]=],
     name = 'str2nr',
-    params = { { 'string', 'string' }, { 'base', 'any' } },
+    params = { { 'string', 'string' }, { 'base', 'integer' } },
     signature = 'str2nr({string} [, {base}])',
   },
   strcharlen = {
@@ -11153,7 +11214,12 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'strcharpart',
-    params = { { 'src', 'any' }, { 'start', 'any' }, { 'len', 'any' }, { 'skipcc', 'any' } },
+    params = {
+      { 'src', 'string' },
+      { 'start', 'integer' },
+      { 'len', 'integer' },
+      { 'skipcc', 'boolean' },
+    },
     signature = 'strcharpart({src}, {start} [, {len} [, {skipcc}]])',
   },
   strchars = {
@@ -11189,7 +11255,7 @@ M.funcs = {
       <
     ]=],
     name = 'strchars',
-    params = { { 'string', 'string' }, { 'skipcc', 'any' } },
+    params = { { 'string', 'string' }, { 'skipcc', 'boolean' } },
     returns = 'integer',
     signature = 'strchars({string} [, {skipcc}])',
   },
@@ -11238,7 +11304,7 @@ M.funcs = {
 
     ]=],
     name = 'strftime',
-    params = { { 'format', 'any' }, { 'time', 'any' } },
+    params = { { 'format', 'string' }, { 'time', 'number' } },
     returns = 'string',
     signature = 'strftime({format} [, {time}])',
   },
@@ -11947,7 +12013,7 @@ M.funcs = {
 
     ]=],
     name = 'tabpagebuflist',
-    params = { { 'arg', 'any' } },
+    params = { { 'arg', 'integer' } },
     signature = 'tabpagebuflist([{arg}])',
   },
   tabpagenr = {
@@ -12128,7 +12194,7 @@ M.funcs = {
       described in |terminal|.
     ]=],
     name = 'termopen',
-    params = { { 'cmd', 'any' }, { 'opts', 'table' } },
+    params = { { 'cmd', 'string|string[]' }, { 'opts', 'table' } },
     signature = 'termopen({cmd} [, {opts}])',
   },
   test_garbagecollect_now = {
@@ -12168,7 +12234,7 @@ M.funcs = {
 
     ]=],
     name = 'timer_info',
-    params = { { 'id', 'any' } },
+    params = { { 'id', 'integer' } },
     signature = 'timer_info([{id}])',
   },
   timer_pause = {
@@ -12189,7 +12255,7 @@ M.funcs = {
 
     ]=],
     name = 'timer_pause',
-    params = { { 'timer', 'any' }, { 'paused', 'any' } },
+    params = { { 'timer', 'integer' }, { 'paused', 'boolean' } },
     signature = 'timer_pause({timer}, {paused})',
   },
   timer_start = {
@@ -12228,7 +12294,7 @@ M.funcs = {
 
     ]=],
     name = 'timer_start',
-    params = { { 'time', 'any' }, { 'callback', 'any' }, { 'options', 'table' } },
+    params = { { 'time', 'number' }, { 'callback', 'string|function' }, { 'options', 'table' } },
     signature = 'timer_start({time}, {callback} [, {options}])',
   },
   timer_stop = {
@@ -12241,7 +12307,7 @@ M.funcs = {
 
     ]=],
     name = 'timer_stop',
-    params = { { 'timer', 'any' } },
+    params = { { 'timer', 'integer' } },
     signature = 'timer_stop({timer})',
   },
   timer_stopall = {
@@ -12266,7 +12332,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'tolower',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'string' } },
     returns = 'string',
     signature = 'tolower({expr})',
   },
@@ -12281,7 +12347,7 @@ M.funcs = {
     ]=],
     fast = true,
     name = 'toupper',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'string' } },
     returns = 'string',
     signature = 'toupper({expr})',
   },
@@ -12343,7 +12409,7 @@ M.funcs = {
 
     ]=],
     name = 'trim',
-    params = { { 'text', 'any' }, { 'mask', 'string' }, { 'dir', '0|1|2' } },
+    params = { { 'text', 'string' }, { 'mask', 'string' }, { 'dir', '0|1|2' } },
     returns = 'string',
     signature = 'trim({text} [, {mask} [, {dir}]])',
   },
@@ -12366,7 +12432,7 @@ M.funcs = {
     ]=],
     float_func = 'trunc',
     name = 'trunc',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'number' } },
     returns = 'integer',
     signature = 'trunc({expr})',
   },
@@ -12399,6 +12465,7 @@ M.funcs = {
       	if myvar is v:null | endif
       <To check if the v:t_ variables exist use this: >vim
       	if exists('v:t_number') | endif
+      <
 
     ]=],
     fast = true,
@@ -12534,8 +12601,8 @@ M.funcs = {
     params = {
       { 'string', 'string' },
       { 'idx', 'integer' },
-      { 'countcc', 'any' },
-      { 'charidx', 'any' },
+      { 'countcc', 'boolean' },
+      { 'charidx', 'boolean' },
     },
     returns = 'integer',
     signature = 'utf16idx({string}, {idx} [, {countcc} [, {charidx}]])',
@@ -12602,10 +12669,11 @@ M.funcs = {
       A more advanced example that echoes the maximum length of
       all lines: >vim
           echo max(map(range(1, line('$')), "virtcol([v:val, '$'])"))
+      <
 
     ]=],
     name = 'virtcol',
-    params = { { 'expr', 'any' }, { 'list', 'any' }, { 'winid', 'integer' } },
+    params = { { 'expr', 'string|integer[]' }, { 'list', 'boolean' }, { 'winid', 'integer' } },
     signature = 'virtcol({expr} [, {list} [, {winid}]])',
   },
   virtcol2col = {
@@ -12659,7 +12727,7 @@ M.funcs = {
       the old value is returned.  See |non-zero-arg|.
     ]=],
     name = 'visualmode',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'boolean' } },
     signature = 'visualmode([{expr}])',
   },
   wait = {
@@ -12681,7 +12749,7 @@ M.funcs = {
       	-3 if an error occurred
     ]=],
     name = 'wait',
-    params = { { 'timeout', 'integer' }, { 'condition', 'any' }, { 'interval', 'any' } },
+    params = { { 'timeout', 'integer' }, { 'condition', 'any' }, { 'interval', 'number' } },
     signature = 'wait({timeout}, {condition} [, {interval}])',
   },
   wildmenumode = {
@@ -12719,7 +12787,7 @@ M.funcs = {
 
     ]=],
     name = 'win_execute',
-    params = { { 'id', 'any' }, { 'command', 'any' }, { 'silent', 'boolean' } },
+    params = { { 'id', 'integer' }, { 'command', 'string' }, { 'silent', 'boolean' } },
     signature = 'win_execute({id}, {command} [, {silent}])',
   },
   win_findbuf = {
@@ -12731,7 +12799,7 @@ M.funcs = {
 
     ]=],
     name = 'win_findbuf',
-    params = { { 'bufnr', 'any' } },
+    params = { { 'bufnr', 'integer' } },
     returns = 'integer[]',
     signature = 'win_findbuf({bufnr})',
   },
@@ -12749,7 +12817,7 @@ M.funcs = {
 
     ]=],
     name = 'win_getid',
-    params = { { 'win', 'any' }, { 'tab', 'any' } },
+    params = { { 'win', 'integer' }, { 'tab', 'integer' } },
     returns = 'integer',
     signature = 'win_getid([{win} [, {tab}]])',
   },
@@ -12790,7 +12858,7 @@ M.funcs = {
 
     ]=],
     name = 'win_gotoid',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'integer' } },
     returns = '0|1',
     signature = 'win_gotoid({expr})',
   },
@@ -12804,7 +12872,7 @@ M.funcs = {
 
     ]=],
     name = 'win_id2tabwin',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'integer' } },
     signature = 'win_id2tabwin({expr})',
   },
   win_id2win = {
@@ -12816,7 +12884,7 @@ M.funcs = {
 
     ]=],
     name = 'win_id2win',
-    params = { { 'expr', 'any' } },
+    params = { { 'expr', 'integer' } },
     signature = 'win_id2win({expr})',
   },
   win_move_separator = {
@@ -12839,7 +12907,7 @@ M.funcs = {
 
     ]=],
     name = 'win_move_separator',
-    params = { { 'nr', 'integer' }, { 'offset', 'any' } },
+    params = { { 'nr', 'integer' }, { 'offset', 'integer' } },
     signature = 'win_move_separator({nr}, {offset})',
   },
   win_move_statusline = {
@@ -12859,7 +12927,7 @@ M.funcs = {
 
     ]=],
     name = 'win_move_statusline',
-    params = { { 'nr', 'integer' }, { 'offset', 'any' } },
+    params = { { 'nr', 'integer' }, { 'offset', 'integer' } },
     signature = 'win_move_statusline({nr}, {offset})',
   },
   win_screenpos = {
@@ -12902,7 +12970,7 @@ M.funcs = {
 
     ]=],
     name = 'win_splitmove',
-    params = { { 'nr', 'integer' }, { 'target', 'any' }, { 'options', 'table' } },
+    params = { { 'nr', 'integer' }, { 'target', 'integer' }, { 'options', 'table' } },
     signature = 'win_splitmove({nr}, {target} [, {options}])',
   },
   winbufnr = {
@@ -12960,6 +13028,7 @@ M.funcs = {
       This excludes any window toolbar line.
       Examples: >vim
         echo "The current window has " .. winheight(0) .. " lines."
+      <
 
     ]=],
     name = 'winheight',
@@ -13057,10 +13126,10 @@ M.funcs = {
       	let window_count = winnr('$')
       	let prev_window = winnr('#')
       	let wnum = winnr('3k')
-
+      <
     ]=],
     name = 'winnr',
-    params = { { 'arg', 'any' } },
+    params = { { 'arg', 'string|integer' } },
     signature = 'winnr([{arg}])',
   },
   winrestcmd = {
@@ -13232,6 +13301,7 @@ M.funcs = {
       To copy a file byte for byte: >vim
       	let fl = readfile("foo", "b")
       	call writefile(fl, "foocopy", "b")
+      <
 
     ]=],
     name = 'writefile',
@@ -13250,7 +13320,7 @@ M.funcs = {
       <
     ]=],
     name = 'xor',
-    params = { { 'expr', 'any' }, { 'expr', 'any' } },
+    params = { { 'expr', 'number' }, { 'expr', 'number' } },
     signature = 'xor({expr}, {expr})',
   },
 }
