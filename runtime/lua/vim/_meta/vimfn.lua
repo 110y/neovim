@@ -8290,9 +8290,9 @@ function vim.fn.setpos(expr, list) end
 --- independent of the 'errorformat' setting.  Use a command like
 --- `:cc 1` to jump to the first position.
 ---
---- @param list any[]
+--- @param list vim.quickfix.entry[]
 --- @param action? string
---- @param what? table
+--- @param what? vim.fn.setqflist.what
 --- @return any
 function vim.fn.setqflist(list, action, what) end
 
@@ -10633,7 +10633,7 @@ function vim.fn.wait(timeout, condition, interval) end
 --- For example to make <c-j> work like <down> in wildmode, use: >vim
 ---     cnoremap <expr> <C-j> wildmenumode() ? "\<Down>\<Tab>" : "\<c-j>"
 --- <
---- (Note, this needs the 'wildcharm' option set appropriately).
+--- (Note: this needs the 'wildcharm' option set appropriately).
 ---
 --- @return any
 function vim.fn.wildmenumode() end

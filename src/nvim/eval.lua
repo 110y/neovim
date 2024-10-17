@@ -9966,7 +9966,11 @@ M.funcs = {
 
     ]=],
     name = 'setqflist',
-    params = { { 'list', 'any[]' }, { 'action', 'string' }, { 'what', 'table' } },
+    params = {
+      { 'list', 'vim.quickfix.entry[]' },
+      { 'action', 'string' },
+      { 'what', 'vim.fn.setqflist.what' },
+    },
     signature = 'setqflist({list} [, {action} [, {what}]])',
   },
   setreg = {
@@ -12779,7 +12783,7 @@ M.funcs = {
       For example to make <c-j> work like <down> in wildmode, use: >vim
           cnoremap <expr> <C-j> wildmenumode() ? "\<Down>\<Tab>" : "\<c-j>"
       <
-      (Note, this needs the 'wildcharm' option set appropriately).
+      (Note: this needs the 'wildcharm' option set appropriately).
     ]=],
     name = 'wildmenumode',
     params = {},
