@@ -1368,7 +1368,7 @@ int eval_foldexpr(win_T *wp, int *cp)
   const bool use_sandbox = was_set_insecurely(wp, kOptFoldexpr, OPT_LOCAL);
 
   char *arg = skipwhite(wp->w_p_fde);
-  current_sctx = wp->w_p_script_ctx[WV_FDE].script_ctx;
+  current_sctx = wp->w_p_script_ctx[kWinOptFoldexpr].script_ctx;
 
   emsg_off++;
   if (use_sandbox) {
@@ -7881,7 +7881,7 @@ void ex_echo(exarg_T *eap)
       char *tofree = encode_tv2echo(&rettv, NULL);
       if (*tofree != NUL) {
         msg_ext_set_kind("echo");
-        msg_multiline(tofree, echo_hl_id, true, false, &need_clear);
+        msg_multiline(cstr_as_string(tofree), echo_hl_id, true, false, &need_clear);
       }
       xfree(tofree);
     }
