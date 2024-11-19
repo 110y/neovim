@@ -338,13 +338,16 @@ Highlight groups that are meant to be used by |vim.lsp.buf.document_highlight()|
 You can see more about the differences in types here:
 https://microsoft.github.io/language-server-protocol/specification#textDocument_documentHighlight
 
-                                                           *hl-LspReferenceText*
+                                                         *hl-LspReferenceText*
 LspReferenceText          used for highlighting "text" references
-                                                           *hl-LspReferenceRead*
+                                                         *hl-LspReferenceRead*
 LspReferenceRead          used for highlighting "read" references
-                                                          *hl-LspReferenceWrite*
+                                                        *hl-LspReferenceWrite*
 LspReferenceWrite         used for highlighting "write" references
-                                                          *hl-LspInlayHint*
+                                                       *hl-LspReferenceTarget*
+LspReferenceTarget        used for highlighting reference targets (e.g. in a
+                          hover range)
+                                                             *hl-LspInlayHint*
 LspInlayHint              used for highlighting inlay hints
 
 
@@ -965,7 +968,7 @@ Lua module: vim.lsp.client                                        *lsp-client*
                                   request before sending kill -15. If set to
                                   false, nvim exits immediately after sending
                                   the "shutdown" request to the server.
-      • {get_language_id}       (`fun(bufnr: integer, filetype: string): string`)
+      • {get_language_id}       (`fun(bufnr: integer, filetype?: string): string`)
       • {capabilities}          (`lsp.ClientCapabilities`) The capabilities
                                 provided by the client (editor or tool)
       • {dynamic_capabilities}  (`lsp.DynamicCapabilities`)
@@ -1086,8 +1089,9 @@ Lua module: vim.lsp.client                                        *lsp-client*
                               `initialize` in the LSP spec.
       • {name}?               (`string`, default: client-id) Name in log
                               messages.
-      • {get_language_id}?    (`fun(bufnr: integer, filetype: string): string`)
-                              Language ID as string. Defaults to the filetype.
+      • {get_language_id}?    (`fun(bufnr: integer, filetype?: string): string`)
+                              Language ID as string. Defaults to the buffer
+                              filetype.
       • {offset_encoding}?    (`'utf-8'|'utf-16'|'utf-32'`) The encoding that
                               the LSP server expects. Client does not verify
                               this is correct.
@@ -1334,6 +1338,14 @@ hover({config})                                          *vim.lsp.buf.hover()*
     the hover window and focus it). In the floating window, all commands and
     mappings are available as usual, except that "q" dismisses the window. You
     can scroll the contents the same as you would any other buffer.
+
+    Note: to disable hover highlights, add the following to your config: >lua
+        vim.api.nvim_create_autocmd('ColorScheme', {
+          callback = function()
+            vim.api.nvim_set_hl(0, 'LspReferenceTarget', {})
+          end,
+        })
+<
 
     Parameters: ~
       • {config}  (`vim.lsp.buf.hover.Opts?`) See |vim.lsp.buf.hover.Opts|.
