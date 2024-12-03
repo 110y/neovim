@@ -6060,6 +6060,7 @@ M.funcs = {
     ]=],
     name = 'jobwait',
     params = { { 'jobs', 'integer[]' }, { 'timeout', 'integer' } },
+    returns = 'integer[]',
     signature = 'jobwait({jobs} [, {timeout}])',
   },
   join = {
@@ -8787,7 +8788,7 @@ M.funcs = {
       <
     ]=],
     name = 'rpcnotify',
-    params = { { 'channel', 'integer' }, { 'event', 'string' }, { 'args', 'any' } },
+    params = { { 'channel', 'integer' }, { 'event', 'string' }, { '...', 'any' } },
     signature = 'rpcnotify({channel}, {event} [, {args}...])',
   },
   rpcrequest = {
@@ -8800,7 +8801,7 @@ M.funcs = {
       <
     ]=],
     name = 'rpcrequest',
-    params = { { 'channel', 'integer' }, { 'method', 'string' }, { 'args', 'any' } },
+    params = { { 'channel', 'integer' }, { 'method', 'string' }, { '...', 'any' } },
     signature = 'rpcrequest({channel}, {method} [, {args}...])',
   },
   rpcstart = {
@@ -11166,7 +11167,7 @@ M.funcs = {
       and exists only for backwards-compatibility.
       With UTF-8 composing characters are handled properly: >vim
       	echo str2list("á")		" returns [97, 769]
-
+      <
     ]=],
     name = 'str2list',
     params = { { 'string', 'string' }, { 'utf8', 'boolean' } },
@@ -13102,6 +13103,7 @@ M.funcs = {
     ]=],
     name = 'winlayout',
     params = { { 'tabnr', 'integer' } },
+    returns = 'any[]',
     signature = 'winlayout([{tabnr}])',
   },
   winline = {
