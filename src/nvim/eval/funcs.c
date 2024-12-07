@@ -2505,7 +2505,7 @@ static void f_getfontname(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   rettv->vval.v_string = NULL;
 }
 
-static void f_deletejumplistitem(typval_T *argvars, typval_T *rettv)
+static void f_deletejumplistitem(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 {
     int idx = (int)tv_get_number(&argvars[0]);
 
