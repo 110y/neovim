@@ -239,7 +239,7 @@ describe(':terminal cursor', function()
     feed([[<C-\><C-N>]])
     command('set statusline=~~~')
     command('new')
-    call('termopen', { testprg('tty-test') })
+    call('jobstart', { testprg('tty-test') }, { term = true })
     feed('i')
     screen:expect({
       grid = [[
@@ -372,12 +372,6 @@ describe('buffer cursor position is correct in terminal without number column', 
       'set notermguicolors',
     }, {
       cols = 70,
-    })
-    screen:set_default_attr_ids({
-      [1] = { foreground = 253, background = 11 },
-      [2] = { reverse = true },
-      [3] = { bold = true },
-      [4] = { background = 11 },
     })
     -- Also check for real cursor position, as it is used for stuff like input methods
     screen._handle_busy_start = function() end
@@ -689,13 +683,6 @@ describe('buffer cursor position is correct in terminal with number column', fun
       'set notermguicolors',
     }, {
       cols = 70,
-    })
-    screen:set_default_attr_ids({
-      [1] = { foreground = 253, background = 11 },
-      [2] = { reverse = true },
-      [3] = { bold = true },
-      [4] = { background = 11 },
-      [7] = { foreground = 130 },
     })
     -- Also check for real cursor position, as it is used for stuff like input methods
     screen._handle_busy_start = function() end
