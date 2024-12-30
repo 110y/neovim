@@ -292,7 +292,7 @@ local function on_client_exit(code, signal, client_id)
         signal,
         lsp.get_log_path()
       )
-      vim.notify(msg, vim.log.levels.WARN)
+      -- vim.notify(msg, vim.log.levels.WARN)
     end
   end)
 end
