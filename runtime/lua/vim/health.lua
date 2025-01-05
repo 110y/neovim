@@ -407,6 +407,18 @@ function M._check(mods, plugin_names)
   -- Clear the 'Running healthchecks...' message.
   vim.cmd.redraw()
   vim.print('')
+
+  -- Quit with 'q' inside healthcheck buffers.
+  vim.api.nvim_buf_set_keymap(
+    bufnr,
+    'n',
+    'q',
+    '<c-w>q',
+    { silent = true, noremap = true, nowait = true }
+  )
+
+  -- Once we're done writing checks, set nomodifiable.
+  vim.bo[bufnr].modifiable = false
 end
 
 return M
