@@ -243,6 +243,8 @@ DIAGNOSTICS
   |vim.diagnostic.jump()|.
 • A "virtual_lines" diagnostic handler was added to render diagnostics using
   virtual lines below the respective code.
+• The "virtual_text" diagnostic handler accepts a `current_line` option to
+  only show virtual text at the cursor's line.
 
 EDITOR
 
@@ -381,6 +383,7 @@ TREESITTER
   queries in addition to overriding.
 • |LanguageTree:is_valid()| now accepts a range parameter to narrow the scope
   of the validity check.
+• |:InspectTree| now shows which nodes are missing.
 
 TUI
 
