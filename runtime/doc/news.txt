@@ -175,6 +175,7 @@ TREESITTER
   the tree before returning. Scripts must call |LanguageTree:parse()| explicitly. >lua
     local p = vim.treesitter.get_parser(0, 'c')
     p:parse()
+• |vim.treesitter.get_parser()| expects its buffer to be loaded.
 <
 
 TUI
@@ -302,6 +303,7 @@ LUA
 • Command-line completions for: `vim.g`, `vim.t`, `vim.w`, `vim.b`, `vim.v`,
   `vim.o`, `vim.wo`, `vim.bo`, `vim.opt`, `vim.opt_local`, `vim.opt_global`,
   and `vim.fn`.
+• Documentation for |lua-bit|.
 • |vim.fs.rm()| can delete files and directories.
 • |vim.validate()| now has a new signature which uses less tables,
   is more performant and easier to read.
