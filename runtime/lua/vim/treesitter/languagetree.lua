@@ -46,6 +46,9 @@ local Range = require('vim.treesitter._range')
 
 local default_parse_timeout_ms = 3
 
+---@type Range2
+local entire_document_range = { 0, math.huge }
+
 ---@alias TSCallbackName
 ---| 'changedtree'
 ---| 'bytes'
@@ -77,7 +80,7 @@ local TSCallbackNames = {
 ---@field package _callbacks_rec table<TSCallbackName,function[]> Callback handlers (recursive)
 ---@field private _children table<string,vim.treesitter.LanguageTree> Injected languages
 ---@field private _injection_query vim.treesitter.Query Queries defining injected languages
----@field private _injections_processed boolean
+---@field private _processed_injection_range Range? Range for which injections have been processed
 ---@field private _opts table Options
 ---@field private _parser TSParser Parser for language
 ---Table of regions for which the tree is currently running an async parse
@@ -137,7 +140,7 @@ function LanguageTree.new(source, lang, opts)
     _opts = opts,
     _injection_query = injections[lang] and query.parse(lang, injections[lang])
       or query.get(lang, 'injections'),
-    _injections_processed = false,
+    _processed_injection_range = nil,
     _valid_regions = {},
     _num_valid_regions = 0,
     _num_regions = 1,
@@ -334,7 +337,10 @@ function LanguageTree:is_valid(exclude_children, range)
   end
 
   if not exclude_children then
-    if not self._injections_processed then
+    if
+      not self._processed_injection_range
+      or not Range.contains(self._processed_injection_range, range or entire_document_range)
+    then
       return false
     end
 
@@ -416,11 +422,10 @@ function LanguageTree:_parse_regions(range, thread_state)
 end
 
 --- @private
---- @return number
-function LanguageTree:_add_injections()
+--- @param injections_by_lang table<string, Range6[][]>
+function LanguageTree:_add_injections(injections_by_lang)
   local seen_langs = {} ---@type table<string,boolean>
 
-  local query_time, injections_by_lang = tcall(self._get_injections, self)
   for lang, injection_regions in pairs(injections_by_lang) do
     local has_lang = pcall(language.add, lang)
 
@@ -444,8 +449,6 @@ function LanguageTree:_add_injections()
       self:remove_child(lang)
     end
   end
-
-  return query_time
 end
 
 --- @param range boolean|Range?
@@ -604,13 +607,32 @@ function LanguageTree:_parse(range, thread_state)
     end
     -- Need to run injections when we parsed something
     if no_regions_parsed > 0 then
-      self._injections_processed = false
+      self._processed_injection_range = nil
     end
   end
 
-  if not self._injections_processed and range then
-    query_time = self:_add_injections()
-    self._injections_processed = true
+  if
+    range
+    and not (
+      self._processed_injection_range
+      and Range.contains(
+        self._processed_injection_range,
+        range ~= true and range or entire_document_range
+      )
+    )
+  then
+    ---@type fun(self: vim.treesitter.LanguageTree, thread_state: ParserThreadState): table<string, Range6[][]>?
+    local get_injections = coroutine.wrap(self._get_injections)
+    local injections_by_lang
+    query_time, injections_by_lang = tcall(get_injections, self, range, thread_state)
+    while not injections_by_lang do
+      coroutine.yield()
+      query_time, injections_by_lang = tcall(get_injections, self, range, thread_state)
+    end
+
+    self:_add_injections(injections_by_lang)
+
+    thread_state.timeout = thread_state.timeout and math.max(thread_state.timeout - query_time, 0)
   end
 
   self:_log({
@@ -986,18 +1008,29 @@ end
 --- TODO: Allow for an offset predicate to tailor the injection range
 ---       instead of using the entire nodes range.
 --- @private
+--- @param range Range|true
+--- @param thread_state ParserThreadState
 --- @return table<string, Range6[][]>
-function LanguageTree:_get_injections()
+function LanguageTree:_get_injections(range, thread_state)
   if not self._injection_query or #self._injection_query.captures == 0 then
+    self._processed_injection_range = entire_document_range
     return {}
   end
 
   ---@type table<integer,vim.treesitter.languagetree.Injection>
   local injections = {}
+  local start = vim.uv.hrtime()
+
+  local full_scan = range == true or self._injection_query.has_combined_injections
 
   for index, tree in pairs(self._trees) do
     local root_node = tree:root()
-    local start_line, _, end_line, _ = root_node:range()
+    local start_line, end_line ---@type integer, integer
+    if full_scan then
+      start_line, _, end_line = root_node:range()
+    else
+      start_line, _, end_line = Range.unpack4(range --[[@as Range]])
+    end
 
     for pattern, match, metadata in
       self._injection_query:iter_matches(root_node, self._source, start_line, end_line + 1)
@@ -1007,6 +1040,12 @@ function LanguageTree:_get_injections()
         add_injection(injections, index, pattern, lang, combined, ranges)
       else
         self:_log('match from injection query failed for pattern', pattern)
+      end
+
+      -- Check the current function duration against the timeout, if it exists.
+      if thread_state.timeout and vim.uv.hrtime() - start > thread_state.timeout * 1000000 then
+        coroutine.yield()
+        start = vim.uv.hrtime()
       end
     end
   end
@@ -1032,6 +1071,12 @@ function LanguageTree:_get_injections()
         end
       end
     end
+  end
+
+  if full_scan then
+    self._processed_injection_range = entire_document_range
+  else
+    self._processed_injection_range = range --[[@as Range]]
   end
 
   return result
