@@ -66,7 +66,9 @@ API
 
 BUILD
 
-On Windows, only building with the UCRT runtime is supported.
+• On Windows, only building with the UCRT runtime is supported.
+• Translations are turned off by default. Enable by building Nvim with the
+  CMake flag `ENABLE_TRANSLATIONS=ON`.
 
 DEFAULTS
 
@@ -357,6 +359,10 @@ PLUGINS
   • spelling_language property is now supported.
 • 'inccommand' incremental preview can run on 'nomodifiable' buffers and
   restores their 'modifiable' state
+• Commenting
+  • 'commentstring' values can now be specified in a Treesitter capture's
+    `bo.commentstring` metadata field, providing finer grained support for
+    languages like `JSX`.
 
 STARTUP
 
