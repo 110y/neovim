@@ -170,7 +170,8 @@ struct terminal {
   struct {
     int row, col;
     int shape;
-    bool visible;
+    bool visible;  ///< Terminal wants to show cursor.
+                   ///< `TerminalState.cursor_visible` indicates whether it is actually shown.
     bool blink;
   } cursor;
 
@@ -243,7 +244,7 @@ static void emit_termrequest(void **argv)
   PUT_C(data, "cursor", ARRAY_OBJ(cursor));
 
   buf_T *buf = handle_get_buffer(term->buf_handle);
-  apply_autocmds_group(EVENT_TERMREQUEST, NULL, NULL, false, AUGROUP_ALL, buf, NULL,
+  apply_autocmds_group(EVENT_TERMREQUEST, NULL, NULL, true, AUGROUP_ALL, buf, NULL,
                        &DICT_OBJ(data));
   xfree(sequence);
 
