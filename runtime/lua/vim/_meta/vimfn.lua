@@ -5872,7 +5872,7 @@ function vim.fn.matchend(expr, pat, start, count) end
 ---
 --- @param list any[]
 --- @param str string
---- @param dict? string
+--- @param dict? table
 --- @return any
 function vim.fn.matchfuzzy(list, str, dict) end
 
@@ -5899,7 +5899,7 @@ function vim.fn.matchfuzzy(list, str, dict) end
 ---
 --- @param list any[]
 --- @param str string
---- @param dict? string
+--- @param dict? table
 --- @return any
 function vim.fn.matchfuzzypos(list, str, dict) end
 
