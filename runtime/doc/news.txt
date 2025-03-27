@@ -115,7 +115,7 @@ DIAGNOSTICS
 
 EDITOR
 
-• todo
+• |:iput| works like |:put| but adjusts indent.
 
 EVENTS
 
@@ -131,7 +131,8 @@ LUA
 
 OPTIONS
 
-• todo
+• 'completefuzzycollect' enables fuzzy collection of candidates for (some)
+  |ins-completion| modes.
 
 PERFORMANCE
 
