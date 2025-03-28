@@ -858,7 +858,7 @@ local function test_cmdline(linegrid)
       cmdline = {
         {
           content = { { '' } },
-          hl_id = 242,
+          hl_id = 243,
           pos = 0,
           prompt = 'Prompt:',
         },
@@ -886,7 +886,7 @@ local function test_cmdline(linegrid)
       },
       cmdline_block = { { { 'if 1' } } },
     })
-    feed(':let x = 1<CR>')
+    feed('let x = 1<CR>')
     screen:expect({
       grid = s1,
       cmdline = {
@@ -897,20 +897,34 @@ local function test_cmdline(linegrid)
           pos = 0,
         },
       },
-      cmdline_block = { { { 'if 1' } }, { { '  :let x = 1' } } },
+      cmdline_block = { { { 'if 1' } }, { { '  let x = 1' } } },
     })
-    feed(':endif')
+    feed('<CR>')
+    eq('let x = 1', eval('@:'))
     screen:expect({
       grid = s1,
       cmdline = {
         {
-          content = { { ':endif' } },
+          content = { { '' } },
           firstc = ':',
           indent = 2,
-          pos = 6,
+          pos = 0,
         },
       },
-      cmdline_block = { { { 'if 1' } }, { { '  :let x = 1' } } },
+      cmdline_block = { { { 'if 1' } }, { { '  let x = 1' } }, { { '  ' } } },
+    })
+    feed('endif')
+    screen:expect({
+      grid = s1,
+      cmdline = {
+        {
+          content = { { 'endif' } },
+          firstc = ':',
+          indent = 2,
+          pos = 5,
+        },
+      },
+      cmdline_block = { { { 'if 1' } }, { { '  let x = 1' } }, { { '  ' } } },
     })
     feed('<CR>')
     screen:expect({
