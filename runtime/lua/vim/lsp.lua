@@ -615,6 +615,17 @@ function lsp.start(config, opts)
     config.root_dir = vim.fs.root(bufnr, opts._root_markers)
   end
 
+  if
+    not config.root_dir
+    and (not config.workspace_folders or #config.workspace_folders == 0)
+    and config.workspace_required
+  then
+    log.info(
+      ('skipping config "%s": workspace_required=true, no workspace found'):format(config.name)
+    )
+    return
+  end
+
   for _, client in pairs(all_clients) do
     if reuse_client(client, config) then
       if opts.attach == false then
@@ -1230,7 +1241,9 @@ end
 ---
 ---@param bufnr integer Buffer handle, or 0 for current.
 ---@param method string LSP method name
----@param params table? Parameters to send to the server
+---@param params? table|(fun(client: vim.lsp.Client, bufnr: integer): table?) Parameters to send to the server.
+---               Can also be passed as a function that returns the params table for cases where
+---               parameters are specific to the client.
 ---@param timeout_ms integer? Maximum time in milliseconds to wait for a result.
 ---                           (default: `1000`)
 ---@return table<integer, {error: lsp.ResponseError?, result: any}>? result Map of client_id:request_result.
