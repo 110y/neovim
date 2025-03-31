@@ -124,7 +124,7 @@ EVENTS
 
 LSP
 
-• |vim.lsp.Config| gained `workspace_required`.
+• |vim.lsp.ClientConfig| gained `workspace_required`.
 
 LUA
 
@@ -134,6 +134,9 @@ OPTIONS
 
 • 'completefuzzycollect' enables fuzzy collection of candidates for (some)
   |ins-completion| modes.
+• 'autowriteall' write all buffers upon receiving `SIGHUP`, `SIGQUIT` or `SIGTSTP`.
+
+• 'winborder' add bold style.
 
 PERFORMANCE
 
