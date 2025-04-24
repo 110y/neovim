@@ -122,7 +122,7 @@ EDITOR
 
 EVENTS
 
-• todo
+• |CmdlineLeavePre| triggered before preparing to leave the command line.
 
 HIGHLIGHTS
 
@@ -131,6 +131,8 @@ HIGHLIGHTS
 LSP
 
 • |vim.lsp.ClientConfig| gained `workspace_required`.
+• Support for `textDocument/documentColor`: |lsp-document_color|
+  https://microsoft.github.io/language-server-protocol/specification/#textDocument_documentColor
 
 LUA
 
@@ -180,7 +182,7 @@ UI
 
 VIMSCRIPT
 
-• todo
+• |cmdcomplete_info()| gets current cmdline completion info.
 
 ==============================================================================
 CHANGED FEATURES                                                 *news-changed*
