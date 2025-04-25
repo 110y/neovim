@@ -175,6 +175,18 @@ end
 local function buf_enable(bufnr)
   reset_bufstate(bufnr, true)
 
+  api.nvim_buf_attach(bufnr, false, {
+    on_reload = function(_, buf)
+      buf_clear(buf)
+      if bufstates[buf].enabled then
+        buf_refresh(buf)
+      end
+    end,
+    on_detach = function(_, buf)
+      buf_disable(buf)
+    end,
+  })
+
   api.nvim_create_autocmd('LspNotify', {
     buffer = bufnr,
     group = document_color_augroup,
@@ -188,25 +200,6 @@ local function buf_enable(bufnr)
       then
         buf_refresh(args.buf, args.data.client_id)
       end
-    end,
-  })
-
-  api.nvim_create_autocmd('LspAttach', {
-    buffer = bufnr,
-    group = document_color_augroup,
-    desc = 'Enable document_color when LSP client attaches',
-    callback = function(args)
-      api.nvim_buf_attach(args.buf, false, {
-        on_reload = function(_, buf)
-          buf_clear(buf)
-          if bufstates[buf].enabled then
-            buf_refresh(buf)
-          end
-        end,
-        on_detach = function(_, buf)
-          buf_disable(buf)
-        end,
-      })
     end,
   })
 
@@ -238,7 +231,13 @@ end
 function M.is_enabled(bufnr)
   vim.validate('bufnr', bufnr, 'number', true)
 
-  return bufstates[vim._resolve_bufnr(bufnr)].enabled
+  bufnr = vim._resolve_bufnr(bufnr)
+
+  if not bufstates[bufnr] then
+    reset_bufstate(bufnr, false)
+  end
+
+  return bufstates[bufnr].enabled
 end
 
 --- Enables document highlighting from the given language client in the given buffer.
@@ -249,7 +248,7 @@ end
 ---   callback = function(args)
 ---     local client = vim.lsp.get_client_by_id(args.data.client_id)
 ---
----     if client:supports_method('textDocument/documentColor')
+---     if client:supports_method('textDocument/documentColor') then
 ---       vim.lsp.document_color.enable(true, args.buf)
 ---     end
 ---   end
