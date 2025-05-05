@@ -52,7 +52,10 @@ function M.tab_check_wins()
     end
 
     local setopt = false
-    if not api.nvim_win_is_valid(M.wins[M.tab][type]) then
+    if
+      not api.nvim_win_is_valid(M.wins[M.tab][type])
+      or not api.nvim_win_get_config(M.wins[M.tab][type]).zindex -- no longer floating
+    then
       local top = { vim.opt.fcs:get().horiz or o.ambw == 'single' and '─' or '-', 'WinSeparator' }
       local border = (type == 'more' or type == 'prompt') and { '', top, '', '', '', '', '', '' }
       local cfg = vim.tbl_deep_extend('force', wincfg, {
@@ -67,7 +70,9 @@ function M.tab_check_wins()
         _cmdline_offset = type == 'cmd' and 0 or nil,
       })
       M.wins[M.tab][type] = api.nvim_open_win(M.bufs[type], false, cfg)
-      api.nvim_win_set_hl_ns(M.wins[M.tab][type], M.ns)
+      if type == 'cmd' then
+        api.nvim_win_set_hl_ns(M.wins[M.tab][type], M.ns)
+      end
       setopt = true
     elseif api.nvim_win_get_buf(M.wins[M.tab][type]) ~= M.bufs[type] then
       api.nvim_win_set_buf(M.wins[M.tab][type], M.bufs[type])
