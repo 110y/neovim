@@ -4580,7 +4580,7 @@ M.funcs = {
 
     ]=],
     name = 'getreg',
-    params = { { 'regname', 'string' }, { 'list', 'nil|false' } },
+    params = { { 'regname', 'string' }, { 'expr', 'any' }, { 'list', 'nil|false' } },
     signature = 'getreg([{regname} [, 1 [, {list}]]])',
     returns = 'string',
   },
@@ -4588,8 +4588,8 @@ M.funcs = {
     args = { 3 },
     base = 1,
     name = 'getreg',
-    params = { { 'regname', 'string' }, { 'list', 'true|number|string|table' } },
-    returns = 'string|string[]',
+    params = { { 'regname', 'string' }, { 'expr', 'any' }, { 'list', 'true|number|string|table' } },
+    returns = 'string[]',
   },
   getreginfo = {
     args = { 0, 1 },
