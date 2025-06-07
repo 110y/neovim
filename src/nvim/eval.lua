@@ -3970,6 +3970,7 @@ M.funcs = {
     ]=],
     name = 'getcurpos',
     params = { { 'winid', 'integer' } },
+    returns = '[integer, integer, integer, integer, integer]',
     signature = 'getcurpos([{winid}])',
   },
   getcursorcharpos = {
@@ -4324,6 +4325,7 @@ M.funcs = {
     ]=],
     name = 'getmatches',
     params = { { 'win', 'integer' } },
+    returns = 'vim.fn.getmatches.ret.item[]',
     signature = 'getmatches([{win}])',
   },
   getmousepos = {
@@ -4439,7 +4441,7 @@ M.funcs = {
     ]=],
     name = 'getpos',
     params = { { 'expr', 'string' } },
-    returns = 'integer[]',
+    returns = '[integer, integer, integer, integer]',
     signature = 'getpos({expr})',
   },
   getqflist = {
@@ -4683,7 +4685,11 @@ M.funcs = {
       <
     ]=],
     name = 'getregion',
-    params = { { 'pos1', 'table' }, { 'pos2', 'table' }, { 'opts', 'table' } },
+    params = {
+      { 'pos1', '[integer, integer, integer, integer]' },
+      { 'pos2', '[integer, integer, integer, integer]' },
+      { 'opts', '{type?:string, exclusive?:boolean}' },
+    },
     returns = 'string[]',
     signature = 'getregion({pos1}, {pos2} [, {opts}])',
   },
@@ -4723,8 +4729,12 @@ M.funcs = {
       			(default: |FALSE|)
     ]=],
     name = 'getregionpos',
-    params = { { 'pos1', 'table' }, { 'pos2', 'table' }, { 'opts', 'table' } },
-    returns = 'integer[][][]',
+    params = {
+      { 'pos1', '[integer, integer, integer, integer]' },
+      { 'pos2', '[integer, integer, integer, integer]' },
+      { 'opts', '{type?:string, exclusive?:boolean, eol?:boolean}' },
+    },
+    returns = '[ [integer, integer, integer, integer], [integer, integer, integer, integer] ][]',
     signature = 'getregionpos({pos1}, {pos2} [, {opts}])',
   },
   getregtype = {
@@ -8659,6 +8669,7 @@ M.funcs = {
     ]=],
     name = 'readfile',
     params = { { 'fname', 'string' }, { 'type', 'string' }, { 'max', 'integer' } },
+    returns = 'string[]',
     signature = 'readfile({fname} [, {type} [, {max}]])',
   },
   reduce = {
@@ -10009,7 +10020,7 @@ M.funcs = {
 
     ]=],
     name = 'setmatches',
-    params = { { 'list', 'any' }, { 'win', 'integer' } },
+    params = { { 'list', 'vim.fn.getmatches.ret.item[]' }, { 'win', 'integer' } },
     signature = 'setmatches({list} [, {win}])',
   },
   setpos = {
@@ -12935,6 +12946,7 @@ M.funcs = {
     ]=],
     name = 'virtcol',
     params = { { 'expr', 'string|any[]' }, { 'list', 'boolean' }, { 'winid', 'integer' } },
+    returns = 'integer|[integer, integer]',
     signature = 'virtcol({expr} [, {list} [, {winid}]])',
   },
   virtcol2col = {
