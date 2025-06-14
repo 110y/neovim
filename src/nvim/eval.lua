@@ -3511,7 +3511,7 @@ M.funcs = {
       Examples: >vim
       	let bufmodified = getbufvar(1, "&mod")
       	echo "todo myvar = " .. getbufvar("todo", "myvar")
-
+      <
     ]=],
     name = 'getbufvar',
     params = { { 'buf', 'integer|string' }, { 'varname', 'string' }, { 'def', 'any' } },
@@ -5058,7 +5058,7 @@ M.funcs = {
       Examples: >vim
       	let list_is_on = getwinvar(2, '&list')
       	echo "myvar = " .. getwinvar(1, 'myvar')
-
+      <
     ]=],
     name = 'getwinvar',
     params = { { 'winnr', 'integer' }, { 'varname', 'string' }, { 'def', 'any' } },
@@ -5832,7 +5832,7 @@ M.funcs = {
       Example: >vim
       	let color = inputlist(['Select color:', '1. red',
       		\ '2. green', '3. blue'])
-
+      <
     ]=],
     name = 'inputlist',
     params = { { 'textlist', 'string[]' } },
@@ -6411,7 +6411,7 @@ M.funcs = {
       object code must be compiled as position-independent ('PIC').
       Examples: >vim
       	echo libcall("libc.so", "getenv", "HOME")
-
+      <
     ]=],
     name = 'libcall',
     params = { { 'libname', 'string' }, { 'funcname', 'string' }, { 'argument', 'any' } },
@@ -10267,7 +10267,7 @@ M.funcs = {
       You can also change the type of a register by appending
       nothing: >vim
       	call setreg('a', '', 'al')
-
+      <
     ]=],
     name = 'setreg',
     params = { { 'regname', 'string' }, { 'value', 'any' }, { 'options', 'string' } },
@@ -10367,7 +10367,7 @@ M.funcs = {
       Examples: >vim
       	call setwinvar(1, "&list", 0)
       	call setwinvar(2, "myvar", "foobar")
-
+      <
     ]=],
     name = 'setwinvar',
     params = { { 'nr', 'integer' }, { 'varname', 'string' }, { 'val', 'any' } },
@@ -10872,7 +10872,7 @@ M.funcs = {
 
       	" Remove all the placed signs from all the buffers
       	call sign_unplace('*')
-
+      <
     ]=],
     name = 'sign_unplace',
     params = { { 'group', 'string' }, { 'dict', 'vim.fn.sign_unplace.dict' } },
@@ -11583,7 +11583,7 @@ M.funcs = {
         echo strftime("%H:%M")		   " 11:55
         echo strftime("%c", getftime("file.c"))
       				   " Show mod time of file.c.
-
+      <
     ]=],
     name = 'strftime',
     params = { { 'format', 'string' }, { 'time', 'number' } },
@@ -11972,6 +11972,7 @@ M.funcs = {
       	let &directory = '.'
       	let swapfiles = swapfilelist()
       	let &directory = save_dir
+      <
     ]=],
     name = 'swapfilelist',
     params = {},
