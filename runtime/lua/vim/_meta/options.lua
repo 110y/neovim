@@ -1515,6 +1515,13 @@ vim.bo.ci = vim.bo.copyindent
 --- 		character, the cursor won't move. When not included,
 --- 		the cursor would skip over it and jump to the
 --- 		following occurrence.
+--- 							*cpo-~*
+--- 	~	When included, don't resolve symbolic links when
+--- 		changing directory with `:cd`, `:lcd`, or `:tcd`.
+--- 		This preserves the symbolic link path in buffer names
+--- 		and when displaying the current directory.  When
+--- 		excluded (default), symbolic links are resolved to
+--- 		their target paths.
 --- 							*cpo-_*
 --- 	_	When using `cw` on a word, do not include the
 --- 		whitespace following the word in the motion.
@@ -2130,6 +2137,8 @@ vim.go.ei = vim.go.eventignore
 --- 	`MenuPopup`,
 --- 	`ModeChanged`,
 --- 	`OptionSet`,
+--- 	`PackChanged`,
+--- 	`PackChangedPre`,
 --- 	`QuickFixCmdPost`,
 --- 	`QuickFixCmdPre`,
 --- 	`QuitPre`,
@@ -7801,7 +7810,9 @@ vim.go.ww = vim.go.whichwrap
 --- 	:set wc=^I
 --- 	set wc=<Tab>
 --- ```
----
+--- 'wildchar' also enables completion in search pattern contexts such as
+--- `/`, `?`, `:s`, `:g`, `:v`, and `:vim`.  To insert a literal <Tab>
+--- instead of triggering completion, type <C-V><Tab> or "\t".
 ---
 --- @type integer
 vim.o.wildchar = 9
