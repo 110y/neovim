@@ -1314,7 +1314,7 @@ end
 
 require('vim._options')
 
--- Remove at Nvim 1.0
+--- Remove at Nvim 1.0
 ---@deprecated
 vim.loop = vim.uv
 
