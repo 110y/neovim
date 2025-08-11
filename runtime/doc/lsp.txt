@@ -1425,9 +1425,9 @@ format({opts})                                          *vim.lsp.buf.format()*
 
     Parameters: ~
       • {opts}  (`table?`) A table with the following fields:
-                • {formatting_options}? (`table`) Can be used to specify
-                  FormattingOptions. Some unspecified options will be
-                  automatically derived from the current Nvim options. See
+                • {formatting_options}? (`lsp.FormattingOptions`) Can be used
+                  to specify FormattingOptions. Some unspecified options will
+                  be automatically derived from the current Nvim options. See
                   https://microsoft.github.io/language-server-protocol/specification/#formattingOptions
                 • {timeout_ms}? (`integer`, default: `1000`) Time in
                   milliseconds to block for formatting requests. No effect if
@@ -1982,7 +1982,7 @@ refresh({opts})                                   *vim.lsp.codelens.refresh()*
                   for current buffer
 
 run()                                                 *vim.lsp.codelens.run()*
-    Run the code lens in the current line
+    Run the code lens available in the current line.
 
 save({lenses}, {bufnr}, {client_id})                 *vim.lsp.codelens.save()*
     Store lenses for a specific buffer and client
