@@ -2229,6 +2229,16 @@ is_enabled({filter})                         *vim.lsp.inlay_hint.is_enabled()*
 ==============================================================================
 Lua module: vim.lsp.inline_completion                  *lsp-inline_completion*
 
+*vim.lsp.inline_completion.Item*
+
+    Fields: ~
+      • {client_id}    (`integer`) Client ID
+      • {insert_text}  (`string|lsp.StringValue`) The text to be inserted, can
+                       be a snippet.
+      • {range}?       (`vim.Range`) Which range it be applied.
+      • {command}?     (`lsp.Command`) Corresponding server command.
+
+
 enable({enable}, {filter})                *vim.lsp.inline_completion.enable()*
     Enables or disables inline completion for the {filter}ed scope, inline
     completion will automatically be refreshed when you are in insert mode.
@@ -2246,9 +2256,9 @@ enable({enable}, {filter})                *vim.lsp.inline_completion.enable()*
                     for all.
 
 get({opts})                                  *vim.lsp.inline_completion.get()*
-    Apply the currently displayed completion candidate to the buffer.
+    Accept the currently displayed completion candidate to the buffer.
 
-    It returns false when no candidate can be applied, so you can use the
+    It returns false when no candidate can be accepted, so you can use the
     return value to implement a fallback: >lua
          vim.keymap.set('i', '<Tab>', function()
           if not vim.lsp.inline_completion.get() then
@@ -2265,6 +2275,10 @@ get({opts})                                  *vim.lsp.inline_completion.get()*
       • {opts}  (`table?`) A table with the following fields:
                 • {bufnr}? (`integer`, default: 0) Buffer handle, or 0 for
                   current.
+                • {on_accept}? (`fun(item: vim.lsp.inline_completion.Item)`)
+                  Accept handler, called with the accepted item. If not
+                  provided, the default handler is used, which applies changes
+                  to the buffer based on the completion item.
 
     Return: ~
         (`boolean`) `true` if a completion was applied, else `false`.
@@ -2375,6 +2389,33 @@ set_level({level})                                   *vim.lsp.log.set_level()*
 
     Parameters: ~
       • {level}  (`string|integer`) One of |vim.log.levels|
+
+
+==============================================================================
+Lua module: vim.lsp.on_type_formatting                *lsp-on_type_formatting*
+
+enable({enable}, {filter})               *vim.lsp.on_type_formatting.enable()*
+    Enables/disables on-type formatting globally or for the {filter}ed scope.
+    The following are some practical usage examples: >lua
+        -- Enable for all clients
+        vim.lsp.on_type_formatting.enable()
+
+        -- Enable for a specific client
+        vim.api.nvim_create_autocmd('LspAttach', {
+          callback = function(args)
+            local client_id = args.data.client_id
+            local client = assert(vim.lsp.get_client_by_id(client_id))
+            if client.name == 'rust-analyzer' then
+              vim.lsp.on_type_formatting.enable(true, { client_id = client_id })
+            end
+          end,
+        })
+<
+
+    Parameters: ~
+      • {enable}  (`boolean?`) true/nil to enable, false to disable.
+      • {filter}  (`table?`) Optional filters |kwargs|:
+                  • {client_id} (`integer?`) Client ID, or `nil` for all.
 
 
 ==============================================================================
