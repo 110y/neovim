@@ -287,7 +287,7 @@ end
 ---
 --- Title of the window. If a function, it accepts the buffer number of the
 --- source buffer as its only argument and should return a string.
---- @field title (string|fun(bufnr:integer):string|nil)
+--- @field title (string|fun(bufnr:integer):string|nil)?
 
 --- Open a window that displays a textual representation of the undotree.
 ---
@@ -348,6 +348,8 @@ function M.open(opts)
     title = string.format('Undo tree for %s', vim.fn.fnamemodify(bufname, ':.'))
   elseif type(opts_title) == 'function' then
     title = opts_title(buf)
+  elseif type(opts_title) == 'string' then
+    title = opts_title
   end
 
   assert(type(title) == 'string', 'Window title must be a string')
@@ -401,6 +403,8 @@ function M.open(opts)
       end
     end,
   })
+
+  vim.bo[b].filetype = 'nvim-undotree'
 end
 
 return M
