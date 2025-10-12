@@ -1209,7 +1209,9 @@ function lsp.buf_request(bufnr, method, params, handler, on_unsupported)
   -- if has client but no clients support the given method, notify the user
   if next(clients) and not method_supported then
     if on_unsupported == nil then
-      vim.notify(lsp._unsupported_method(method), vim.log.levels.ERROR)
+      -- 110y: disabled because some clients may not support some methods (e.g. clangd does not
+      -- support completionItem/resolve and raise an error when I select a completion item)
+      -- vim.notify(lsp._unsupported_method(method), vim.log.levels.ERROR)
     else
       on_unsupported()
     end
