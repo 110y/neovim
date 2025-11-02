@@ -260,6 +260,8 @@ LSP
 • Support for `textDocument/onTypeFormatting`: |lsp-on_type_formatting|
   https://microsoft.github.io/language-server-protocol/specification/#textDocument_onTypeFormatting
 • The filter option of |vim.lsp.buf.code_action()| now receives the client ID as an argument.
+• |Client:stop()| now accepts a numerical `force` argument to be interpreted as the time to wait
+  before forcing the shutdown.
 
 LUA
 
@@ -365,6 +367,7 @@ VIMSCRIPT
 • |getcompletiontype()| gets command-line completion type for any string.
 • |prompt_getinput()| gets current user-input in prompt-buffer.
 • |wildtrigger()| triggers command-line expansion.
+• |v:vim_did_init| is set after sourcing |init.vim| but before |load-plugins|.
 
 ==============================================================================
 CHANGED FEATURES                                                 *news-changed*
