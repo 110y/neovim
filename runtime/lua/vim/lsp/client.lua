@@ -72,7 +72,7 @@ local all_clients = {}
 --- Milliseconds to wait for server to exit cleanly after sending the "shutdown" request before
 --- sending kill -15. If set to false, waits indefinitely. If set to true, nvim will kill the
 --- server immediately.
---- (default: `3000`)
+--- (default: `false`)
 --- @field exit_timeout? integer|boolean
 ---
 --- A table with flags for the client. The current (experimental) flags are:
@@ -160,7 +160,7 @@ local all_clients = {}
 --- Milliseconds to wait for server to exit cleanly after sending the "shutdown" request before
 --- sending kill -15. If set to false, waits indefinitely. If set to true, nvim will kill the
 --- server immediately.
---- (default: `3000`)
+--- (default: `false`)
 --- @field exit_timeout integer|boolean
 ---
 --- A table with flags for the client. The current (experimental) flags are:
@@ -218,6 +218,9 @@ local all_clients = {}
 ---
 --- Whether on-type formatting is enabled for this client.
 --- @field _otf_enabled boolean?
+---
+--- Timer for stop() with timeout.
+--- @field private _shutdown_timer uv.uv_timer_t?
 ---
 --- Track this so that we can escalate automatically if we've already tried a
 --- graceful shutdown
@@ -395,7 +398,7 @@ function Client.create(config)
     commands = config.commands or {},
     settings = config.settings or {},
     flags = config.flags or {},
-    exit_timeout = config.exit_timeout == nil and 3000 or config.exit_timeout --[[@as integer|boolean]],
+    exit_timeout = config.exit_timeout or false,
     get_language_id = config.get_language_id or default_get_language_id,
     capabilities = config.capabilities,
     workspace_folders = lsp._get_workspace_folders(config.workspace_folders or config.root_dir),
@@ -882,12 +885,6 @@ end
 ---
 --- @param force? boolean|integer
 function Client:stop(force)
-  if type(force) == 'number' then
-    vim.defer_fn(function()
-      self:stop(true)
-    end, force)
-  end
-
   local rpc = self.rpc
   if rpc.is_closing() then
     return
@@ -900,6 +897,13 @@ function Client:stop(force)
   if force == true or not self.initialized or self._graceful_shutdown_failed then
     rpc.terminate()
     return
+  end
+
+  if type(force) == 'number' then
+    self._shutdown_timer = vim.defer_fn(function()
+      self._shutdown_timer = nil
+      self:stop(true)
+    end, force)
   end
 
   -- Sending a signal after a process has exited is acceptable.
@@ -1309,6 +1313,11 @@ end
 --- @param code integer) exit code of the process
 --- @param signal integer the signal used to terminate (if any)
 function Client:_on_exit(code, signal)
+  if self._shutdown_timer and not self._shutdown_timer:is_closing() then
+    self._shutdown_timer:close()
+    self._shutdown_timer = nil
+  end
+
   vim.schedule(function()
     for bufnr in pairs(self.attached_buffers) do
       self:_on_detach(bufnr)
