@@ -2520,9 +2520,8 @@ int parse_command_modifiers(exarg_T *eap, const char **errormsg, cmdmod_T *cmod,
   if (strncmp(eap->cmd, "'<,'>", 5) == 0) {
     // The automatically inserted Visual area range is skipped, so that
     // typing ":cmdmod cmd" in Visual mode works without having to move the
-    // range to after the modififiers. The command will be
-    // "'<,'>cmdmod cmd", parse "cmdmod cmd" and then put back "'<,'>"
-    // before "cmd" below.
+    // range to after the modifiers. The command will be "'<,'>cmdmod cmd",
+    // parse "cmdmod cmd" and then put back "'<,'>" before "cmd" below.
     eap->cmd += 5;
     cmd_start = eap->cmd;
     has_visual_range = true;
@@ -8047,6 +8046,21 @@ static void ex_terminal(exarg_T *eap)
   }
 
   do_cmdline_cmd(ex_cmd);
+}
+
+/// ":lsp {subcmd} {clients}"
+static void ex_lsp(exarg_T *eap)
+{
+  Error err = ERROR_INIT;
+  MAXSIZE_TEMP_ARRAY(args, 1);
+
+  ADD_C(args, CSTR_AS_OBJ(eap->arg));
+
+  NLUA_EXEC_STATIC("require'vim._core.ex_cmd.lsp'.ex_lsp(...)", args, kRetNilBool, NULL, &err);
+  if (ERROR_SET(&err)) {
+    emsg(err.msg);
+  }
+  api_clear_error(&err);
 }
 
 /// ":fclose"
