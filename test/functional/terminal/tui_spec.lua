@@ -2468,6 +2468,22 @@ describe('TUI', function()
     screen:expect({ any = vim.pesc('[Process exited 1]') })
   end)
 
+  it('exits properly when :quit non-last window in event handler #14379', function()
+    local code = [[
+      vim.defer_fn(function()
+        vim.cmd('vsplit | quit')
+      end, 0)
+      vim.cmd('quit')
+    ]]
+    child_session:notify('nvim_exec_lua', code, {})
+    screen:expect([[
+                                                        |
+      [Process exited 0]^                                |
+                                                        |*4
+      {5:-- TERMINAL --}                                    |
+    ]])
+  end)
+
   it('no stack-use-after-scope with cursor color #22432', function()
     screen:set_option('rgb', true)
     command('set termguicolors')
@@ -2788,6 +2804,7 @@ describe('TUI', function()
   it('with non-tty (pipe) stdout/stderr', function()
     finally(function()
       os.remove('testF')
+      os.remove(testlog)
     end)
     local screen = tt.setup_screen(
       0,
@@ -2795,16 +2812,19 @@ describe('TUI', function()
         nvim_prog
       ),
       nil,
-      { VIMRUNTIME = os.getenv('VIMRUNTIME') }
+      { VIMRUNTIME = os.getenv('VIMRUNTIME'), NVIM_LOG_FILE = testlog }
     )
     feed_data(':w testF\n:q\n')
     screen:expect([[
       :w testF                                          |
       :q                                                |
-      ^                                                  |
-                                                        |*3
+      abc                                               |
+                                                        |
+      [Process exited 0]^                                |
+                                                        |
       {5:-- TERMINAL --}                                    |
     ]])
+    assert_log('TUI: timed out waiting for DA1 response', testlog)
   end)
 
   it('<C-h> #10134', function()
