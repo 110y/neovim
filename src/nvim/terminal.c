@@ -143,7 +143,7 @@ typedef struct {
 } ScrollbackLine;
 
 struct terminal {
-  TerminalOptions opts;  // options passed to terminal_open
+  TerminalOptions opts;  // options passed to terminal_alloc()
   VTerm *vt;
   VTermScreen *vts;
   // buffer used to:
@@ -474,18 +474,20 @@ static bool term_may_alloc_scrollback(Terminal *term, buf_T *buf)
 
 // public API {{{
 
-/// Initializes terminal properties, and triggers TermOpen.
+/// Allocates a terminal instance and initializes terminal properties.
 ///
 /// The PTY process (TerminalOptions.data) was already started by jobstart(),
 /// via ex_terminal() or the term:// BufReadCmd.
 ///
 /// @param buf Buffer used for presentation of the terminal.
 /// @param opts PTY process channel, various terminal properties and callbacks.
-void terminal_open(Terminal **termpp, buf_T *buf, TerminalOptions opts)
+///
+/// @return the terminal instance.
+Terminal *terminal_alloc(buf_T *buf, TerminalOptions opts)
   FUNC_ATTR_NONNULL_ALL
 {
   // Create a new terminal instance and configure it
-  Terminal *term = *termpp = xcalloc(1, sizeof(Terminal));
+  Terminal *term = xcalloc(1, sizeof(Terminal));
   term->opts = opts;
 
   // Associate the terminal instance with the new buffer
@@ -545,9 +547,27 @@ void terminal_open(Terminal **termpp, buf_T *buf, TerminalOptions opts)
   // events from this queue are copied back onto the main event queue.
   term->pending.events = multiqueue_new(NULL, NULL);
 
+  return term;
+}
+
+/// Triggers TermOpen and allocates terminal scrollback buffer.
+///
+/// @param termpp  Pointer to the terminal channel's `term` field.
+/// @param buf     Buffer used for presentation of the terminal.
+void terminal_open(Terminal **termpp, buf_T *buf)
+  FUNC_ATTR_NONNULL_ALL
+{
+  Terminal *term = *termpp;
+  assert(term != NULL);
+
   aco_save_T aco;
   aucmd_prepbuf(&aco, buf);
 
+  if (term->sb_buffer != NULL) {
+    // If scrollback has been allocated by autocommands between terminal_alloc()
+    // and terminal_open(), it also needs to be refreshed.
+    refresh_scrollback(term, buf);
+  }
   refresh_screen(term, buf);
   set_option_value(kOptBuftype, STATIC_CSTR_AS_OPTVAL("terminal"), OPT_LOCAL);
 
@@ -575,6 +595,7 @@ void terminal_open(Terminal **termpp, buf_T *buf, TerminalOptions opts)
     abort();
   }
 
+  VTermState *state = vterm_obtain_state(term->vt);
   // Configure the color palette. Try to get the color from:
   //
   // - b:terminal_color_{NUM}
