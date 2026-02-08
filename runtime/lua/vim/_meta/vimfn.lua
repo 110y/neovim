@@ -2953,7 +2953,7 @@ function vim.fn.getcharpos(expr) end
 ---   nnoremap <expr> , getcharsearch().forward ? ',' : ';'
 --- <Also see |setcharsearch()|.
 ---
---- @return table
+--- @return { char: string, forward: 1|0, until: 1|0 }
 function vim.fn.getcharsearch() end
 
 --- The same as |getchar()|, except that this always returns a
@@ -8156,7 +8156,7 @@ function vim.fn.setcharpos(expr, list) end
 ---   call setcharsearch(prevsearch)
 --- <Also see |getcharsearch()|.
 ---
---- @param dict string
+--- @param dict { char?: string, forward?: 1|0, until?: 1|0 }
 --- @return any
 function vim.fn.setcharsearch(dict) end
 
@@ -9577,7 +9577,7 @@ function vim.fn.str2nr(string, base) end
 --- Also see |strlen()|, |strdisplaywidth()| and |strwidth()|.
 ---
 --- @param string string
---- @return any
+--- @return integer
 function vim.fn.strcharlen(string) end
 
 --- Like |strpart()| but using character index and length instead
@@ -9597,8 +9597,8 @@ function vim.fn.strcharlen(string) end
 --- @param src string
 --- @param start integer
 --- @param len? integer
---- @param skipcc? boolean
---- @return any
+--- @param skipcc? 0|1|boolean
+--- @return string
 function vim.fn.strcharpart(src, start, len, skipcc) end
 
 --- The result is a Number, which is the number of characters
@@ -9630,7 +9630,7 @@ function vim.fn.strcharpart(src, start, len, skipcc) end
 --- <
 ---
 --- @param string string
---- @param skipcc? boolean
+--- @param skipcc? 0|1|boolean
 --- @return integer
 function vim.fn.strchars(string, skipcc) end
 
