@@ -296,6 +296,64 @@ describe(':terminal buffer', function()
     eq('t', fn.mode(1))
   end)
 
+  it('is refreshed with partial mappings in Terminal mode #9167', function()
+    command([[set timeoutlen=20000 | tnoremap jk <C-\><C-N>]])
+    feed('j') -- Won't reach the terminal until the next character is typed
+    screen:expect_unchanged()
+    feed('j') -- Refresh scheduled for the first 'j' but not processed
+    screen:expect_unchanged()
+    for i = 1, 10 do
+      eq({ mode = 't', blocking = true }, api.nvim_get_mode())
+      vim.uv.sleep(10) -- Wait for the previously scheduled refresh timer to arrive
+      feed('j') -- Refresh scheduled for the last 'j' and processed for the one before
+      screen:expect(([[
+        tty ready                                         |
+        %s^%s|
+                                                          |*4
+        {5:-- TERMINAL --}                                    |
+      ]]):format(('j'):rep(i), (' '):rep(50 - i)))
+    end
+    feed('l') -- No partial mapping, so all pending refreshes should be processed
+    screen:expect([[
+      tty ready                                         |
+      jjjjjjjjjjjjl^                                     |
+                                                        |*4
+      {5:-- TERMINAL --}                                    |
+    ]])
+  end)
+
+  it('is refreshed with partial mappings in Normal mode', function()
+    command('set timeoutlen=20000 | nnoremap jk :')
+    command('nnoremap j <Cmd>call chansend(&channel, "j")<CR>')
+    feed([[<C-\><C-N>]])
+    screen:expect([[
+      tty ready                                         |
+      ^                                                  |
+                                                        |*5
+    ]])
+    feed('j') -- Won't reach the terminal until the next character is typed
+    screen:expect_unchanged()
+    feed('j') -- Refresh scheduled for the first 'j' but not processed
+    screen:expect_unchanged()
+    for i = 1, 10 do
+      eq({ mode = 'nt', blocking = true }, api.nvim_get_mode())
+      vim.uv.sleep(10) -- Wait for the previously scheduled refresh timer to arrive
+      feed('j') -- Refresh scheduled for the last 'j' and processed for the one before
+      screen:expect(([[
+        tty ready                                         |
+        ^%s%s|
+                                                          |*4
+                                                          |
+      ]]):format(('j'):rep(i), (' '):rep(50 - i)))
+    end
+    feed('l') -- No partial mapping, so all pending refreshes should be processed
+    screen:expect([[
+      tty ready                                         |
+      j^jjjjjjjjjjj                                      |
+                                                        |*5
+    ]])
+  end)
+
   it('writing to an existing file with :w fails #13549', function()
     eq(
       'Vim(write):E13: File exists (add ! to override)',
@@ -553,6 +611,46 @@ end)
 
 describe(':terminal buffer', function()
   before_each(clear)
+
+  it('can resume suspended PTY process running in fish', function()
+    skip(is_os('win'), 'N/A for Windows')
+    skip(fn.executable('fish') == 0, 'missing "fish" command')
+
+    local screen = Screen.new(50, 7)
+    screen:add_extra_attr_ids({
+      [100] = {
+        foreground = Screen.colors.NvimDarkGrey2,
+        background = Screen.colors.NvimLightGrey2,
+      },
+      [101] = {
+        foreground = Screen.colors.NvimLightGrey4,
+        background = Screen.colors.NvimLightGrey2,
+      },
+      [102] = {
+        foreground = Screen.colors.NvimDarkGrey2,
+        background = Screen.colors.NvimLightGrey4,
+      },
+    })
+    command('set shell=fish termguicolors')
+    command(('terminal %s -u NONE -i NONE'):format(fn.shellescape(nvim_prog)))
+    command('startinsert')
+    local s0 = [[
+      {100:^                                                  }|
+      {101:~                                                 }|*3
+      {102:[No Name]                       0,0-1          All}|
+      {100:                                                  }|
+      {5:-- TERMINAL --}                                    |
+    ]]
+    screen:expect(s0)
+    feed('<C-Z>')
+    screen:expect([[
+                                                        |*5
+      ^[Process suspended]                               |
+      {5:-- TERMINAL --}                                    |
+    ]])
+    feed('<Space>')
+    screen:expect(s0)
+  end)
 
   it('term_close() use-after-free #4393', function()
     command('terminal yes')
