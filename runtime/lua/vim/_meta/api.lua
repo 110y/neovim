@@ -568,7 +568,7 @@ function vim.api.nvim_buf_line_count(buffer) end
 --- @param opts vim.api.keyset.set_extmark Optional parameters.
 --- - id : id of the extmark to edit.
 --- - end_row : ending line of the mark, 0-based inclusive.
---- - end_col : ending col of the mark, 0-based exclusive.
+--- - end_col : ending col of the mark, 0-based exclusive, or -1 to extend the range to end of line.
 --- - hl_group : highlight group used for the text range. This and below
 ---     highlight groups can be supplied either as a string or as an integer,
 ---     the latter of which can be obtained using `nvim_get_hl_id_by_name()`.
@@ -1309,6 +1309,7 @@ function vim.api.nvim_get_autocmds(opts) end
 --- -  "buffer"  (optional) Buffer connected to |terminal| instance.
 --- -  "client"  (optional) Info about the peer (client on the other end of the channel), as set
 ---              by |nvim_set_client_info()|.
+--- - "exitcode" (optional) Exit code of the |terminal| process.
 ---
 function vim.api.nvim_get_chan_info(chan) end
 
