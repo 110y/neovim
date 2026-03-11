@@ -8680,7 +8680,7 @@ M.funcs = {
 
     ]=],
     name = 'readdir',
-    params = { { 'directory', 'string' }, { 'expr', 'integer' } },
+    params = { { 'directory', 'string' }, { 'expr', 'integer|string|fun(name: string): integer' } },
     signature = 'readdir({directory} [, {expr}])',
   },
   readfile = {
@@ -9187,7 +9187,7 @@ M.funcs = {
     ]=],
     name = 'screencol',
     params = {},
-    returns = 'integer[]',
+    returns = 'integer',
     signature = 'screencol()',
   },
   screenpos = {
@@ -9220,6 +9220,7 @@ M.funcs = {
     ]=],
     name = 'screenpos',
     params = { { 'winid', 'integer' }, { 'lnum', 'integer' }, { 'col', 'integer' } },
+    returns = '{ col: integer, curscol: integer, endcol: integer, row: integer }',
     signature = 'screenpos({winid}, {lnum}, {col})',
   },
   screenrow = {
@@ -9682,6 +9683,7 @@ M.funcs = {
       { 'timeout', 'integer' },
       { 'skip', 'string|function' },
     },
+    returns = '{ [1]: integer, [2]: integer, [3]: integer? }',
     signature = 'searchpos({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])',
   },
   serverlist = {
