@@ -1368,6 +1368,8 @@ function vim.fn.debugbreak(pid) end
 --- @return T
 function vim.fn.deepcopy(expr, noref) end
 
+--- Lua: see |vim.fs.rm()|.
+---
 --- Without {flags} or with {flags} empty: Deletes the file by the
 --- name {fname}.
 ---
@@ -1853,7 +1855,7 @@ function vim.fn.exp(expr) end
 ---       current script ID  |<SID>|
 ---   <script>  Sourced script file, or script file
 ---       where the current function was defined.
----       For Lua see |lua-script-location|.
+---       Lua: see |lua-script-location|.
 ---   <stack>    Call stack
 ---   <cword>    Word under the cursor
 ---   <cWORD>    WORD under the cursor
@@ -4953,7 +4955,7 @@ function vim.fn.jobresize(job, width, height) end
 --- @return any
 function vim.fn.jobsend(...) end
 
---- Note: Prefer |vim.system()| in Lua (unless using `rpc`, `pty`, or `term`).
+--- Lua: Prefer |vim.system()| (unless using `rpc`, `pty`, or `term`).
 ---
 --- Spawns {cmd} as a job.
 --- If {cmd} is a List it runs directly (no 'shell').
@@ -10168,7 +10170,7 @@ function vim.fn.synconcealed(lnum, col) end
 --- @return integer[]
 function vim.fn.synstack(lnum, col) end
 
---- Note: Prefer |vim.system()| in Lua.
+--- Lua: Prefer |vim.system()|.
 ---
 --- Gets the output of {cmd} as a |string| (|systemlist()| returns
 --- a |List|) and sets |v:shell_error| to the error code.
@@ -10648,7 +10650,7 @@ function vim.fn.undofile(name) end
 --- @return vim.fn.undotree.ret
 function vim.fn.undotree(buf) end
 
---- Note: Prefer |vim.list.unique()| in Lua.
+--- Lua: Prefer |vim.list.unique()|.
 ---
 --- Remove second and succeeding copies of repeated adjacent
 --- {list} items in-place.  Returns {list}.  If you want a list
@@ -11046,7 +11048,7 @@ function vim.fn.wincol() end
 --- is "10.0", Windows 8 is "6.2", Windows XP is "5.1".  For
 --- non-MS-Windows systems the result is an empty string.
 ---
---- See also Lua |uv.os_uname()|.
+--- Lua: see |uv.os_uname()|.
 ---
 --- @return string
 function vim.fn.windowsversion() end

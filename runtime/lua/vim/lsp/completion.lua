@@ -261,7 +261,7 @@ local function get_doc(item)
   if
     has_completeopt('popup')
     and item.insertTextFormat == protocol.InsertTextFormat.Snippet
-    and #(item.documentation or '') == 0
+    and (type(item.documentation) ~= 'string' or #item.documentation == 0)
     and vim.bo.filetype ~= ''
     and (item.textEdit or (item.insertText and item.insertText ~= ''))
   then
@@ -327,9 +327,9 @@ local function generate_kind(item)
   local hex = r
       and string.format(
         '%02x%02x%02x',
-        vim._ensure_integer(r),
-        vim._ensure_integer(g),
-        vim._ensure_integer(b)
+        vim._assert_integer(r),
+        vim._assert_integer(g),
+        vim._assert_integer(b)
       )
     or doc:match('#?([%da-fA-F]+)')
 

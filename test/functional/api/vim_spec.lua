@@ -3887,6 +3887,15 @@ describe('API', function()
       eq(4, api.nvim_echo({ { 'foo' } }, false, { id = 4 }))
       eq(5, api.nvim_echo({ { 'foo' } }, false, {}))
     end)
+
+    it('no use-after-free for custom kind with :messages #38289', function()
+      exec_lua(function()
+        vim.api.nvim_echo({ { 'a' } }, true, { kind = 'foo' })
+        vim.o.guicursor = '' -- pending mode update go brrr
+        vim.api.nvim__redraw({ flush = true }) -- ui_flush -> arena_mem_free go brrr
+        vim.cmd.messages()
+      end)
+    end)
   end)
 
   describe('nvim_open_term', function()
@@ -4979,7 +4988,7 @@ describe('API', function()
       result = api.nvim_parse_cmd('copen 5', {})
       eq(5, result.count)
     end)
-    it('parses range-only command', function()
+    it('parses range-only cmdline (:1)', function()
       insert [[
         line1
         line2
@@ -5033,7 +5042,7 @@ describe('API', function()
       res = api.nvim_parse_cmd("'<,'>", {})
       eq({ 1, 5 }, res.range)
     end)
-    it('parses modifier-only command', function()
+    it('parses modifier-only cmdline (:aboveleft)', function()
       local res = api.nvim_parse_cmd('aboveleft', {})
       eq('', res.cmd)
       eq('aboveleft', res.mods.split)
@@ -5270,7 +5279,7 @@ describe('API', function()
       feed(':call<CR><CR>')
       eq('E471: Argument required', api.nvim_cmd({ cmd = 'messages' }, { output = true }))
 
-      -- modifier only
+      -- "modifier-only" command (e.g. :noautocmd).
       eq('', api.nvim_cmd({ cmd = '', mods = { noautocmd = true } }, {}))
     end)
 
