@@ -2674,6 +2674,9 @@ static void f_gettext(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 static void f_has(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 {
   static const char *const has_list[] = {
+#ifdef __ANDROID__
+    "android",
+#endif
 #if defined(BSD) && !defined(__APPLE__) && !defined(__GNU__)
     "bsd",
 #endif
@@ -2685,6 +2688,9 @@ static void f_has(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 #endif
 #ifdef SUN_SYSTEM
     "sun",
+#endif
+#ifdef __TERMUX__
+    "termux",
 #endif
 #ifdef UNIX
     "unix",
