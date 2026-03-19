@@ -175,6 +175,43 @@ describe('messages2', function()
       {3:[Pager]                            1,1            Top}|
                                                            |
     ]])
+    feed(':<C-F>')
+    screen:expect([[
+      {3:                                                     }|
+      foo                                                  |*4
+      {1::}echo "foo" | echo "bar\nbaz\n"->repeat(&lines)      |
+      {1::}^                                                    |
+      {1:~                                                    }|*5
+      {3:[Command Line]                     2,0-1          All}|
+                                                           |
+    ]])
+    command('wincmd +')
+    screen:expect([[
+      {3:                                                     }|
+      foo                                                  |*3
+      {1::}echo "foo" | echo "bar\nbaz\n"->repeat(&lines)      |
+      {1::}^                                                    |
+      {1:~                                                    }|*6
+      {3:[Command Line]                     2,0-1          All}|
+                                                           |
+    ]])
+    command('echo "foo"')
+    screen:expect([[
+      {3:                                                     }|
+      foo                                                  |*3
+      {1::}echo "foo" | echo "bar\nbaz\n"->repeat(&lines)      |
+      {1::}^                                                    |
+      {1:~                                                    }|*6
+      {3:[Command Line]                     2,0-1          All}|
+      foo                                                  |
+    ]])
+    feed('<C-C>')
+    screen:expect([[
+      {3:                                                     }|
+      foo                                                  |*11
+      {3:[Pager]                            1,1            Top}|
+      {16::}^                                                    |
+    ]])
   end)
 
   it('new buffer, window and options after closing a buffer or switching tabpage', function()
@@ -678,9 +715,9 @@ describe('messages2', function()
 
   it('replace by message ID', function()
     exec_lua(function()
-      vim.api.nvim_echo({ { 'foo' } }, true, { id = 1 })
-      vim.api.nvim_echo({ { 'bar\nbaz' } }, true, { id = 2 })
-      vim.api.nvim_echo({ { 'foo' } }, true, { id = 3 })
+      assert(1 == vim.api.nvim_echo({ { 'foo' } }, true, {}))
+      assert(2 == vim.api.nvim_echo({ { 'bar\nbaz' } }, true, {}))
+      assert(3 == vim.api.nvim_echo({ { 'foo' } }, true, {}))
       vim.keymap.set('n', 'Q', function()
         vim.api.nvim_echo({ { 'Syntax', 23 }, { '\n  - ', 0 }, { 'cCommentL', 439 } }, false, {})
       end)

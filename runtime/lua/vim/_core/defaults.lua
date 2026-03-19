@@ -209,6 +209,10 @@ do
       vim.lsp.buf.code_action()
     end, { desc = 'vim.lsp.buf.code_action()' })
 
+    vim.keymap.set('n', 'grx', function()
+      vim.lsp.codelens.run()
+    end, { desc = 'vim.lsp.codelens.run()' })
+
     vim.keymap.set('n', 'grr', function()
       vim.lsp.buf.references()
     end, { desc = 'vim.lsp.buf.references()' })
@@ -605,14 +609,13 @@ do
           vim.api.nvim_buf_get_extmarks(ev.buf, nvim_terminal_exitmsg_ns, 0, -1, {})
         ) > 0
 
-      -- `nvim_open_term` buffers do not have any attached chan
+      -- `nvim_open_term` buffers do not have an attached 'channel'.
       local msg = buf.channel == 0 and '[Terminal closed]'
         or ('[Process exited %d]'):format(vim.v.event.status)
 
-      -- TermClose may be queued before TermOpen if the process
-      -- exits before `terminal_open` is called. Don't display
-      -- the msg now, let TermOpen display it.
       if buf.buftype ~= 'terminal' or buf_has_exitmsg then
+        -- TermClose may be queued before TermOpen if process exits before `terminal_open` is called.
+        -- Don't display the msg now, let TermOpen display it.
         vim.api.nvim_create_autocmd('TermOpen', {
           buffer = ev.buf,
           once = true,
