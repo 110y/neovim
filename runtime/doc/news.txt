@@ -354,6 +354,7 @@ LUA
 • |vim.json.encode()| has an `sort_keys` option.
 • |Range:is_empty()| to check if a |vim.Range| is empty.
 • |vim.json.decode()| has an `skip_comments` option.
+• |vim.fs.ext()| returns the last extension of a file.
 
 OPTIONS
 
@@ -465,6 +466,8 @@ UI
 • Cursor shape indicates when it is behind an unfocused floating window.
 • Improved LSP signature help rendering.
 • Multigrid UIs can call nvim_input_mouse with grid 0 to let Nvim decide the grid.
+• |vim.ui.progress_status()| returns a formatted string of currently
+running |progress-message|.
 
 VIMSCRIPT
 
