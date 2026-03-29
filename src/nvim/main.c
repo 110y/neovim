@@ -364,7 +364,7 @@ int main(int argc, char **argv)
 
   // NORETURN: Start builtin UI client.
   if (ui_client_channel_id) {
-    ui_client_run(remote_ui);  // NORETURN
+    ui_client_run();  // NORETURN
   }
   assert(!ui_client_channel_id && !use_builtin_ui);
   // Nvim server...
@@ -859,17 +859,6 @@ void getout(int exitval)
   // Apply 'titleold'.
   if (p_title && *p_titleold != NUL) {
     ui_call_set_title(cstr_as_string(p_titleold));
-  }
-
-  if (restarting) {
-    Error err = ERROR_INIT;
-    if (!remote_ui_restart(current_ui, &err)) {
-      if (ERROR_SET(&err)) {
-        ELOG("%s", err.msg);  // UI disappeared already?
-        api_clear_error(&err);
-      }
-    }
-    restarting = false;
   }
 
   if (garbage_collect_at_exit) {
