@@ -1543,8 +1543,11 @@ local options = {
         and from tags to 5.  Other sources remain unlimited.
         Note: The match limit takes effect only during forward completion
         (CTRL-N) and is ignored during backward completion (CTRL-P).
+
+        This option cannot be set in a modeline when 'modelineexpr' is off.
       ]=],
       full_name = 'complete',
+      modelineexpr = true,
       list = 'onecomma',
       scope = { 'buf' },
       short_desc = N_('specify how Insert mode completion works'),
@@ -4254,8 +4257,10 @@ local options = {
         You can include a line break.  Simplest method is to use |:let|: >vim
         	let &guitabtooltip = "line one\nline two"
         <
+        This option cannot be set in a modeline when 'modelineexpr' is off.
       ]=],
       full_name = 'guitabtooltip',
+      modelineexpr = true,
       redraw = { 'current_window' },
       scope = { 'global' },
       short_desc = N_('GUI: custom tooltip for a tab page'),
