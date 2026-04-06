@@ -258,6 +258,7 @@ func Test_zip_fname_evil_path()
   " needed for writing the zip file
   CheckExecutable zip
 
+  messages clear
   call s:CopyZipFile("evil.zip")
   defer delete("X.zip")
   e X.zip
@@ -281,6 +282,7 @@ func Test_zip_fname_evil_path2()
   " needed for writing the zip file
   CheckExecutable zip
 
+  messages clear
   call s:CopyZipFile("evil.zip")
   defer delete("X.zip")
   e X.zip
@@ -295,5 +297,25 @@ func Test_zip_fname_evil_path2()
   let mess  = execute(':mess')
   call assert_match('Path Traversal Attack', mess)
   call assert_match('zipfile://.*::.*tmp/foobar', @%)
+  bw!
+endfunc
+
+func Test_zip_fname_evil_path3()
+  CheckNotMSWindows
+  " needed for writing the zip file
+  CheckExecutable zip
+
+  messages clear
+  call s:CopyZipFile("evil.zip")
+  defer delete("X.zip")
+  e X.zip
+
+  :1
+  let fname = 'payload.txt'
+  call search('\V' .. fname)
+  exe "normal \<cr>"
+  :w!
+  let mess  = execute(':mess')
+  call assert_match('Path Traversal Attack', mess)
   bw!
 endfunc
