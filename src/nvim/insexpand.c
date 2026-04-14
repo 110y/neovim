@@ -971,7 +971,8 @@ static int ins_compl_add(char *const str, int len, char *const fname, char *cons
   match->cp_number = flags & CP_ORIGINAL_TEXT ? 0 : -1;
   match->cp_str = cbuf_to_string(str, (size_t)len);
   match->cp_preselect = preselect;
-  if (preselect && compl_preselect_match == NULL) {
+  if (preselect && compl_preselect_match == NULL
+      && (get_cot_flags() & kOptCotFlagPreselect)) {
     compl_preselect_match = match;
   }
 
@@ -3452,7 +3453,7 @@ static void set_completion(colnr_T startcol, list_T *list)
 
   compl_curr_match = compl_first_match;
   bool no_select = compl_no_select || compl_longest;
-  if ((get_cot_flags() & kOptCotFlagPreselect) && compl_preselect_match && !no_select) {
+  if (compl_preselect_match && !no_select) {
     compl_curr_match = compl_preselect_match->cp_prev;
     ins_complete(Ctrl_N, false);
   } else if (compl_no_insert || no_select) {
@@ -6399,7 +6400,7 @@ static unsigned quote_meta(char *dest, char *src, int len)
   return m;
 }
 
-#if defined(EXITFREE)
+#ifdef EXITFREE
 void free_insexpand_stuff(void)
 {
   API_CLEAR_STRING(compl_orig_text);
@@ -6509,6 +6510,11 @@ static void remove_old_matches(void)
 
       if (!shown_match_removed && compl_shown_match == current) {
         shown_match_removed = true;
+      }
+
+      // Avoid dangling pointer when preselect match is removed.
+      if (to_delete == compl_preselect_match) {
+        compl_preselect_match = NULL;
       }
 
       current = current->cp_next;

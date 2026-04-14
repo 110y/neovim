@@ -266,8 +266,9 @@ describe('completion', function()
       feed('i<C-r>=TestComplete()<CR><ESC>')
       eq(0, eval('&l:modified'))
     end)
+
     describe('"preselect"', function()
-      it('"preselect" selects first item with preselect attribute', function()
+      it('selects first item.preselect item', function()
         source([[
           function! TestComplete() abort
             call complete(1, [
@@ -328,6 +329,12 @@ describe('completion', function()
           {1:~                                                           }|*2
           {5:-- INSERT --}                                                |
         ]])
+
+        -- without "preselect" in completeopt, preselect attribute is ignored
+        feed('<Esc>S')
+        command('set completeopt-=preselect')
+        feed('<C-r>=TestComplete()<CR><C-N><C-Y>')
+        eq('aaa', api.nvim_get_current_line())
       end)
     end)
   end)
