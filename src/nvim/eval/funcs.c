@@ -227,7 +227,7 @@ char *get_expr_name(expand_T *xp, int idx)
   return get_user_var_name(xp, ++intidx);
 }
 
-/// Find internal function in hash functions
+/// Gets a builtin (aka "vimfn", "eval") function from the generated hash table.
 ///
 /// @param[in]  name  Name of the function.
 ///
@@ -238,6 +238,17 @@ const EvalFuncDef *find_internal_func(const char *const name)
   size_t len = strlen(name);
   int index = find_internal_func_hash(name, len);
   return index >= 0 ? &functions[index] : NULL;
+}
+
+/// Gets the Lua name of a Lua-implemented "vimfn" function, or NULL if not found.
+const char *find_internal_func_lua(const char *const name)
+  FUNC_ATTR_WARN_UNUSED_RESULT FUNC_ATTR_PURE FUNC_ATTR_NONNULL_ALL
+{
+  const EvalFuncDef *const fdef = find_internal_func(name);
+  if (fdef && fdef->func == &lua_wrapper) {
+    return fdef->data.func_lua;
+  }
+  return NULL;
 }
 
 /// Check the argument count to use for internal function "fdef".
@@ -325,7 +336,7 @@ static bool non_zero_arg(typval_T *argvars)
               && *argvars[0].vval.v_string != NUL));
 }
 
-/// Apply a floating point C function on a typval with one float_T.
+/// Apply a floating point C function on a typval with one float_T (`func_float` in eval.lua).
 ///
 /// Some versions of glibc on i386 have an optimization that makes it harder to
 /// call math functions indirectly from inside an inlined function, causing
@@ -336,19 +347,23 @@ static void float_op_wrapper(typval_T *argvars, typval_T *rettv, EvalFuncData fp
 
   rettv->v_type = VAR_FLOAT;
   if (tv_get_float_chk(argvars, &f)) {
-    rettv->vval.v_float = fptr.float_func(f);
+    rettv->vval.v_float = fptr.func_float(f);
   } else {
     rettv->vval.v_float = 0.0;
   }
 }
 
+/// Invokes an API (nvim_) function from Vimscript.
+///
+/// Converts `argvars` to API Objects, calls the API handler, and converts the result back.
+/// Used by `gen_eval.lua` for `eval=true` API functions.
 static void api_wrapper(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 {
   if (check_secure()) {
     return;
   }
 
-  MsgpackRpcRequestHandler handler = *fptr.api_handler;
+  MsgpackRpcRequestHandler handler = *fptr.func_api;
 
   MAXSIZE_TEMP_ARRAY(args, MAX_FUNC_ARGS);
   Arena arena = ARENA_EMPTY;
@@ -375,11 +390,42 @@ end:
   api_clear_error(&err);
 }
 
+/// Invokes a Lua-implemented vimfn/"f_xx" function from Vimscript (`func_lua` in eval.lua).
+///
+/// - Converts argvars to API Objects, calls the Lua function, converts the result back.
+/// - NOT used when called from Lua; `nlua_call()` calls the function directly.
+static void lua_wrapper(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
+{
+  MAXSIZE_TEMP_ARRAY(args, MAX_FUNC_ARGS);
+  Arena arena = ARENA_EMPTY;
+
+  for (typval_T *tv = argvars; tv->v_type != VAR_UNKNOWN; tv++) {
+    ADD_C(args, vim_to_object(tv, &arena, false));
+  }
+
+  char buf[256];
+  snprintf(buf, sizeof(buf), "return require('vim._core.vimfn').%s(...)", fptr.func_lua);
+
+  Error err = ERROR_INIT;
+  Object result = nlua_exec(cstr_as_string(buf), NULL, args, kRetObject, &arena, &err);
+
+  if (ERROR_SET(&err)) {
+    semsg_multiline("emsg", e_api_error, err.msg);
+    goto end;
+  }
+
+  object_to_vim_take_luaref(&result, rettv, true, &err);
+
+end:
+  arena_mem_free(arena_finish(&arena));
+  api_clear_error(&err);
+}
+
 /// "abs(expr)" function
 static void f_abs(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 {
   if (argvars[0].v_type == VAR_FLOAT) {
-    float_op_wrapper(argvars, rettv, (EvalFuncData){ .float_func = &fabs });
+    float_op_wrapper(argvars, rettv, (EvalFuncData){ .func_float = &fabs });
   } else {
     bool error = false;
 
@@ -578,7 +624,7 @@ static void f_chanclose(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 
   ChannelPart part = kChannelPartAll;
   if (argvars[1].v_type == VAR_STRING) {
-    char *stream = argvars[1].vval.v_string;
+    const char *stream = tv_get_string(&argvars[1]);
     if (!strcmp(stream, "stdin")) {
       part = kChannelPartStdin;
     } else if (!strcmp(stream, "stdout")) {
@@ -1157,51 +1203,6 @@ static void f_empty(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   }
 
   rettv->vval.v_number = n;
-}
-
-/// "environ()" function
-static void f_environ(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
-{
-  tv_dict_alloc_ret(rettv);
-
-  size_t env_size = os_get_fullenv_size();
-  char **env = xmalloc(sizeof(*env) * (env_size + 1));
-  env[env_size] = NULL;
-
-  os_copy_fullenv(env, env_size);
-
-  for (ssize_t i = (ssize_t)env_size - 1; i >= 0; i--) {
-    const char *str = env[i];
-    const char * const end = strchr(str + (str[0] == '=' ? 1 : 0),
-                                    '=');
-    assert(end != NULL);
-    ptrdiff_t len = end - str;
-    assert(len > 0);
-    const char *value = str + len + 1;
-
-    char c = env[i][len];
-    env[i][len] = NUL;
-
-#ifdef MSWIN
-    // Upper-case all the keys for Windows so we can detect duplicates
-    char *const key = strcase_save(str, true);
-#else
-    char *const key = xstrdup(str);
-#endif
-
-    env[i][len] = c;
-
-    if (tv_dict_find(rettv->vval.v_dict, key, len) != NULL) {
-      // Since we're traversing from the end of the env block to the front, any
-      // duplicate names encountered should be ignored.  This preserves the
-      // semantics of env vars defined later in the env block taking precedence.
-      xfree(key);
-      continue;
-    }
-    tv_dict_add_str(rettv->vval.v_dict, key, (size_t)len, value);
-    xfree(key);
-  }
-  os_free_fullenv(env);
 }
 
 /// "escape({string}, {chars})" function
@@ -2921,16 +2922,6 @@ static void f_hlexists(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   rettv->vval.v_number = highlight_exists(tv_get_string(&argvars[0]));
 }
 
-/// "hostname()" function
-static void f_hostname(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
-{
-  char hostname[256];
-
-  os_get_hostname(hostname, 256);
-  rettv->v_type = VAR_STRING;
-  rettv->vval.v_string = xstrdup(hostname);
-}
-
 /// "index()" function
 static void f_index(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
 {
@@ -3412,9 +3403,12 @@ dict_T *create_environment(const dictitem_T *job_env, const bool clear_env, cons
 
   if (!clear_env) {
     typval_T temp_env = TV_INITIAL_VALUE;
-    f_environ(NULL, &temp_env, (EvalFuncData){ .null = NULL });
-    tv_dict_extend(env, temp_env.vval.v_dict, "force");
-    tv_dict_free(temp_env.vval.v_dict);
+    typval_T no_args[] = { { .v_type = VAR_UNKNOWN } };
+    nlua_call_vimfn("vim._core.vimfn", "f_environ", no_args, &temp_env);
+    if (temp_env.v_type == VAR_DICT) {
+      tv_dict_extend(env, temp_env.vval.v_dict, "force");
+    }
+    tv_clear(&temp_env);
 
     if (pty) {
       // These env vars shouldn't propagate to the child process. #6764
@@ -6359,42 +6353,21 @@ static void f_serverlist(typval_T *argvars, typval_T *rettv, EvalFuncData fptr)
   size_t n;
   char **addrs = server_address_list(&n);
 
-  Arena arena = ARENA_EMPTY;
-  // Passed to vim._core.server.serverlist() to avoid duplicates
-  Array addrs_arr = arena_array(&arena, n);
-
-  // Copy addrs into a linked list.
-  list_T *const l = tv_list_alloc_ret(rettv, (ptrdiff_t)n);
+  // Get the (internal) address list as a typval to pass to Lua.
+  typval_T addrs_tv;
+  tv_list_alloc_ret(&addrs_tv, (ptrdiff_t)n);
   for (size_t i = 0; i < n; i++) {
-    tv_list_append_allocated_string(l, addrs[i]);
-    ADD_C(addrs_arr, CSTR_AS_OBJ(addrs[i]));
+    tv_list_append_allocated_string(addrs_tv.vval.v_list, addrs[i]);
   }
-
-  if (!(argvars[0].v_type == VAR_DICT && tv_dict_get_bool(argvars[0].vval.v_dict, "peer", false))) {
-    goto cleanup;
-  }
-
-  MAXSIZE_TEMP_ARRAY(args, 1);
-  ADD_C(args, ARRAY_OBJ(addrs_arr));
-
-  Error err = ERROR_INIT;
-  Object rv = NLUA_EXEC_STATIC("return require('vim._core.server').serverlist(...)",
-                               args, kRetObject,
-                               &arena, &err);
-
-  if (ERROR_SET(&err)) {
-    ELOG("vim._core.serverlist failed: %s", err.msg);
-    goto cleanup;
-  }
-
-  for (size_t i = 0; i < rv.data.array.size; i++) {
-    char *curr_server = rv.data.array.items[i].data.string.data;
-    tv_list_append_string(l, curr_server, -1);
-  }
-
-cleanup:
   xfree(addrs);
-  arena_mem_free(arena_finish(&arena));
+
+  // Lua handles options (e.g. {peer=true}), peer discovery, and returns combined list.
+  typval_T opts = argvars[0].v_type != VAR_UNKNOWN ? argvars[0] : (typval_T){ .v_type = VAR_SPECIAL,
+                                                                              .vval.v_special =
+                                                                                kSpecialVarNull };
+  typval_T lua_args[] = { opts, addrs_tv, { .v_type = VAR_UNKNOWN } };
+  nlua_call_vimfn("vim._core.server", "serverlist", lua_args, rettv);
+  tv_clear(&addrs_tv);
 }
 
 /// "serverstart()" function
