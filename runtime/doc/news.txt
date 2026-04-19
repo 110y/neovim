@@ -123,11 +123,13 @@ DIAGNOSTICS
 
 EDITOR
 
+• |gf| and |<cfile>| support `file://…` URIs.
 • |:log| opens log files.
 
 EVENTS
 
-• todo
+• |:delmarks| now triggers the |MarkSet| autocommand with line==col==0, same
+  as |nvim_buf_del_mark()|
 
 HIGHLIGHTS
 
