@@ -365,7 +365,7 @@ void set_init_1(bool clean_arg)
   memmove(backupdir + 2, backupdir, backupdir_len + 1);
   memmove(backupdir, ".,", 2);
   set_string_default(kOptBackupdir, backupdir, true);
-  set_string_default(kOptViewdir, stdpaths_user_state_subpath("view", 2, true),
+  set_string_default(kOptViewdir, stdpaths_user_state_subpath("view", 2, false),
                      true);
   set_string_default(kOptDirectory, stdpaths_user_state_subpath("swap", 2, true),
                      true);
@@ -406,6 +406,12 @@ void set_init_1(bool clean_arg)
 
   // Expand environment variables and things like "~" for the defaults.
   set_init_expand_env();
+
+  // Allow disabling ttyfast during startup to disable features such as
+  // automatic background detection over slow connections.
+  if (os_env_exists("NVIM_NOTTYFAST", false)) {
+    set_option_value_give_err(kOptTtyfast, BOOLEAN_OPTVAL(false), 0);
+  }
 
   save_file_ff(curbuf);         // Buffer is unchanged
 
@@ -1579,6 +1585,7 @@ int do_set(char *arg, int opt_flags)
           arg++;
           // Only for :set command set global value of local options.
           set_options_default(opt_flags);
+          didset_options_all();
           didset_options();
           didset_options2();
           ui_refresh_options();
@@ -1825,6 +1832,26 @@ static void didset_options2(void)
   tabstop_set(curbuf->b_p_vsts, &curbuf->b_p_vsts_array);
   xfree(curbuf->b_p_vts_array);
   tabstop_set(curbuf->b_p_vts,  &curbuf->b_p_vts_array);
+}
+
+/// Repair UI state after `:set all&`.
+///
+/// `set_options_default` resets option values via `set_option_default` and
+/// `set_option_direct` without invoking per-option `did_set` callbacks, so
+/// UI-derived state (cursor shape, statusline, tabline) can get out of sync.
+/// This function patches the known cases.
+///
+/// Note: We intentionally do not replay all `did_set` callbacks
+/// (`opt_did_set_cb`) because they have order-dependent side effects and
+/// old/new transition logic that does not hold when values are already reset.
+static void didset_options_all(void)
+{
+  const char *errmsg = parse_shape_opt(SHAPE_CURSOR);
+  assert(errmsg == NULL);
+  (void)errmsg;
+  last_status(false);
+  win_float_update_statusline();
+  win_new_screen_rows();
 }
 
 /// Check for string options that are NULL (normally only termcap options).
@@ -2629,6 +2656,8 @@ static const char *did_set_scrollbind(optset_T *args)
 
 #ifdef BACKSLASH_IN_FILENAME
 /// Process the updated 'shellslash' option value.
+/// TODO(ntdiary): Remove this once we're confident that the `shellslash`
+/// option is no longer needed.
 static const char *did_set_shellslash(optset_T *args FUNC_ATTR_UNUSED)
 {
   if (p_ssl) {
@@ -2641,10 +2670,11 @@ static const char *did_set_shellslash(optset_T *args FUNC_ATTR_UNUSED)
     pseps[0] = '\\';
   }
 
+  // TODO(ntdiary): Remove these in the follow PR.
   // need to adjust the file name arguments and buffer names.
-  buflist_slash_adjust();
-  alist_slash_adjust();
-  scriptnames_slash_adjust();
+  // buflist_slash_adjust();
+  // alist_slash_adjust();
+  // scriptnames_slash_adjust();
   return NULL;
 }
 #endif
@@ -3881,6 +3911,29 @@ static const char *set_option(const OptIndex opt_idx, OptVal value, int opt_flag
       return errmsg;
     }
   }
+
+#ifdef BACKSLASH_IN_FILENAME
+  // Ensure "/" slashes in various options.
+  uint32_t flags = options[opt_idx].flags;
+  if ((flags & kOptFlagExpand)
+      && opt_idx != kOptEqualprg
+      && opt_idx != kOptFormatprg
+      && opt_idx != kOptGrepprg
+      && opt_idx != kOptKeywordprg
+      && opt_idx != kOptMakeprg
+      && opt_idx != kOptShell) {
+    bool allow_comma = flags & kOptFlagComma;
+    bool allow_space = (opt_idx == kOptCdpath || opt_idx == kOptPath || opt_idx == kOptTags);
+    for (char *p = value.data.string.data; *p; p++) {
+      if (*p != '\\'
+          || (p[1] == ',' && allow_comma)
+          || (p[1] == ' ' && allow_space)) {
+        continue;
+      }
+      *p = '/';
+    }
+  }
+#endif
 
   vimoption_T *opt = &options[opt_idx];
   const bool scope_local = opt_flags & OPT_LOCAL;
