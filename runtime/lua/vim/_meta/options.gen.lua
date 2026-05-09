@@ -2625,7 +2625,8 @@ vim.go.fcs = vim.go.fillchars
 --- `String` and is the `:find` command argument.  The second argument is
 --- a `Boolean` and is set to `v:true` when the function is called to get
 --- a List of command-line completion matches for the `:find` command.
---- The function should return a List of strings.
+--- The function should return a List, which is handled similarly to the
+--- return value of a `:command-completion-customlist` function.
 ---
 --- The function is called only once per `:find` command invocation.
 --- The function can process all the directories specified in 'path'.
@@ -5917,6 +5918,7 @@ vim.go.shcf = vim.go.shellcmdflag
 --- Note: When using a pipe like "| tee", you'll lose the exit code of the
 --- shell command.  This might be configurable by your shell, look for
 --- the pipefail option (for bash and zsh, use ":set -o pipefail").
+--- Only a single "%s" value is allowed.
 ---
 --- @type string
 vim.o.shellpipe = "| tee"
@@ -5959,6 +5961,8 @@ vim.go.shq = vim.go.shellquote
 --- explicitly set before.
 --- In the future pipes may be used for filtering and this option will
 --- become obsolete (at least for Unix).
+--- 							*E1577*
+--- Only a single "%s" item is allowed in the option value.
 ---
 --- @type string
 vim.o.shellredir = ">"
