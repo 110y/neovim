@@ -306,6 +306,7 @@ void nlua_error(lua_State *const lstate, const char *const msg)
     fprintf(stderr, msg, (int)len, str);
     fprintf(stderr, "\n");
   } else {
+    msg_ext_no_fast();
     semsg_multiline("lua_error", msg, (int)len, str);
   }
 
@@ -342,6 +343,7 @@ static void nlua_luv_error_event(void **argv)
   luv_err_t type = (luv_err_t)(intptr_t)argv[1];
   switch (type) {
   case kCallback:
+    msg_ext_no_fast();
     semsg_multiline("lua_error", "Lua callback:\n%s", error);
     break;
   case kThread:
@@ -599,6 +601,17 @@ static int nlua_check_interrupt(lua_State *lstate)
   return 1;
 }
 
+static int nlua_os_exit(lua_State *lstate)
+{
+  int status = 0;
+  if (lua_gettop(lstate) >= 1 && !lua_isnil(lstate, 1)) {
+    status = lua_isboolean(lstate, 1) ? (lua_toboolean(lstate, 1) ? 0 : 1)
+                                      : (int)luaL_checkinteger(lstate, 1);
+  }
+  getout(status);
+  return 0;  // Unreachable, but MSVC does not infer getout() is noreturn.
+}
+
 static nlua_ref_state_t *nlua_new_ref_state(lua_State *lstate, bool is_thread)
   FUNC_ATTR_NONNULL_ALL
 {
@@ -839,6 +852,12 @@ static bool nlua_state_init(lua_State *const lstate) FUNC_ATTR_NONNULL_ALL
   lua_pop(lstate, 1);
 #endif
 
+  // os.exit()
+  lua_getglobal(lstate, "os");
+  lua_pushcfunction(lstate, &nlua_os_exit);
+  lua_setfield(lstate, -2, "exit");
+  lua_pop(lstate, 1);
+
   // vim
   lua_newtable(lstate);
 
@@ -1049,6 +1068,7 @@ static void nlua_print_event(void **argv)
   HlMessageChunk chunk = { { .data = argv[0], .size = (size_t)(intptr_t)argv[1] - 1 }, 0 };
   kv_push(msg, chunk);
   bool needs_clear = false;
+  msg_ext_no_fast();
   msg_multihl(NIL, msg, "lua_print", true, false, NULL, &needs_clear);
 }
 
