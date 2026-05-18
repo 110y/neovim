@@ -1808,7 +1808,7 @@ static int mode_ret(LuaRetMode mode)
 Object nlua_call_ref_ctx(bool fast, LuaRef ref, const char *name, Array args, LuaRetMode mode,
                          Arena *arena, Error *err)
 {
-  lua_State *const lstate = global_lstate;
+  lua_State *const lstate = active_lstate;
   int top = lua_gettop(lstate);
   nlua_pushref(lstate, ref);
   int nargs = (int)args.size;
@@ -2395,7 +2395,9 @@ int nlua_do_ucmd(ucmd_T *cmd, exarg_T *eap, bool preview)
   char nargs[2];
   if (cmd->uc_argt & EX_EXTRA) {
     if (cmd->uc_argt & EX_NOSPC) {
-      if (cmd->uc_argt & EX_NEEDARG) {
+      if (cmd->uc_argt & EX_ARGSPACE) {
+        nargs[0] = '_';
+      } else if (cmd->uc_argt & EX_NEEDARG) {
         nargs[0] = '1';
       } else {
         nargs[0] = '?';

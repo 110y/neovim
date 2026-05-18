@@ -203,6 +203,7 @@ LUA
 • |vim.log| for easily creating loggers.
 • |vim.pack.get()| output includes revision of a pending update.
 • |vim.pack.get()| can fetch new updates before computing the output.
+• |vim.pos| and |vim.range| can now convert between mark positions.
 
 OPTIONS
 
@@ -249,7 +250,8 @@ TUI
 
 • The TUI will re-query the terminal's background color when resuming from
   a suspended state, and Nvim will update 'background' accordingly.
-• TUI uses |$NVIM_TERMDEFS| to override terminfo entries.
+• User can override the builtin "terminfo" via |$NVIM_TERMDEFS|. This is
+  similar to Vim's |t_xx| options.
 
 UI
 
