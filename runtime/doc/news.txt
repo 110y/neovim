@@ -152,6 +152,8 @@ DIAGNOSTICS
 
 • |vim.diagnostic.status()| uses the severity names defined by the `signs`
   field of |vim.diagnostic.config()|, if any.
+• `virtual_lines.overflow` in |vim.diagnostic.config()| controls
+  how virtual lines wider than the window are displayed.
 
 EDITOR
 
@@ -166,6 +168,8 @@ EDITOR
   number of history lines kept above the prompt.
 • |v_al| and |v_il| text objects select the whole buffer and the current line
   without leading or trailing white space.
+• 'autoread' uses file system watchers to detect external changes in
+  real-time, instead of only on |FocusGained|/|:checktime|.
 
 EVENTS
 
