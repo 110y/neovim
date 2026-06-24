@@ -101,6 +101,7 @@ static int current_augroup = AUGROUP_DEFAULT;
 static bool au_need_clean = false;
 
 static int autocmd_blocked = 0;  // block all autocmds
+static int aucmd_prepbuf_depth = 0;
 
 static bool autocmd_nested = false;
 static bool autocmd_include_groups = false;
@@ -763,7 +764,7 @@ void do_autocmd(exarg_T *eap, char *arg_in, int forceit)
   char *arg = arg_in;
   char *envpat = NULL;
   char *cmd;
-  bool need_free = false;
+  bool cmd_need_free = false;
   bool nested = false;
   bool once = false;
   int group;
@@ -832,7 +833,7 @@ void do_autocmd(exarg_T *eap, char *arg_in, int forceit)
     }
 
     if (invalid_flags) {
-      return;
+      goto err_exit;
     }
 
     // Find the start of the commands.
@@ -840,9 +841,9 @@ void do_autocmd(exarg_T *eap, char *arg_in, int forceit)
     if (*cmd != NUL) {
       cmd = expand_sfile(cmd);
       if (cmd == NULL) {  // some error
-        return;
+        goto err_exit;
       }
-      need_free = true;
+      cmd_need_free = true;
     }
   }
 
@@ -879,7 +880,8 @@ void do_autocmd(exarg_T *eap, char *arg_in, int forceit)
     }
   }
 
-  if (need_free) {
+err_exit:
+  if (cmd_need_free) {
     xfree(cmd);
   }
   xfree(envpat);
@@ -1347,14 +1349,15 @@ void aucmd_prepbuf(aco_save_T *aco, buf_T *buf)
   curbuf = buf;
   aco->new_curwin_handle = curwin->handle;
   set_bufref(&aco->new_curbuf, curbuf);
-  if (aco->new_curwin_handle != aco->save_curwin_handle) {
-    aucmd_prepbuf_depth++;
-  }
 
   aco->save_VIsual_active = VIsual_active;
   if (!same_buffer) {
     // disable the Visual area, position may be invalid in another buffer
     VIsual_active = false;
+  }
+  if (aco->new_curwin_handle != aco->save_curwin_handle) {
+    autocmd_save_curwin = aucmd_prepbuf_depth == 0 ? aco->save_curwin_handle : autocmd_save_curwin;
+    aucmd_prepbuf_depth++;
   }
 }
 
@@ -1468,7 +1471,6 @@ win_found:
         curbuf->b_nwindows++;
       }
 
-      curwin->w_redr_status = true;
       curwin = save_curwin;
       curbuf = curwin->w_buffer;
       prevwin = win_find_by_handle(aco->save_prevwin_handle);
@@ -1488,6 +1490,7 @@ win_found:
   if (aco->new_curwin_handle != aco->save_curwin_handle) {
     assert(aucmd_prepbuf_depth > 0);
     aucmd_prepbuf_depth--;
+    autocmd_save_curwin = aucmd_prepbuf_depth == 0 ? 0 : autocmd_save_curwin;
   }
 }
 
