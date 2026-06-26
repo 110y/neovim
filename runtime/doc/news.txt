@@ -97,6 +97,8 @@ EVENTS
 
 LSP
 
+• `vim.lsp.ClientConfig.cmd` given as a string array now uses
+  `vim.lsp.ClientConfig.root_dir` as its default process working directory.
 • `client.attached_buffers[buf]` now stores `languageId` string (was boolean).
 
 LUA
@@ -324,6 +326,8 @@ These existing features changed their behavior.
 • `nvim_exec_autocmds({buf=…})` runs in the context of the target buffer.
 • |OptionSet| is no longer triggered during startup by automatic
   |'background'| detection.
+• Editing a local directory now shows its contents in a `filetype=directory`
+  buffer. See |dir|.
 • |:Open| with no arguments uses the current file.
 • The "buffer" key was renamed to "buf" in these functions (but the old name
   "buffer" is still accepted, for backwards compatibility):
