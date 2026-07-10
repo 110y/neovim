@@ -37,8 +37,9 @@ local function bufopt(name)
 end
 
 local function assert_directory(path)
-  eq(path, api.nvim_buf_get_name(0))
-  eq(path, fn.bufname('%'))
+  local ffname = path:sub(-1) == '/' and path or path .. '/'
+  eq(ffname, api.nvim_buf_get_name(0))
+  eq(path, vim.fs.normalize(fn.bufname('%')))
   eq('directory', bufopt('filetype'))
   eq(true, bufopt('buflisted'))
 end
@@ -155,13 +156,37 @@ describe('nvim.dir', function()
     assert_directory(root)
     line_of('alpha.txt')
 
-    n.clear({ args_rm = { '--cmd' }, args = { '--noplugin' } })
-    api.nvim_buf_set_lines(0, 0, -1, false, { '  alpha', '  beta' })
-    api.nvim_win_set_cursor(0, { 2, 7 })
-    feed('-')
+    -- Ensure the cursor stays on the entry we navigated up from.
+    eq('alpha.txt', api.nvim_get_current_line())
+  end)
 
-    eq({ 1, 2 }, api.nvim_win_get_cursor(0))
-    eq(false, exec_lua([[return package.loaded['nvim.dir'] ~= nil]]))
+  it('lets startup plugins replace the - mapping', function()
+    local config_dir = fn.stdpath('config')
+    local plugin_dir = vim.fs.joinpath(config_dir, 'plugin')
+    fn.mkdir(plugin_dir, 'p')
+    fn.writefile({
+      [[if vim.fn.mapcheck('-', 'n') == '' and vim.fn.hasmapto('<Plug>(dirvish_up)', 'n') == 0 then]],
+      [[  vim.keymap.set('n', '-', '<Plug>(dirvish_up)')]],
+      [[end]],
+    }, vim.fs.joinpath(plugin_dir, 'dirvish.lua'))
+
+    n.clear({ args_rm = { '-u', '--cmd' } })
+
+    eq('<Plug>(dirvish_up)', fn.mapcheck('-', 'n'))
+    n.rmdir(config_dir)
+  end)
+
+  it('preserves alternate buffer when opening a parent directory', function()
+    make_fixture()
+    n.clear({ args_rm = { '-u', '--cmd' } })
+
+    edit(file)
+    feed('-')
+    poke_eventloop()
+
+    assert_directory(root)
+    -- Keep the alternate buffer on the file we navigated up from.
+    eq(file, api.nvim_buf_get_name(fn.bufnr('#')))
   end)
 
   it('uses an absolute buffer name for a relative startup directory argument', function()

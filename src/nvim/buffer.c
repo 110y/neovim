@@ -39,6 +39,7 @@
 #include "nvim/channel.h"
 #include "nvim/charset.h"
 #include "nvim/cmdexpand.h"
+#include "nvim/context.h"
 #include "nvim/cursor.h"
 #include "nvim/diff.h"
 #include "nvim/digraph.h"
@@ -401,6 +402,19 @@ int open_buffer(bool read_stdin, exarg_T *eap, int flags_arg)
   // require "!" to overwrite the file, because it wasn't read completely
   if (aborting()) {
     curbuf->b_flags |= BF_READERR;
+  }
+
+  // Directory buf:
+  // readfile() returns NOTDONE without firing BufReadPost when it did not read a
+  // file (e.g. a directory). Since BufReadPost is what normally runs filetype
+  // detection, do it here so FileType fires before the BufEnter below.
+  if (retval == NOTDONE && *curbuf->b_p_ft == NUL
+      && curbuf->b_ffname != NULL
+      && after_pathsep(curbuf->b_ffname,
+                       curbuf->b_ffname + strlen(curbuf->b_ffname))) {
+    if (augroup_exists("filetypedetect")) {
+      do_doautocmd("filetypedetect BufRead", false, NULL);
+    }
   }
 
   // Need to update automatic folding.  Do this before the autocommands,
@@ -1455,7 +1469,7 @@ static int do_buffer_ext(int action, int start, int dir, int count, int flags)
     // Repeat this so long as we end up in a window with this buffer.
     while (buf == curbuf
            && !(win_locked(curwin) || curwin->w_buffer->b_locked > 0)
-           && (is_aucmd_win(lastwin) || !last_window(curwin))) {
+           && (is_ctx_win(lastwin) || !last_window(curwin))) {
       if (win_close(curwin, false, false) == FAIL) {
         break;
       }
@@ -2021,6 +2035,7 @@ buf_T *buflist_new(char *ffname_arg, char *sfname_arg, linenr_T lnum, int flags)
   }
 
   if (ffname != NULL) {
+    assert(sfname != NULL);
     buf->b_ffname = ffname;
     buf->b_sfname = xstrdup(sfname);
   }
@@ -3596,6 +3611,9 @@ int append_arg_number(win_T *wp, char *buf, size_t buflen)
 }
 
 /// Make "*ffname" a full file name, set "*sfname" to "*ffname" if not NULL.
+/// For a directory the resulting "*ffname" gets a trailing path separator. When
+/// "*sfname" already ends with a separator the final component is not resolved,
+/// so the symbolic link path is preserved.
 /// "*ffname" becomes a pointer to allocated memory (or NULL).
 /// When resolving a link both "*sfname" and "*ffname" will point to the same
 /// allocated memory.
@@ -3609,7 +3627,30 @@ void fname_expand(buf_T *buf, char **ffname, char **sfname)
   if (*sfname == NULL) {  // no short file name given, use ffname
     *sfname = *ffname;
   }
-  *ffname = fix_fname((*ffname));     // expand to full path
+  *ffname = fix_fname(*ffname);     // expand to full path
+  if (*ffname == NULL) {
+    *sfname = NULL;
+    return;
+  }
+  // Preserve a symbolic link path for directory buffers. fix_fname("link/")
+  // resolves to the target, so re-expand without the trailing separator: if
+  // "link" is a symbolic link to directory "target", ":edit link/" produces
+  // ".../link/", not ".../target/".
+  if (os_isdir(*ffname)) {
+    char *name = xstrdup(*sfname);
+    size_t name_len = strlen(name);
+    if (name_len > 0 && after_pathsep(name, name + name_len)
+        && name + name_len > get_past_head(name)) {
+      *path_tail_with_sep(name) = NUL;
+    }
+    char *full = fix_fname(name);
+    xfree(name);
+    if (full != NULL) {
+      xfree(*ffname);
+      *ffname = full;
+    }
+    *ffname = concat_fnames_realloc(*ffname, "", true);
+  }
 
 #ifdef MSWIN
   if (!buf->b_p_bin) {
@@ -3681,7 +3722,7 @@ void ex_buffer_all(exarg_T *eap)
            || (had_tab > 0 && wp != firstwin))
           && !ONE_WINDOW
           && !(win_locked(wp) || wp->w_buffer->b_locked > 0)
-          && !is_aucmd_win(wp)) {
+          && !is_ctx_win(wp)) {
         if (win_close(wp, false, false) == FAIL) {
           break;
         }
@@ -3708,7 +3749,7 @@ void ex_buffer_all(exarg_T *eap)
   //
   // Don't execute Win/Buf Enter/Leave autocommands here.
   autocmd_no_enter++;
-  // lastwin may be aucmd_win
+  // lastwin may be ctx_win
   win_enter(lastwin_nofloating(NULL), false);
   autocmd_no_leave++;
   for (buf_T *buf = firstbuf; buf != NULL && open_wins < count; buf = buf->b_next) {
@@ -3800,7 +3841,7 @@ void ex_buffer_all(exarg_T *eap)
   // Close superfluous windows.
   for (win_T *wp = lastwin; open_wins > count;) {
     bool r = (buf_hide(wp->w_buffer) || !bufIsChanged(wp->w_buffer)
-              || autowrite(wp->w_buffer, false) == OK) && !is_aucmd_win(wp);
+              || autowrite(wp->w_buffer, false) == OK) && !is_ctx_win(wp);
     if (!win_valid(wp)) {
       // BufWrite Autocommands made the window invalid, start over
       wp = lastwin;
