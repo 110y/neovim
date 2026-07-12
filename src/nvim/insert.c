@@ -1,4 +1,4 @@
-// edit.c: functions for Insert mode
+// insert.c: functions for Insert mode
 
 #include <assert.h>
 #include <ctype.h>
@@ -22,7 +22,6 @@
 #include "nvim/decoration.h"
 #include "nvim/digraph.h"
 #include "nvim/drawscreen.h"
-#include "nvim/edit.h"
 #include "nvim/errors.h"
 #include "nvim/eval.h"
 #include "nvim/eval/typval_defs.h"
@@ -34,7 +33,6 @@
 #include "nvim/extmark_defs.h"
 #include "nvim/fileio.h"
 #include "nvim/fold.h"
-#include "nvim/getchar.h"
 #include "nvim/gettext_defs.h"
 #include "nvim/globals.h"
 #include "nvim/grid.h"
@@ -44,6 +42,8 @@
 #include "nvim/highlight_group.h"
 #include "nvim/indent.h"
 #include "nvim/indent_c.h"
+#include "nvim/input.h"
+#include "nvim/insert.h"
 #include "nvim/insexpand.h"
 #include "nvim/keycodes.h"
 #include "nvim/macros_defs.h"
@@ -107,7 +107,7 @@ typedef struct {
   bool nomove;
 } InsertState;
 
-#include "edit.c.generated.h"
+#include "insert.c.generated.h"
 enum {
   BACKSPACE_CHAR = 1,
   BACKSPACE_WORD = 2,

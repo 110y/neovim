@@ -25,9 +25,9 @@
 #include "nvim/change.h"
 #include "nvim/context.h"
 #include "nvim/cursor.h"
+#include "nvim/dialog.h"
 #include "nvim/diff.h"
 #include "nvim/drawscreen.h"
-#include "nvim/edit.h"
 #include "nvim/errors.h"
 #include "nvim/eval.h"
 #include "nvim/eval/vars.h"
@@ -37,11 +37,12 @@
 #include "nvim/fold.h"
 #include "nvim/garray.h"
 #include "nvim/garray_defs.h"
-#include "nvim/getchar.h"
 #include "nvim/gettext_defs.h"
 #include "nvim/globals.h"
 #include "nvim/highlight_defs.h"
 #include "nvim/iconv_defs.h"
+#include "nvim/input.h"
+#include "nvim/insert.h"
 #include "nvim/log.h"
 #include "nvim/macros_defs.h"
 #include "nvim/mbyte.h"
@@ -3282,22 +3283,6 @@ void write_lnum_adjust(linenr_T offset)
     curbuf->b_no_eol_lnum += offset;
   }
 }
-
-#ifdef BACKSLASH_IN_FILENAME
-/// Convert all backslashes in fname to forward slashes in-place,
-/// unless when it looks like a URL.
-void forward_slash(char *fname)
-{
-  if (path_with_url(fname)) {
-    return;
-  }
-  for (char *p = fname; *p != NUL; p++) {
-    if (*p == '\\') {
-      *p = '/';
-    }
-  }
-}
-#endif
 
 /// Path to Nvim's own temp dir. Ends in a slash.
 static char *vim_tempdir = NULL;

@@ -778,7 +778,7 @@ describe('TUI :restart', function()
 
     feed_data(':restart! echo "restarted"\r')
     screen:expect([[
-      ^                     │0000;<control>;Cc;0;BN;;;;;N|
+                           │^0000;<control>;Cc;0;BN;;;;;N|
       ~                    │0001;<control>;Cc;0;BN;;;;;N|
       ~                    │0002;<control>;Cc;0;BN;;;;;N|
       ~                    │0003;<control>;Cc;0;BN;;;;;N|
@@ -789,11 +789,11 @@ describe('TUI :restart', function()
 
     feed_data(':set sessionoptions-=winsize | restart!\r')
     screen:expect([[
-      ^                         │0000;<control>;Cc;0;BN;;|
-      ~                        │0001;<control>;Cc;0;BN;;|
-      ~                        │0002;<control>;Cc;0;BN;;|
-      ~                        │0003;<control>;Cc;0;BN;;|
-      ~                        │0004;<control>;Cc;0;BN;;|
+                              │^0000;<control>;Cc;0;BN;;;|
+      ~                       │0001;<control>;Cc;0;BN;;;|
+      ~                       │0002;<control>;Cc;0;BN;;;|
+      ~                       │0003;<control>;Cc;0;BN;;;|
+      ~                       │0004;<control>;Cc;0;BN;;;|
                                                         |
       {5:-- TERMINAL --}                                    |
     ]])
@@ -837,6 +837,10 @@ describe('TUI :connect', function()
     tt.feed_data('iThis is server 2.\027')
     screen2:expect({ any = vim.pesc('This is server 2^.') })
 
+    if is_os('win') then
+      -- still supports backslashes
+      server1 = server1:gsub('/', '\\')
+    end
     tt.feed_data(':connect ' .. server1 .. '\013')
     screen2:expect({ any = vim.pesc('This is server 1^.') })
 
