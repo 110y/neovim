@@ -3652,7 +3652,7 @@ linenr_T get_address(exarg_T *eap, char **ptr, cmd_addr_T addr_type, bool skip, 
         // line, and can match anywhere in the
         // next/previous line.
         curwin->w_cursor.col = (c == '/' && curwin->w_cursor.lnum > 0) ? MAXCOL : 0;
-        searchcmdlen = 0;
+        Search.cmdlen = 0;
         flags = silent ? SEARCH_KEEP : SEARCH_HIS | SEARCH_MSG;
         if (!do_search(NULL, c, c, cmd, strlen(cmd), 1, flags, NULL)) {
           curwin->w_cursor = pos;
@@ -3662,7 +3662,7 @@ linenr_T get_address(exarg_T *eap, char **ptr, cmd_addr_T addr_type, bool skip, 
         lnum = curwin->w_cursor.lnum;
         curwin->w_cursor = pos;
         // adjust command string pointer
-        cmd += searchcmdlen;
+        cmd += Search.cmdlen;
       }
       break;
 
@@ -4987,7 +4987,7 @@ static void ex_restart(exarg_T *eap)
       quit_cmd = eap->args[1];
       after_cmd = eap->argc > 2 ? eap->args[2] : "";
     } else {
-      emsg("restart failed: +cmd did not quit the server");
+      semsg(e_restart_failed_cmd_no_quit, quit_cmd);
       return;
     }
   }
@@ -5183,14 +5183,14 @@ static void ex_restart(exarg_T *eap)
   }
   // Try to quit.
   nvim_command(cstr_as_string(quit_cmd), &err);
-  xfree(quit_cmd_copy);
 
   if (ERROR_SET(&err)) {
     emsg(err.msg);  // Could not exit
     api_clear_error(&err);
   } else if (!exiting) {
-    emsg("restart failed: +cmd did not quit the server");
+    semsg(e_restart_failed_cmd_no_quit, quit_cmd);
   }
+  xfree(quit_cmd_copy);
 
 fail_2:
   set_vim_var_string(VV_EXITREASON, NULL, -1);
@@ -6722,7 +6722,7 @@ static void ex_operators(exarg_T *eap)
     beginline(BL_SOL | BL_FIX);
   }
 
-  if (VIsual_active) {
+  if (Visual.active) {
     end_visual_mode();
   }
 
@@ -7095,7 +7095,7 @@ static void ex_redraw(exarg_T *eap)
   if (eap->forceit) {
     redraw_all_later(UPD_NOT_VALID);
     redraw_cmdline = true;
-  } else if (VIsual_active) {
+  } else if (Visual.active) {
     redraw_curbuf_later(UPD_INVERTED);
   }
   update_screen();
@@ -7135,7 +7135,7 @@ static void ex_redrawstatus(exarg_T *eap)
   if (State & MODE_CMDLINE) {
     redraw_statuslines();
   } else {
-    if (VIsual_active) {
+    if (Visual.active) {
       redraw_curbuf_later(UPD_INVERTED);
     }
     update_screen();
@@ -7422,7 +7422,7 @@ static void ex_startinsert(exarg_T *eap)
     curwin->w_curswant = 0;  // avoid MAXCOL
   }
 
-  if (VIsual_active) {
+  if (Visual.active) {
     showmode();
   }
 }
@@ -8182,8 +8182,8 @@ static void ex_digraphs(exarg_T *eap)
 
 void set_no_hlsearch(bool flag)
 {
-  no_hlsearch = flag;
-  set_vim_var_nr(VV_HLSEARCH, !no_hlsearch && p_hls);
+  Search.no_hlsearch = flag;
+  set_vim_var_nr(VV_HLSEARCH, !Search.no_hlsearch && p_hls);
 }
 
 /// ":nohlsearch"
