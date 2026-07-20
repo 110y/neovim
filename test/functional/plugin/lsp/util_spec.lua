@@ -1159,7 +1159,7 @@ describe('vim.lsp.util', function()
       local r = exec_lua(function()
         local hover_data = {
           kind = 'markdown',
-          value = '```lua\nfunction vim.api.nvim_buf_attach(buffer: integer, send_buffer: boolean, opts: vim.api.keyset.buf_attach)\n  -> boolean\n```\n\n---\n\n Activates buffer-update events. Example:\n\n\n\n ```lua\n events = {}\n vim.api.nvim_buf_attach(0, false, {\n   on_lines = function(...)\n     table.insert(events, {...})\n   end,\n })\n ```\n\n\n @see `nvim_buf_detach()`\n @see `api-buffer-updates-lua`\n@*param* `buffer` — Buffer handle, or 0 for current buffer\n\n\n\n@*param* `send_buffer` — True if whole buffer.\n Else the first notification will be `nvim_buf_changedtick_event`.\n\n\n@*param* `opts` — Optional parameters.\n\n - on_lines: Lua callback. Args:\n   - the string "lines"\n   - buffer handle\n   - b:changedtick\n@*return* — False if foo;\n\n otherwise True.\n\n@see foo\n@see bar\n\n',
+          value = '```lua\nfunction vim.api.nvim_buf_attach(buffer: integer, send_buffer: boolean, opts: vim.api.keyset.buf_attach)\n  -> boolean\n```\n\n---\n\n Activates buffer-update events. Example:\n\n\n\n ```lua\n events = {}\n vim.api.nvim_buf_attach(0, false, {\n   on_lines = function(...)\n     table.insert(events, {...})\n   end,\n })\n ```\n\n\n @see `nvim_buf_detach()`\n @see `api-buffer-updates-lua`\n@*param* `buffer` — Buffer handle, or 0 for current buffer\n\n\n\n@*param* `send_buffer` — True if whole buffer.\n Else the first notification will be `nvim_buf_changedtick_event`.\n\n\n@*param* `opts` — Optional parameters.\n\n - on_lines: Lua callback. Args:\n   - the string "lines"\n   - buffer handle\n   - b:changedtick\n@*return* — False if foo;\n\n otherwise True.\n\n@see foo\n@see bar\n\nExample:\n\n    iex> params = %{title: "", topics: []}\n\n    iex> changeset.changes[:topics]\n',
         }
         return vim.lsp.util.convert_input_to_markdown_lines(hover_data)
       end)
@@ -1206,6 +1206,12 @@ describe('vim.lsp.util', function()
         ' otherwise True.',
         '@see foo',
         '@see bar',
+        -- Blank line preceding a 4-space-indented codeblock is required, per Markdown spec. #40860
+        'Example:',
+        '',
+        '    iex> params = %{title: "", topics: []}',
+        '',
+        '    iex> changeset.changes[:topics]',
       }
       eq(expected, r)
     end)
@@ -1384,6 +1390,35 @@ describe('vim.lsp.util', function()
         eq(true, winfixbuf)
         -- b:lsp_floating_preview should be cleared.
         eq('Key not found: lsp_floating_preview', pcall_err(api.nvim_buf_get_var, 0, var_name))
+      end)
+
+      it('converted to a normal window is unmanaged, not closed #36659', function()
+        local converted = exec_lua(function()
+          local opts = { focus_id = 'focus_test' }
+          local cur_winnr = vim.api.nvim_get_current_win()
+          vim.lsp.util.open_floating_preview({ 'test' }, '', opts)
+          local converted = vim.b.lsp_floating_preview
+          vim.api.nvim_win_set_config(converted, { win = cur_winnr, split = 'right' })
+          -- close events unmanage the converted window instead of closing it
+          vim.api.nvim_exec_autocmds('CursorMoved', { buffer = 0 })
+          assert(
+            vim.wait(1000, function()
+              return vim.b.lsp_floating_preview == nil
+            end),
+            'preview should be untracked after close event'
+          )
+          -- reusing the focus_id opens a new float instead of refocusing the converted window
+          local _, new_win = vim.lsp.util.open_floating_preview({ 'test' }, '', opts)
+          assert(new_win ~= converted, 'expected a new float')
+          -- also when triggered from inside the converted window
+          vim.api.nvim_set_current_win(converted)
+          local _, newer_win = vim.lsp.util.open_floating_preview({ 'test' }, '', opts)
+          assert(newer_win ~= converted, 'expected a new float')
+          assert(vim.api.nvim_get_current_win() == converted, 'focus changed')
+          return converted
+        end)
+        eq(true, api.nvim_win_is_valid(converted))
+        eq('', api.nvim_win_get_config(converted).relative)
       end)
     end)
 

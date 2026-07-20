@@ -316,6 +316,7 @@ LUA
 • |vim.pack.get()| can fetch new updates before computing the output.
 • |vim.o| now accepts table style values for assignment.
 • |vim.keycode()| returns structured info as return value 2.
+• |Iter:count()| counts items in the iterator.
 
 OPTIONS
 
@@ -417,6 +418,9 @@ These existing features changed their behavior.
 • Markdown inline highlighting now conceals the backslash in backslash escapes.
 • Markdown inline backslash escapes and hard line breaks no longer use the
   `@string.escape` capture.
+• |vim.lsp.util.open_floating_preview()| windows (e.g. |vim.lsp.buf.hover()|)
+  converted to normal windows (e.g. with |CTRL-W_H|) are no longer closed
+  automatically.
 
 ==============================================================================
 REMOVED FEATURES                                                 *news-removed*
