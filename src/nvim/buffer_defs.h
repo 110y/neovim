@@ -974,6 +974,7 @@ typedef enum {
 typedef enum {
   kWinNormal = 0,
   kWinInfo,
+  kWinPreview,
 } WinKind;
 
 /// Keep in sync with win_split_str[] in nvim_win_get_config() (api/win_config.c)
@@ -1206,6 +1207,12 @@ struct window_S {
   int w_vsep_width;                 // Number of vertical separator columns (0 or 1).
   pos_save_T w_save_cursor;         // backup of cursor pos and topline
   bool w_do_win_fix_cursor;         // if true cursor may be invalid
+
+  // Screen pos 'previewpopup' anchors to (original cursor pos). Separate from WinConfig because
+  // win_float_update_preview() re-autosizes as content updates, and re-decides the flip
+  // above/below. WinConfig.row/col hold the placed (offset, flipped, clamped) result.
+  int w_wantline;
+  int w_wantcol;
 
   int w_winrow_off;  ///< offset from winrow to the inner window area
   int w_wincol_off;  ///< offset from wincol to the inner window area

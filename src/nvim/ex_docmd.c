@@ -4251,7 +4251,7 @@ void separate_nextcmd(exarg_T *eap)
                || *p == '\n') {
       // We remove the '\' before the '|', unless EX_CTRLV is used
       // AND 'b' is present in 'cpoptions'.
-      if ((vim_strchr(p_cpo, CPO_BAR) == NULL
+      if ((vim_strchr(p_cpo, kCpoBar) == NULL
            || !(eap->argt & EX_CTRLV)) && *(p - 1) == '\\') {
         STRMOVE(p - 1, p);  // remove the '\'
         p--;
@@ -5254,6 +5254,8 @@ static void ex_pclose(exarg_T *eap)
       break;
     }
   }
+
+  win_float_close(kWinPreview);
 }
 
 /// Close window "win" and take care of handling closing the last window for a
@@ -6351,7 +6353,7 @@ static void ex_read(exarg_T *eap)
     i = readfile(curbuf->b_ffname, curbuf->b_fname,
                  eap->line2, 0, (linenr_T)MAXLNUM, eap, 0, false);
   } else {
-    if (vim_strchr(p_cpo, CPO_ALTREAD) != NULL) {
+    if (vim_strchr(p_cpo, kCpoAltread) != NULL) {
       setaltfname(eap->arg, eap->arg, 1);
     }
     i = readfile(eap->arg, NULL,
@@ -6451,7 +6453,7 @@ static void post_chdir(CdScope scope, bool trigger_dirchanged)
   }
 
   last_chdir_reason = NULL;
-  shorten_fnames(vim_strchr(p_cpo, CPO_NOSYMLINKS) == NULL);
+  shorten_fnames(vim_strchr(p_cpo, kCpoNosymlinks) == NULL);
 
   if (trigger_dirchanged) {
     do_autocmd_dirchanged(cwd, scope, kCdCauseManual, false);
@@ -6861,7 +6863,7 @@ static void ex_at(exarg_T *eap)
   }
 
   // Put the register in the typeahead buffer with the "silent" flag.
-  if (do_execreg(c, true, vim_strchr(p_cpo, CPO_EXECBUF) != NULL, true) == FAIL) {
+  if (do_execreg(c, true, vim_strchr(p_cpo, kCpoExecbuf) != NULL, true) == FAIL) {
     beep_flush();
     return;
   }
@@ -7557,7 +7559,7 @@ static void prepare_preview_window(void)
 {
   // Open the preview window or popup and make it the current window.
   g_do_tagpreview = (int)p_pvh;
-  prepare_tagpreview(true);
+  prepare_tagpreview(true, *p_pvp != NUL);
 }
 
 static void back_to_current_window(win_T *curwin_save)
