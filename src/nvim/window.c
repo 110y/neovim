@@ -803,7 +803,7 @@ void win_set_buf(win_T *win, buf_T *buf, Error *err)
   bool win_ok;
 
   TRY_WRAP(err, {
-    win_ok = ctx_switch(&switchwin, win, tab, NULL, kCtxNoDisplay);
+    win_ok = ctx_switch(&switchwin, win, tab, NULL, kCtxNoDisplay | kCtxKeepCwd);
     if (win_ok) {
       const int save_acd = p_acd;
       if (!switchwin.cs_same_win) {
@@ -5362,12 +5362,12 @@ void update_cwd(CdCause cause)
   char *new_dir;
   CdScope scope;
 
-  if (curwin->w_localdir) {
-    new_dir = curwin->w_localdir;
-    scope = kCdScopeWindow;
-  } else if (curbuf->b_localdir) {
+  if (curbuf->b_localdir) {
     new_dir = curbuf->b_localdir;
     scope = kCdScopeBuffer;
+  } else if (curwin->w_localdir) {
+    new_dir = curwin->w_localdir;
+    scope = kCdScopeWindow;
   } else if (curtab->tp_localdir) {
     new_dir = curtab->tp_localdir;
     scope = kCdScopeTabpage;
@@ -7254,7 +7254,13 @@ static bool resize_frame_for_status(frame_T *fr)
     emsg(_(e_noroom));
     return false;
   } else if (fp != fr) {
-    frame_setheight(fr, fr->fr_height + 1, false);
+    int old_height = fr->fr_height;
+
+    frame_setheight(fr, old_height + 1, false);
+    if (fr->fr_height == old_height) {
+      emsg(_(e_noroom));
+      return false;
+    }
     win_comp_pos();
   } else {
     win_new_height(wp, wp->w_height - 1);
@@ -7267,16 +7273,13 @@ static bool resize_frame_for_status(frame_T *fr)
 // @return Success or failure.
 static bool resize_frame_for_winbar(frame_T *fr)
 {
-  win_T *wp = fr->fr_win;
-  frame_T *fp = find_horizontally_resizable_frame(fr);
+  int old_height = fr->fr_height;
 
-  if (fp == NULL || fp == fr) {
+  frame_setheight(fr, old_height + 1, false);
+  if (fr->fr_height == old_height) {
     emsg(_(e_noroom));
     return false;
   }
-  frame_new_height(fp, fp->fr_height - 1, false, false, false);
-  win_new_height(wp, wp->w_height + 1);
-  frame_fix_height(wp);
   win_comp_pos();
 
   return true;
