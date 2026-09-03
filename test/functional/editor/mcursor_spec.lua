@@ -1132,7 +1132,8 @@ describe('multicursor', function()
       ]])
     end)
 
-    it('typed text appears at cursors before leaving insert-mode', function()
+    it('typed text live-mirrors at cursors', function()
+      command('let v:oldfiles = ["/a", "/b"] | let @a = "reg"')
       local screen = Screen.new(30, 6)
       cursors({ 'aaa', 'bbb', 'ccc' })
       -- Still in insert mode (no <Esc> yet): the text already cascaded; each cursor displays
@@ -1155,8 +1156,10 @@ describe('multicursor', function()
         {1:~                             }|*2
                                       |
       ]])
-      -- Entering insert mode displays each cursor at its insertion point
-      -- right away, BEFORE any text is typed ("a": one char to the right).
+      -- Cascade context-management should not clobber v:oldfiles.
+      eq({ '/a', '/b' }, api.nvim_get_vvar('oldfiles'))
+
+      -- Entering insert mode ("a") displays each cursor at its insertion-point immediately.
       feed('a')
       screen:expect([[
         XY{17:a}aa                         |
@@ -1166,8 +1169,7 @@ describe('multicursor', function()
         {5:-- INSERT --}                  |
       ]])
       feed('<Esc>')
-      -- An operator entry ("ciw") live-mirrors the same way: the entry
-      -- replay changes each cursor's OWN word, still in insert mode.
+      -- Operator entry ("ciw") live-mirrors the per-cursor change, still in insert mode.
       feed('0ciwZ')
       screen:expect([[
         Z{17: }                            |
@@ -1177,13 +1179,34 @@ describe('multicursor', function()
         {5:-- INSERT --}                  |
       ]])
       feed('<Esc>')
-      -- A Visual-entered change ("viwc") live-mirrors too: the entry replay
-      -- re-executes the selection at each cursor.
+      -- Visual-change entry ("viwc") live-mirrors the selection at each cursor.
       feed('viwcW')
       screen:expect([[
         W{17: }                            |
         W{17: }                            |
         W^                             |
+        {1:~                             }|*2
+        {5:-- INSERT --}                  |
+      ]])
+      feed('<Esc>')
+      -- Also when "c" is a Visual-mode operator mapping. #41605
+      command('xnoremap c "_c')
+      feed('viwcM')
+      screen:expect([[
+        M{17: }                            |
+        M{17: }                            |
+        M^                             |
+        {1:~                             }|*2
+        {5:-- INSERT --}                  |
+      ]])
+      feed('<Esc>')
+      -- Also when another key maps to "c".
+      command('xnoremap - c')
+      feed('viw-N')
+      screen:expect([[
+        N{17: }                            |
+        N{17: }                            |
+        N^                             |
         {1:~                             }|*2
         {5:-- INSERT --}                  |
       ]])
@@ -1394,7 +1417,8 @@ describe('multicursor', function()
       eq({ l[4], l[4] }, { l[5], l[6] })
     end)
 
-    it("'autocomplete': <BS> and <C-e> cancel propagate", function()
+    it("'autocomplete': <BS>, <C-e>", function()
+      -- BS/C-e cancel propagation.
       ac_setup()
       feed('ifoo<BS>x<Esc>')
       eq({ 'fox', 'fox', 'fox' }, { get_lines()[4], get_lines()[5], get_lines()[6] })
@@ -1412,6 +1436,35 @@ describe('multicursor', function()
       feed('<Esc>')
       eq('', api.nvim_get_vvar('errmsg'))
       eq({ ' ', ' ', ' ' }, get_lines())
+
+      -- Live-mirrors after <BS> ends autocompletion; popup shows on new input.
+      clear_cursors()
+      ac_setup()
+      feed('ifo')
+      eq(1, fn.pumvisible())
+      feed('<BS>')
+      eq(1, fn.pumvisible())
+      feed('<BS>')
+      eq(0, fn.pumvisible())
+      feed('fo')
+      eq(1, fn.pumvisible())
+      eq({ 'fo', 'fo', 'fo' }, { get_lines()[4], get_lines()[5], get_lines()[6] })
+      feed('<Esc>')
+      eq({ 'fo', 'fo', 'fo' }, { get_lines()[4], get_lines()[5], get_lines()[6] })
+
+      -- Live-mirrors if <BS> ends autocompletion then restarts it immediately ('autocomplete' with
+      -- printable char before the cursor). #41605
+      clear_cursors()
+      cursors({ 'foo', 'foobar', 'foobarbaz' })
+      feed('A f')
+      eq(1, fn.pumvisible())
+      feed('<BS>')
+      eq({ 'foo ', 'foobar ', 'foobarbaz ' }, get_lines())
+      feed(' fo')
+      eq(1, fn.pumvisible())
+      eq({ 'foo  fo', 'foobar  fo', 'foobarbaz  fo' }, get_lines())
+      feed('<Esc>')
+      eq({ 'foo  fo', 'foobar  fo', 'foobarbaz  fo' }, get_lines())
     end)
 
     it('InsertCharPre-driven complete() plugin (cmp-style)', function()
@@ -1459,7 +1512,7 @@ describe('multicursor', function()
       eq('n', api.nvim_get_mode().mode)
     end)
 
-    it('shows per-cursor visual selection', function()
+    it('shows per-cursor selection', function()
       local screen = Screen.new(30, 6)
       cursors({ 'longword x', 'ab y', 'medium z' })
       -- Each cursor shows its own selection ("iw" = that cursor's word), previewed live.
@@ -1471,6 +1524,7 @@ describe('multicursor', function()
         {1:~                             }|*2
         {5:-- VISUAL --}                  |
       ]])
+      eq('visual', screen.mode) -- The UI mode ('guicursor'). #41631
       feed('e')
       screen:expect([[
         {17:longword x}                    |
@@ -1487,6 +1541,7 @@ describe('multicursor', function()
         {1:~                             }|*2
                                       |
       ]])
+      eq('normal', screen.mode)
     end)
 
     it('shows linewise/blockwise selections', function()
