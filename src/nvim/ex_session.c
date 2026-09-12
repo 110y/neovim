@@ -1023,7 +1023,9 @@ void ex_mkrc(exarg_T *eap)
       flagp = &ssop_flags;
     }
 
-    apply_autocmds(EVENT_SESSIONWRITEPRE, NULL, NULL, false, curbuf);
+    if (eap->cmdidx == CMD_mksession) {
+      apply_autocmds(EVENT_SESSIONWRITEPRE, NULL, NULL, false, curbuf);
+    }
 
     // Write the version command for :mkvimrc
     if (eap->cmdidx == CMD_mkvimrc) {
@@ -1130,7 +1132,9 @@ void ex_mkrc(exarg_T *eap)
 
   xfree(viewFile);
 
-  apply_autocmds(EVENT_SESSIONWRITEPOST, NULL, NULL, false, curbuf);
+  if (eap->cmdidx == CMD_mksession) {
+    apply_autocmds(EVENT_SESSIONWRITEPOST, NULL, NULL, false, curbuf);
+  }
 }
 
 /// @return  the name of the view file for the current buffer.
