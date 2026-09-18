@@ -1333,7 +1333,7 @@ describe('multicursor', function()
       local ev = atom_last()
       eq(
         { type = 'mapping', lhs = k('iX<Esc>'), changed = true },
-        t_atom.pick(atom_last(), 'type', 'lhs', 'changed')
+        t.pick(atom_last(), 'type', 'lhs', 'changed')
       )
       eq({
         { type = 'motion', keys = '^' },
@@ -2497,6 +2497,27 @@ describe('multicursor', function()
       eq({ 'aa', 'bb', 'cc' }, get_lines())
     end)
 
+    it('empty insert-session does not add undo state #41883', function()
+      cursors({ 'abc', 'def', 'ghi' }, 'Qj')
+      local seq = fn.undotree().seq_last
+      feed('i<Esc>')
+      eq(seq, fn.undotree().seq_last)
+      feed('a<Esc>') -- Move the cursors (records extmark undo), but don't edit.
+      eq(seq, fn.undotree().seq_last)
+      -- In a mapping the session shares the mapping's undo state: only its own entry is dropped.
+      command('nnoremap <F5> xi<Esc>')
+      feed('<F5>')
+      eq({ 'bc', 'ef', 'ghi' }, get_lines())
+      eq(seq + 1, fn.undotree().seq_last)
+      feed('u')
+      eq({ 'abc', 'def', 'ghi' }, get_lines())
+      -- After an undo, the redo branch survives.
+      feed('i<Esc>')
+      eq(seq + 1, fn.undotree().seq_last)
+      feed('<C-r>')
+      eq({ 'bc', 'ef', 'ghi' }, get_lines())
+    end)
+
     it('a mapped undo/redo (vim-repeat "nmap u") does not cascade', function()
       -- vim-repeat maps u/U/<C-R> to undo/redo wrappers. Such a mapping changes the buffer, but an
       -- undo/redo is buffer-global, not a per-cursor edit: it must NOT cascade, or every cursor
@@ -2690,9 +2711,12 @@ describe('multicursor', function()
 
       cursors({ 'aaa', 'bbb', 'ccc' }, 'QjQ')
       exec_lua('vim.wait(10)') -- drain the scheduled refresh
-      -- Clear-all, then shape 29 ("follow main cursor") at each position.
+      -- Clear-all, text color (30), cursor color (40), then positions (29).
       local sent = exec_lua('return _G.sent')
-      eq('\027[>0;4 q\027[>29;2:1:1;2:2:1 q', sent[#sent])
+      t.matches(
+        '^\027%[>0;4 q\027%[>30;2:%d+:%d+:%d+ q\027%[>40;2:%d+:%d+:%d+ q\027%[>29;2:1:1;2:2:1 q$',
+        sent[#sent]
+      )
 
       -- The cell-highlight fallback is suppressed (no {17:} on line 1).
       screen:expect([[
@@ -2843,7 +2867,7 @@ describe('multicursor', function()
         operator = 'g@',
         changed = false,
         moved = true,
-      }, t_atom.pick(atom_last(), 'type', 'keys', 'lhs', 'operator', 'changed', 'moved'))
+      }, t.pick(atom_last(), 'type', 'keys', 'lhs', 'operator', 'changed', 'moved'))
     end)
 
     it('cursors placed inside the opfunc are live for the next typed cascade', function()
