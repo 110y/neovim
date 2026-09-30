@@ -493,6 +493,7 @@ void flush_buffers(flush_buffers_T flush_typeahead)
     atom_composite_abort();
   }
 
+  const bool discard_redo = readbuf2.keys.size > 0;
   free_buff(&readbuf1);
   free_buff(&readbuf2);
 
@@ -530,20 +531,24 @@ void flush_buffers(flush_buffers_T flush_typeahead)
   if (++typebuf.tb_change_cnt == 0) {
     typebuf.tb_change_cnt = 1;
   }
+
+  if (discard_redo) {
+    // The operator that would finish the replayed selection was discarded.
+    // Do this after cleanup: ending Visual mode may trigger ModeChanged autocommands.
+    reset_VIsual();
+  }
 }
 
 /// flush map and typeahead buffers and give a warning for an error
 void beep_flush(void)
 {
-  if (emsg_silent == 0) {
-    // Don't flush during mc-replay. A failed motion ("vt;" where there is no ";") should not eat
-    // the keys typed after it ("c"). This matches Helix multiselection: each action during a Visual
-    // selection proceeds or fails, without canceling the next action.
-    if (!mc_replaying()) {
-      flush_buffers(FLUSH_MINIMAL);
-    }
-    vim_beep(kOptBoFlagError);
+  // Don't flush during mc-replay. A failed motion ("vt;" where there is no ";") should not eat
+  // the keys typed after it ("c"). This matches Helix multiselection: each action during a Visual
+  // selection proceeds or fails, without canceling the next action.
+  if (emsg_silent == 0 && !mc_replaying()) {
+    flush_buffers(FLUSH_MINIMAL);
   }
+  vim_beep(kOptBoFlagError);
 }
 
 /// Starts capturing a new change: stores `spec`, caller appends the body (redo_append_x). The

@@ -329,6 +329,8 @@ function M.show_msg(tgt, kind, content, replace_last, append, id)
     or (api.nvim_buf_line_count(buf) - ((replace_last or cr or append) and 1 or 0))
   local curline = (cr or append) and api.nvim_buf_get_lines(buf, row, row + 1, false)[1]
   col = mark[2] or (append and not cr and math.min(col, #curline) or 0)
+  --- EmmyLuaLs/emmylua-analyzer-rust#1269
+  --- @type integer, integer, integer
   local start_row, start_col, lines = row, col, o.lines
 
   local function set_target_pos()
@@ -743,9 +745,13 @@ local function enter_pager()
         in_pager = api.nvim_get_current_win() == ui.wins.pager
       end
       in_pager = in_pager and api.nvim_win_is_valid(ui.wins.pager)
+      --- @type vim.api.keyset.win_config
       local cfg = in_pager and { relative = 'laststatus', col = 0 } or { hide = true }
       if in_pager then
-        cfg.row, cfg.height, cfg.border = win_row_height_border('pager', height)
+        local has_border
+        cfg.row, cfg.height, has_border = win_row_height_border('pager', height)
+        cfg.border = has_border and { '', { mopt.msgsep, 'MsgSeparator' }, '', '', '', '', '', '' }
+          or 'none'
       else
         pcall(api.nvim_set_option_value, 'eiw', 'all', { scope = 'local', win = ui.wins.pager })
         api.nvim_del_autocmd(id)

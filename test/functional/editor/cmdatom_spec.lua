@@ -54,6 +54,54 @@ describe('dot-repeat', function()
     eq({ 'acbzacbonexy', 'czacbtwo' }, get_lines())
   end)
 
+  it('ends Visual mode when a replayed motion fails #41896', function()
+    fn.setline(1, { '1', '2', '3' })
+    feed('<C-V>jI1<Esc>')
+    eq({ '11', '12', '3' }, get_lines())
+    feed('j.')
+    eq({ '11', '112', '13' }, get_lines())
+    feed('j.')
+    eq({ '11', '112', '13' }, get_lines())
+    eq('n', fn.mode(1))
+    -- A failed repeat does not replace the last change.
+    feed('k0.')
+    eq({ '11', '1112', '113' }, get_lines())
+    eq('n', fn.mode(1))
+  end)
+
+  for _, errorbells in ipairs({ 'noerrorbells', 'errorbells' }) do
+    it('ends Visual mode when a replayed motion raises an error with ' .. errorbells, function()
+      command('set ' .. errorbells)
+      fn.setline(1, { 'one', 'two' })
+      feed('majV`a~')
+      eq({ 'ONE', 'TWO' }, get_lines())
+      command('delmarks a')
+      feed('.')
+      eq('E20: Mark not set', api.nvim_get_vvar('errmsg'))
+      eq({ 'ONE', 'TWO' }, get_lines())
+      eq('n', fn.mode(1))
+    end)
+  end
+
+  it('still stops macros and mappings on failed Visual motions', function()
+    fn.setline(1, { 'one', 'two', 'three' })
+    fn.setreg('q', 'Vjd')
+    feed('2@q')
+    eq({ 'three' }, get_lines())
+    eq('V', fn.mode(1))
+    feed('<Esc>')
+    command('nnoremap Q Vjd')
+    feed('Q')
+    eq({ 'three' }, get_lines())
+    eq('V', fn.mode(1))
+    feed('<Esc>')
+    -- An ordinary failed motion still leaves the selection active.
+    feed('vj')
+    eq('v', fn.mode(1))
+    feed('d')
+    eq({ 'hree' }, get_lines())
+  end)
+
   it('of a visual op does not churn showcmd', function()
     local screen = Screen.new(40, 8, { ext_messages = true })
     command('set showcmd')
@@ -1402,6 +1450,26 @@ describe('CmdAtom', function()
       { type = 'motion', keys = k('/gamma<NL>') },
       { type = 'excmd', keys = k(':nohlsearch<NL>') },
     }, atoms_tail(4, 'type', 'keys'))
+
+    -- Cursor-relative marks ('< '. '{ …) are classified as type=motion. Other marks are type=jump.
+    feed('ma')
+    feed('`.')
+    feed("'[")
+    feed('`{')
+    feed('g`.')
+    feed('`a')
+    feed("g'a")
+    feed('G')
+    eq({
+      { type = 'motion', keys = '`.' },
+      { type = 'motion', keys = "'[" },
+      { type = 'motion', keys = '`{' },
+      { type = 'motion', keys = 'g`.' },
+      { type = 'jump', keys = '`a' },
+      { type = 'jump', keys = "g'a" },
+      { type = 'jump', keys = 'G' },
+    }, atoms_tail(7, 'type', 'keys'))
+
     -- ":" embeds its count as the range prefill, never as composed digits;
     -- the count field carries it.
     feed('gg')
