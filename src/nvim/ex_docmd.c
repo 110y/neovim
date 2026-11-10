@@ -5958,14 +5958,9 @@ static void ex_connect(exarg_T *eap)
                            { .v_type = VAR_NUMBER, .vval.v_number = (varnumber_T)current_ui },
                            { .v_type = VAR_UNKNOWN } };
     nlua_call_typval("vim.net._ssh", "connect", argvars, &ssh_rettv);
-
-    if (ssh_rettv.v_type == VAR_SPECIAL) {
-      return;  // User declined the prompt, or interrupted (CTRL-C).
-    }
     if (ssh_rettv.v_type != VAR_STRING || ssh_rettv.vval.v_string == NULL) {
-      emsg(_("E6101: SSH connection failed"));
       tv_clear(&ssh_rettv);
-      return;
+      return;  // Declined, interrupted (CTRL-C), or failed (E6101 shown).
     }
 
     addr = ssh_rettv.vval.v_string;
@@ -5978,6 +5973,23 @@ static void ex_connect(exarg_T *eap)
       semsg(_("E6102: Cannot connect to %s: %s"), addr, error);
       xfree(full_addr);
       return;
+    }
+
+    // remote-ssh: UI reconnects through same tunnel, relinked to `addr` (vim.net._ssh.relink()).
+    Channel *chan = find_channel(current_ui);
+    if (!is_tcp && chan && chan->addr) {
+      typval_T argvars[] = { { .v_type = VAR_STRING, .vval.v_string = chan->addr },
+                             { .v_type = VAR_STRING, .vval.v_string = addr },
+                             { .v_type = VAR_UNKNOWN } };
+      typval_T relinked = { .v_type = VAR_UNKNOWN };
+      nlua_call_typval("vim.net._ssh", "relink", argvars, &relinked);
+      if (relinked.v_type != VAR_BOOL) {  // Error (already shown).
+        xfree(full_addr);
+        return;
+      }
+      if (relinked.vval.v_bool == kBoolVarTrue) {
+        addr = chan->addr;
+      }
     }
   }
 
