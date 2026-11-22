@@ -18,6 +18,7 @@
 #include "nvim/ascii_defs.h"
 #include "nvim/autocmd.h"
 #include "nvim/buffer.h"
+#include "nvim/context.h"
 #include "nvim/eval/typval_defs.h"
 #include "nvim/eval/vars.h"
 #include "nvim/ex_docmd.h"
@@ -250,8 +251,8 @@ pos_T atom_origin_pos(buf_T *buf)
       && buf_get_changedtick(buf) == o.tick) {
     return o.pos;
   }
-  if (buf != curwin->w_buffer) {
-    return (pos_T){ 0 };  // No meaningful cursor for `buf`
+  if (buf != curwin->w_buffer || is_ctx_win(curwin)) {
+    return (pos_T){ 0 };  // No meaningful cursor.
   }
   return curwin->w_cursor;
 }
@@ -1339,7 +1340,7 @@ InsSession atom_ins_start(int cmd, long count, VisualIns vis, bool vblock)
 
 /// Detects an opaque change, i.e. an edit/cursor-move since `before` by an opaque action
 /// (kKeyOpaque: <Cmd>/Lua/RPC, or autocmd) during an insert-session, which capture (redo) misses.
-/// Multicursor keeps it in its previews.
+/// Multicursor copies it to its previews, as residual text (not replayed).
 void atom_ins_opaque_end(CmdOrigin before)
 {
   if (curbuf == before.buf.br_buf && (atom_origin_changed(before) || atom_origin_moved(before))) {

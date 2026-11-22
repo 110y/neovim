@@ -10716,7 +10716,7 @@ function vim.fn.tabpagenr(arg) end
 --- <When {tabarg} is invalid zero is returned.
 ---
 --- @param tabarg integer
---- @param arg? '$'|'#'
+--- @param arg? string
 --- @return integer
 function vim.fn.tabpagewinnr(tabarg, arg) end
 
