@@ -453,6 +453,22 @@ describe('messages2', function()
       {1:~                                                    }|*12
       hello                                                |
     ]])
+    -- Prompt is visible from command entered below expanded message. #42116
+    feed(':call confirm("Ok?")')
+    screen:expect([[
+                                                           |
+      {1:~                                                    }|*11
+      hello                                                |
+      {16::}{15:call} {25:confirm}{16:(}{26:"Ok?"}{16:)}^                                 |
+    ]])
+    feed('<CR>')
+    screen:expect([[
+                                                           |
+      {1:~                                                    }|*10
+      hello                                                |
+      {6:Ok?}                                                  |
+      {6:[O]k: }^                                               |
+    ]])
   end)
 
   it('no prompt and newlines with Visual filter command #38273', function()
@@ -684,6 +700,16 @@ describe('messages2', function()
       {1:~                                                    }|*12
       {16::}{15:let} {25:g:x} {15:=} {26:1}                                         |
     ]])
+  end)
+
+  it('pager key enters pager from Normal mode in terminal buffer', function()
+    command('set messagesopt+=pager:<CR>')
+    api.nvim_open_term(0, {})
+    t.eq('nt', api.nvim_get_mode().mode)
+    feed([[:echo "foo\n"->repeat(&lines)<CR>]])
+    feed('<CR>')
+    n.poke_eventloop()
+    t.eq('pager', api.nvim_get_option_value('filetype', { buf = 0 }))
   end)
 
   it('paging prompt dialog #35191', function()
@@ -1215,7 +1241,8 @@ describe('messages2', function()
       targets['nvim%.bufwrite'] = 'msg' -- Matches the message ID, not the kind.
       require('vim._core.ui2').enable({ msg = { targets = targets } })
       print('foo') -- "lua_print" kind goes to cmd
-      vim.cmd.echo('"bar"') -- "echo" kind goes to msg
+      -- "echo" kind goes to msg ("lua_print" does not match mid-ID #42910)
+      vim.api.nvim_echo({ { 'bar' } }, false, { id = 'Xlua_print' })
       vim.cmd.highlight('VisualNC') -- "list_cmd" kind goes to pager
     end)
     screen:expect([[
