@@ -2842,7 +2842,12 @@ const char *did_set_global_undolevels(OptInt value, OptInt old_value)
   // sync undo before 'undolevels' changes
   // use the old value, otherwise u_sync() may not work properly
   p_ul = old_value;
-  u_sync(true);
+  // Non-current buffer may also use the global value, so sync every such buffer. #42447
+  FOR_ALL_BUFFERS(bp) {
+    if (bp == curbuf || bp->b_p_ul == NO_LOCAL_UNDOLEVEL) {
+      u_sync(bp, true);
+    }
+  }
   p_ul = value;
   return NULL;
 }
@@ -2852,7 +2857,7 @@ const char *did_set_buflocal_undolevels(buf_T *buf, OptInt value, OptInt old_val
 {
   // use the old value, otherwise u_sync() may not work properly
   buf->b_p_ul = old_value;
-  u_sync(true);
+  u_sync(buf, true);
   buf->b_p_ul = value;
   return NULL;
 }
@@ -4589,13 +4594,17 @@ Object get_option_value_for(OptIndex opt_idx, int opt_flags, const OptScope scop
   tabpage_T *swtab = NULL;
   void *ctx = scope == kOptScopeTab ? (void *)&swtab : (void *)&cs;
 
-  bool switched = switch_option_context(ctx, scope, from, err);
+  // PERF: for buffer scope, avoid ctx_switch() (:bcd), just swap curbuf (like getbufvar()).
+  bool switched = scope != kOptScopeBuf && switch_option_context(ctx, scope, from, err);
   if (ERROR_SET(err)) {
     return NIL;
   }
+  buf_T *const save_curbuf = curbuf;
+  curbuf = scope == kOptScopeBuf ? (buf_T *)from : curbuf;
 
   Object retv = get_option_value(opt_idx, opt_flags);
 
+  curbuf = save_curbuf;
   if (switched) {
     restore_option_context(ctx, scope);
   }
